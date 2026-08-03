@@ -1,0 +1,12 @@
+/* O site usa o verde da marca como ação e o laranja da família como destaque. */
+:root {
+  --cor-acao: var(--color-marca-500);
+  --cor-acao-suave: var(--color-marca-50);
+  --cor-acao-forte: var(--color-marca-700);
+  --cor-destaque: var(--color-sol-500);
+  scroll-behavior: smooth;
+}
+
+body {
+  background: #ffffff;
+}

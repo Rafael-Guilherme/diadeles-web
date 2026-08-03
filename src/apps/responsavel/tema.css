@@ -1,0 +1,6 @@
+/* Laranja quente: o app da família é sobre a criança, não sobre trabalho. */
+:root {
+  --cor-acao: var(--color-sol-600);
+  --cor-acao-suave: var(--color-sol-50);
+  --cor-acao-forte: var(--color-sol-700);
+}

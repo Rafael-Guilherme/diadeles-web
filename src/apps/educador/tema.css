@@ -1,0 +1,6 @@
+/* Verde: ferramenta de trabalho. A família tem outra identidade, de propósito. */
+:root {
+  --cor-acao: var(--color-marca-500);
+  --cor-acao-suave: var(--color-marca-50);
+  --cor-acao-forte: var(--color-marca-700);
+}
