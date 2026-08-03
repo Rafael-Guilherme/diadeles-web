@@ -155,7 +155,7 @@ export function PainelRegistro({
               onChange={(evento) => setObservacao(evento.target.value)}
               rows={2}
               placeholder="Algo que a família precisa saber"
-              className="w-full resize-none rounded-xl border border-[color:var(--color-borda)] px-3 py-2 text-sm outline-none focus:border-[--cor-acao]"
+              className="w-full resize-none rounded-(--raio) border border-[color:var(--color-borda)] px-3 py-2 text-sm outline-none focus:border-(color:--cor-acao)"
             />
           </label>
         </div>
@@ -192,9 +192,9 @@ function Escolha({
           <button
             key={chave}
             onClick={() => aoEscolher(chave)}
-            className={`min-h-10 rounded-xl border px-3 text-sm font-medium ${
+            className={`min-h-10 rounded-(--raio) border px-3 text-sm font-medium ${
               valor === chave
-                ? 'border-[--cor-acao] bg-[--cor-acao] text-white'
+                ? 'border-(color:--cor-acao) bg-(color:--cor-acao) text-white'
                 : 'border-[color:var(--color-borda)] bg-white'
             }`}
           >
@@ -218,9 +218,9 @@ function Alternador({
   return (
     <button
       onClick={aoAlternar}
-      className={`min-h-10 flex-1 rounded-xl border px-3 text-sm font-medium ${
+      className={`min-h-10 flex-1 rounded-(--raio) border px-3 text-sm font-medium ${
         ativo
-          ? 'border-[--cor-acao] bg-[--cor-acao] text-white'
+          ? 'border-(color:--cor-acao) bg-(color:--cor-acao) text-white'
           : 'border-[color:var(--color-borda)] bg-white'
       }`}
     >

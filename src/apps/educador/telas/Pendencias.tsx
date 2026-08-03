@@ -5,7 +5,7 @@ import { api } from '@/shared/api/cliente';
 import type { TipoRegistro } from '@/shared/offline/fila';
 import { useFila } from '@/shared/offline/sincronizador';
 import { fila } from '@/shared/offline/fila';
-import { Aviso, Botao, Cartao, Carregando } from '@/shared/ui/componentes';
+import { Aviso, Botao, Cartao, Carregando, Vazio } from '@/shared/ui/componentes';
 import { Cabecalho } from '../componentes/Cabecalho';
 import { ROTULOS_TIPO } from '../componentes/PainelRegistro';
 import { useEffect, useState } from 'react';
@@ -64,7 +64,7 @@ export function Pendencias() {
       )}
 
       {errosNaFila.length > 0 && (
-        <Cartao className="space-y-2 border-[color:var(--color-alerta)]/30 p-4">
+        <Cartao interno className="space-y-2 border-[color:var(--color-alerta)]/30">
           <p className="font-semibold text-[color:var(--color-alerta)]">
             {errosNaFila.length}{' '}
             {errosNaFila.length === 1 ? 'registro não pôde' : 'registros não puderam'} ser gravado
@@ -84,12 +84,12 @@ export function Pendencias() {
       )}
 
       {semChamada.length > 0 && (
-        <Cartao className="p-4">
+        <Cartao interno>
           <p className="font-semibold">Sem chamada</p>
           <p className="mb-2 text-sm text-[color:var(--color-tinta-suave)]">
             Ninguém marcou entrada ou falta para estas crianças.
           </p>
-          <ul className="text-sm">
+          <ul className="space-y-0.5 text-sm text-[color:var(--color-tinta-suave)]">
             {semChamada.map((c) => (
               <li key={c.id}>· {c.nomeSocial ?? c.nome}</li>
             ))}
@@ -98,17 +98,15 @@ export function Pendencias() {
       )}
 
       {comPendencia.length === 0 && semChamada.length === 0 ? (
-        <div className="flex flex-col items-center gap-2 py-14 text-center">
-          <CheckCircle2 size={36} className="text-[color:var(--color-ok)]" />
-          <p className="text-base font-semibold">Turno completo</p>
-          <p className="max-w-xs text-sm text-[color:var(--color-tinta-suave)]">
-            Todas as crianças presentes têm a rotina registrada. As famílias já podem acompanhar.
-          </p>
-        </div>
+        <Vazio
+          icone={<CheckCircle2 size={24} className="text-[color:var(--color-ok)]" />}
+          titulo="Turno completo"
+          descricao="Todas as crianças presentes têm a rotina registrada. As famílias já podem acompanhar."
+        />
       ) : (
-        <ul className="space-y-2">
+        <ul className="space-y-(--gap-lista)">
           {comPendencia.map((crianca) => (
-            <Cartao key={crianca.id} className="p-3">
+            <Cartao key={crianca.id} interno>
               <p className="font-semibold">{crianca.nomeSocial ?? crianca.nome}</p>
               <p className="text-sm text-[color:var(--color-tinta-suave)]">
                 Falta registrar:{' '}

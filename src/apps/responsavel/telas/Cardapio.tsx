@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
+import { UtensilsCrossed } from 'lucide-react';
 import { api } from '@/shared/api/cliente';
-import { Cartao, Carregando, Vazio } from '@/shared/ui/componentes';
+import { Cartao, Carregando, Etiqueta, Vazio } from '@/shared/ui/componentes';
 
 const ROTULOS: Record<string, string> = {
   lancheManha: 'Lanche da manhã',
@@ -25,12 +26,18 @@ export function Cardapio() {
 
   return (
     <div className="mx-auto w-full max-w-md">
-      <header className="area-segura-topo px-5 pb-3">
-        <h1 className="text-2xl font-bold tracking-tight">Cardápio da semana</h1>
+      <header className="area-segura-topo px-5 pb-4">
+        <h1 className="display text-2xl">Cardápio da semana</h1>
       </header>
 
-      <main className="space-y-3 px-4 pb-6">
-        {data?.length === 0 && <Vazio titulo="A escola ainda não publicou o cardápio" />}
+      <main className="space-y-(--gap-lista) px-4 pb-6">
+        {data?.length === 0 && (
+          <Vazio
+            icone={<UtensilsCrossed size={22} />}
+            titulo="A escola ainda não publicou o cardápio"
+            descricao="Assim que a semana for publicada, ela aparece aqui."
+          />
+        )}
 
         {data?.map((dia) => {
           const ehHoje = dia.data === hoje;
@@ -39,23 +46,27 @@ export function Cardapio() {
           return (
             <Cartao
               key={dia.id}
-              className={`p-4 ${ehHoje ? 'border-[--cor-acao] bg-[--cor-acao-suave]' : ''}`}
+              interno
+              elevado={ehHoje}
+              className={ehHoje ? 'border-(color:--cor-acao-borda) bg-(color:--cor-acao-suave)' : ''}
             >
-              <p className="text-sm font-bold capitalize">
-                {data_.toLocaleDateString('pt-BR', { weekday: 'long' })}
-                {ehHoje && <span className="ml-2 text-xs font-semibold text-[--cor-acao]">hoje</span>}
-              </p>
-              <p className="mb-2 text-xs text-[color:var(--color-tinta-suave)]">
+              <div className="flex items-baseline justify-between gap-2">
+                <p className="font-semibold capitalize">
+                  {data_.toLocaleDateString('pt-BR', { weekday: 'long' })}
+                </p>
+                {ehHoje && <Etiqueta tom="marca">hoje</Etiqueta>}
+              </div>
+              <p className="mb-3 text-2xs uppercase tracking-wide text-[color:var(--color-tinta-tenue)]">
                 {data_.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long' })}
               </p>
 
-              <dl className="space-y-1.5">
+              <dl className="space-y-2">
                 {Object.entries(dia.refeicoes).map(([chave, valor]) => (
                   <div key={chave}>
-                    <dt className="text-xs font-semibold text-[color:var(--color-tinta-suave)]">
+                    <dt className="text-2xs font-bold uppercase tracking-wider text-[color:var(--color-tinta-tenue)]">
                       {ROTULOS[chave] ?? chave}
                     </dt>
-                    <dd className="text-sm">{String(valor)}</dd>
+                    <dd className="text-sm leading-relaxed">{String(valor)}</dd>
                   </div>
                 ))}
               </dl>

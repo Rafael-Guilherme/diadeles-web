@@ -1,7 +1,7 @@
 import { Check, Share, SquarePlus, Smartphone } from 'lucide-react';
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { useInstalacao } from '../pwa/instalacao';
-import { Botao, Cartao } from '../ui/componentes';
+import { Aviso, Botao, Cartao } from '../ui/componentes';
 
 /**
  * Página dedicada de instalação.
@@ -25,14 +25,14 @@ export function Instalar({ voltar }: { voltar?: () => void }) {
   return (
     <div className="mx-auto w-full max-w-md space-y-5 px-5 py-8">
       <header className="space-y-1">
-        <h1 className="text-2xl font-bold tracking-tight">Instalar o aplicativo</h1>
-        <p className="text-sm text-[color:var(--color-tinta-suave)]">
+        <h1 className="text-2xl">Instalar o aplicativo</h1>
+        <p className="text-sm leading-relaxed text-[color:var(--color-tinta-suave)]">
           Instalando, o app abre direto da tela de início e passa a avisar quando houver novidade.
         </p>
       </header>
 
       {instalado ? (
-        <Cartao className="flex items-center gap-3 p-4">
+        <Cartao interno className="flex items-center gap-3">
           <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[color:var(--color-ok-suave)] text-[color:var(--color-ok)]">
             <Check size={20} />
           </span>
@@ -44,9 +44,9 @@ export function Instalar({ voltar }: { voltar?: () => void }) {
           </div>
         </Cartao>
       ) : podeInstalarDireto ? (
-        <Cartao className="space-y-3 p-4">
+        <Cartao interno className="space-y-3">
           <div className="flex items-center gap-3">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[--cor-acao-suave] text-[--cor-acao]">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-(color:--cor-acao-suave) text-(color:--cor-acao)">
               <Smartphone size={20} />
             </span>
             <p className="text-sm">Seu navegador permite instalar com um toque.</p>
@@ -54,55 +54,38 @@ export function Instalar({ voltar }: { voltar?: () => void }) {
           <Botao bloco onClick={() => void instalar()}>
             Instalar agora
           </Botao>
-          {resultado && (
-            <p className="text-xs text-[color:var(--color-tinta-suave)]">{resultado}</p>
-          )}
+          {resultado && <p className="text-xs text-[color:var(--color-tinta-suave)]">{resultado}</p>}
         </Cartao>
       ) : ios ? (
-        <Cartao className="space-y-4 p-4">
+        <Cartao interno className="space-y-4">
           <p className="text-sm font-semibold">No iPhone ou iPad, em 3 passos:</p>
           <ol className="space-y-3 text-sm">
-            <li className="flex gap-3">
-              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-neutral-100 text-xs font-bold">
-                1
-              </span>
-              <span className="flex items-center gap-1.5">
-                Toque em <Share size={16} className="inline" /> <b>Compartilhar</b>, na barra do
-                Safari.
-              </span>
-            </li>
-            <li className="flex gap-3">
-              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-neutral-100 text-xs font-bold">
-                2
-              </span>
-              <span className="flex items-center gap-1.5">
-                Escolha <SquarePlus size={16} className="inline" />{' '}
-                <b>Adicionar à Tela de Início</b>.
-              </span>
-            </li>
-            <li className="flex gap-3">
-              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-neutral-100 text-xs font-bold">
-                3
-              </span>
-              <span>
-                Confirme em <b>Adicionar</b>. Pronto — abra o app pelo novo ícone.
-              </span>
-            </li>
+            <Passo numero={1}>
+              Toque em <Share size={16} className="inline shrink-0" /> <b>Compartilhar</b>, na barra
+              do Safari.
+            </Passo>
+            <Passo numero={2}>
+              Escolha <SquarePlus size={16} className="inline shrink-0" />{' '}
+              <b>Adicionar à Tela de Início</b>.
+            </Passo>
+            <Passo numero={3}>
+              Confirme em <b>Adicionar</b>. Pronto — abra o app pelo novo ícone.
+            </Passo>
           </ol>
-          <p className="rounded-lg bg-[color:var(--color-alerta-suave)] px-3 py-2 text-xs text-[color:var(--color-alerta)]">
+          <Aviso>
             No iPhone, os avisos só funcionam depois de adicionar à tela de início. É uma regra do
             próprio sistema.
-          </p>
+          </Aviso>
         </Cartao>
       ) : (
-        <Cartao className="space-y-3 p-4">
+        <Cartao interno className="space-y-4">
           <p className="text-sm font-semibold">No Android ou no computador:</p>
-          <ol className="space-y-2 text-sm text-[color:var(--color-tinta-suave)]">
-            <li>1. Abra o menu do navegador (⋮).</li>
-            <li>
-              2. Toque em <b>Instalar aplicativo</b> ou <b>Adicionar à tela inicial</b>.
-            </li>
-            <li>3. Confirme. O ícone aparece junto dos seus outros apps.</li>
+          <ol className="space-y-3 text-sm">
+            <Passo numero={1}>Abra o menu do navegador (⋮).</Passo>
+            <Passo numero={2}>
+              Toque em <b>Instalar aplicativo</b> ou <b>Adicionar à tela inicial</b>.
+            </Passo>
+            <Passo numero={3}>Confirme. O ícone aparece junto dos seus outros apps.</Passo>
           </ol>
         </Cartao>
       )}
@@ -113,5 +96,16 @@ export function Instalar({ voltar }: { voltar?: () => void }) {
         </Botao>
       )}
     </div>
+  );
+}
+
+function Passo({ numero, children }: { numero: number; children: ReactNode }) {
+  return (
+    <li className="flex gap-3">
+      <span className="numerico flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[color:var(--color-papel)] text-xs font-bold ring-1 ring-[color:var(--color-borda)]">
+        {numero}
+      </span>
+      <span className="flex flex-wrap items-center gap-x-1.5 leading-relaxed">{children}</span>
+    </li>
   );
 }

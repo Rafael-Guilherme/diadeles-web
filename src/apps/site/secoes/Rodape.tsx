@@ -2,12 +2,12 @@ import { APP_EDUCADOR, APP_RESPONSAVEL } from '../conteudo';
 
 export function Rodape() {
   return (
-    <footer className="border-t border-[color:var(--color-borda)] bg-[--color-papel]">
+    <footer className="border-t border-[color:var(--color-borda)] bg-(color:--color-papel)">
       <div className="mx-auto max-w-6xl px-5 py-12">
         <div className="flex flex-col gap-8 sm:flex-row sm:justify-between">
           <div className="max-w-xs">
             <div className="flex items-center gap-2 font-bold tracking-tight">
-              <img src="/favicon.png" alt="" className="h-7 w-7 rounded-lg" />
+              <img src="/favicon.png" alt="" className="h-7 w-7 rounded-(--raio-sm)" />
               Diadeles
             </div>
             <p className="mt-3 text-sm leading-relaxed text-[color:var(--color-tinta-suave)]">
@@ -68,7 +68,9 @@ function Coluna({
 }) {
   return (
     <div>
-      <p className="font-semibold">{titulo}</p>
+      <p className="text-2xs font-bold uppercase tracking-wider text-[color:var(--color-tinta-tenue)]">
+        {titulo}
+      </p>
       <ul className="mt-3 space-y-2">
         {links.map(([href, texto]) => (
           <li key={texto}>

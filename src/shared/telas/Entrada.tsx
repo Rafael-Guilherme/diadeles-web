@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { API_URL } from '../api/cliente';
 import { useSessao, type Sessao } from '../auth/sessao';
-import { Botao, Cartao, Carregando } from '../ui/componentes';
+import { Aviso, Botao, Cartao, Carregando } from '../ui/componentes';
 
 interface PerfilDemo {
   chave: string;
@@ -64,30 +64,26 @@ export function Entrada({
     <div className="mx-auto flex min-h-full w-full max-w-md flex-col justify-center gap-6 px-5 py-10">
       <header className="space-y-2">
         <div className="flex items-center gap-3">
-          <img src="/pwa-192.png" alt="" className="h-12 w-12 rounded-xl" />
+          <img src="/pwa-192.png" alt="" className="h-12 w-12 rounded-(--raio)" />
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">{titulo}</h1>
+            <h1 className="text-2xl">{titulo}</h1>
             <p className="text-sm text-[color:var(--color-tinta-suave)]">{subtitulo}</p>
           </div>
         </div>
       </header>
 
-      {erro && (
-        <div className="rounded-xl border border-[color:var(--color-alerta)]/20 bg-[color:var(--color-alerta-suave)] px-4 py-3 text-sm text-[color:var(--color-alerta)]">
-          {erro}
-        </div>
-      )}
+      {erro && <Aviso>{erro}</Aviso>}
 
       {!perfis && !erro && <Carregando texto="Buscando perfis de demonstração…" />}
 
-      <div className="space-y-3">
+      <div className="space-y-(--gap-lista)">
         {perfis?.map((perfil) => (
-          <Cartao key={perfil.chave} className="p-4">
+          <Cartao key={perfil.chave} interno>
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <p className="font-semibold">{perfil.nome}</p>
-                <p className="text-xs font-medium text-[--cor-acao]">{perfil.cargo}</p>
-                <p className="mt-1 text-sm text-[color:var(--color-tinta-suave)]">
+                <p className="text-xs font-medium text-(color:--cor-acao)">{perfil.cargo}</p>
+                <p className="mt-1 text-sm leading-relaxed text-[color:var(--color-tinta-suave)]">
                   {perfil.descricao}
                 </p>
               </div>
@@ -103,7 +99,7 @@ export function Entrada({
         ))}
       </div>
 
-      <p className="text-center text-xs text-[color:var(--color-tinta-suave)]">
+      <p className="text-center text-xs leading-relaxed text-[color:var(--color-tinta-tenue)]">
         Ambiente de demonstração. Os dados são fictícios e podem ser recriados a qualquer momento.
       </p>
     </div>

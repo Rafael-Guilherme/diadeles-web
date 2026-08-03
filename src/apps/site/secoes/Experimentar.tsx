@@ -10,13 +10,13 @@ export function Experimentar() {
   return (
     <section
       id="experimentar"
-      className="border-y border-[color:var(--color-borda)] bg-[--cor-acao] text-white"
+      className="border-y border-[color:var(--color-borda)] bg-(color:--cor-acao) text-white"
     >
       <div className="mx-auto max-w-6xl px-5 py-20">
         <div className="max-w-2xl">
-          <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
-            Abra os dois lados agora.
-          </h2>
+          {/* Sem rótulo acima do título: aqui o fundo já é a cor da marca, e um
+              segundo destaque em cima dele só competiria com a chamada. */}
+          <h2 className="text-balance text-3xl sm:text-4xl">Abra os dois lados agora.</h2>
           <p className="mt-4 text-lg leading-relaxed text-white/80">
             Uma escola de demonstração já está montada, com um dia em andamento: chamada feita,
             almoço e sono registrados, uma criança ausente, uma ocorrência no parque. Sem cadastro,
@@ -24,7 +24,7 @@ export function Experimentar() {
           </p>
         </div>
 
-        <div className="mt-10 grid gap-4 md:grid-cols-2">
+        <div className="mt-10 grid gap-(--gap-lista) md:grid-cols-2">
           <CartaoApp
             href={APP_EDUCADOR}
             icone={<GraduationCap size={22} />}
@@ -68,10 +68,10 @@ function CartaoApp({
       href={href}
       target="_blank"
       rel="noreferrer"
-      className="group flex flex-col rounded-2xl bg-white/10 p-6 ring-1 ring-white/15 transition hover:bg-white/15"
+      className="group flex flex-col rounded-(--raio-xl) bg-white/10 p-(--padding-cartao) ring-1 ring-white/15 transition hover:bg-white/15"
     >
       <div className="flex items-center justify-between">
-        <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/15">
+        <span className="flex h-11 w-11 items-center justify-center rounded-(--raio) bg-white/15">
           {icone}
         </span>
         <ArrowUpRight
@@ -79,9 +79,9 @@ function CartaoApp({
           className="text-white/50 transition group-hover:translate-x-0.5 group-hover:text-white"
         />
       </div>
-      <h3 className="mt-4 text-xl font-bold">{titulo}</h3>
+      <h3 className="mt-4 text-xl">{titulo}</h3>
       <p className="mt-1.5 leading-relaxed text-white/75">{texto}</p>
-      <span className="mt-4 text-xs font-semibold uppercase tracking-wide text-white/60">
+      <span className="mt-4 text-2xs font-bold uppercase tracking-wider text-white/60">
         {rotulo}
       </span>
     </a>

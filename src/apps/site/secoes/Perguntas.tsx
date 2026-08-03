@@ -1,13 +1,11 @@
 import { ChevronDown } from 'lucide-react';
 import { PERGUNTAS } from '../conteudo';
+import { AberturaSecao } from '../componentes';
 
 export function Perguntas() {
   return (
     <section id="perguntas" className="mx-auto max-w-3xl px-5 py-20">
-      <p className="text-sm font-bold uppercase tracking-wider text-[--cor-acao]">Perguntas</p>
-      <h2 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">
-        O que costumam perguntar.
-      </h2>
+      <AberturaSecao rotulo="Perguntas" titulo="O que costumam perguntar." />
 
       <div className="mt-10 divide-y divide-[color:var(--color-borda)] border-y border-[color:var(--color-borda)]">
         {PERGUNTAS.map((item, indice) => (
@@ -18,7 +16,7 @@ export function Perguntas() {
               {item.pergunta}
               <ChevronDown
                 size={18}
-                className="shrink-0 text-[color:var(--color-tinta-suave)] transition group-open:rotate-180"
+                className="shrink-0 text-[color:var(--color-tinta-tenue)] transition group-open:rotate-180"
               />
             </summary>
             <p className="mt-3 leading-relaxed text-[color:var(--color-tinta-suave)]">

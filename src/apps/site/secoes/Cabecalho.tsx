@@ -28,7 +28,7 @@ export function Cabecalho() {
     >
       <div className="mx-auto flex max-w-6xl items-center gap-6 px-5 py-3">
         <a href="#topo" className="flex items-center gap-2 font-bold tracking-tight">
-          <img src="/favicon.png" alt="" className="h-8 w-8 rounded-lg" />
+          <img src="/favicon.png" alt="" className="h-8 w-8 rounded-(--raio-sm)" />
           Diadeles
         </a>
 
@@ -44,7 +44,7 @@ export function Cabecalho() {
           ))}
           <a
             href="#experimentar"
-            className="rounded-xl bg-[--cor-acao] px-4 py-2.5 text-sm font-semibold text-white transition hover:brightness-110"
+            className="rounded-(--raio) bg-(color:--cor-acao) px-4 py-2.5 text-sm font-semibold text-white transition hover:brightness-110"
           >
             Ver funcionando
           </a>
@@ -54,7 +54,7 @@ export function Cabecalho() {
           onClick={() => setAberto((v) => !v)}
           aria-label={aberto ? 'Fechar menu' : 'Abrir menu'}
           aria-expanded={aberto}
-          className="ml-auto flex h-10 w-10 items-center justify-center rounded-lg md:hidden"
+          className="ml-auto flex h-10 w-10 items-center justify-center rounded-(--raio-sm) md:hidden"
         >
           {aberto ? <X size={22} /> : <Menu size={22} />}
         </button>
@@ -75,7 +75,7 @@ export function Cabecalho() {
           <a
             href="#experimentar"
             onClick={() => setAberto(false)}
-            className="mt-2 block rounded-xl bg-[--cor-acao] px-4 py-3 text-center font-semibold text-white"
+            className="mt-2 block rounded-(--raio) bg-(color:--cor-acao) px-4 py-3 text-center font-semibold text-white"
           >
             Ver funcionando
           </a>

@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useFila } from '@/shared/offline/sincronizador';
 import { useInstalacao } from '@/shared/pwa/instalacao';
+import { Etiqueta } from '@/shared/ui/componentes';
 
 /**
  * O indicador de fila fica sempre visível. Silêncio sobre o que ainda não subiu
@@ -25,22 +26,22 @@ export function Cabecalho({
   const { instalado } = useInstalacao();
 
   return (
-    <header className="area-segura-topo sticky top-0 z-10 border-b border-[color:var(--color-borda)] bg-white/95 px-4 pb-3 backdrop-blur">
-      <div className="flex items-center gap-3">
+    <header className="area-segura-topo sticky top-0 z-10 border-b border-[color:var(--color-borda)] bg-white/90 px-4 pb-3 backdrop-blur-md">
+      <div className="flex items-center gap-2">
         {voltarPara && (
           <button
             onClick={() => navegar(voltarPara)}
             aria-label="Voltar"
-            className="-ml-2 flex h-9 w-9 items-center justify-center rounded-full active:bg-neutral-100"
+            className="-ml-2 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[color:var(--color-tinta-suave)] transition active:bg-neutral-100"
           >
             <ArrowLeft size={20} />
           </button>
         )}
 
         <div className="min-w-0 flex-1">
-          <h1 className="truncate text-lg font-bold leading-tight">{titulo}</h1>
+          <h1 className="truncate text-lg leading-tight">{titulo}</h1>
           {subtitulo && (
-            <p className="truncate text-xs text-[color:var(--color-tinta-suave)]">{subtitulo}</p>
+            <p className="truncate text-xs text-[color:var(--color-tinta-tenue)]">{subtitulo}</p>
           )}
         </div>
 
@@ -55,7 +56,7 @@ export function Cabecalho({
           <Link
             to="/instalar"
             aria-label="Instalar aplicativo"
-            className="flex h-9 w-9 items-center justify-center rounded-full text-[--cor-acao] active:bg-neutral-100"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-(color:--cor-acao) transition active:bg-neutral-100"
           >
             <Download size={18} />
           </Link>
@@ -76,37 +77,38 @@ function IndicadorFila({
   enviando: boolean;
   online: boolean;
 }) {
+  // `numerico` mantém a contagem na mesma largura enquanto ela sobe e desce —
+  // o número treme menos e o cabeçalho não empurra o título ao lado.
+  const forma = 'shrink-0 px-2.5 py-1 numerico';
+
   if (comErro > 0) {
     return (
-      <span className="flex items-center gap-1 rounded-full bg-[color:var(--color-alerta-suave)] px-2.5 py-1 text-xs font-semibold text-[color:var(--color-alerta)]">
+      <Etiqueta tom="alerta" className={forma} titulo="Registros que não puderam ser gravados">
         <CloudOff size={14} /> {comErro}
-      </span>
+      </Etiqueta>
     );
   }
 
   if (!online) {
     return (
-      <span className="flex items-center gap-1 rounded-full bg-neutral-100 px-2.5 py-1 text-xs font-semibold text-neutral-600">
+      <Etiqueta tom="neutro" className={forma} titulo="Sem rede — os registros ficam salvos aqui">
         <CloudOff size={14} /> {pendentes > 0 ? pendentes : 'sem rede'}
-      </span>
+      </Etiqueta>
     );
   }
 
   if (pendentes > 0 || enviando) {
     return (
-      <span className="flex items-center gap-1 rounded-full bg-[--cor-acao-suave] px-2.5 py-1 text-xs font-semibold text-[--cor-acao]">
+      <Etiqueta tom="marca" className={forma} titulo="Enviando o que foi registrado">
         <CloudUpload size={14} className={enviando ? 'animate-pulse' : ''} />
         {pendentes > 0 ? pendentes : 'enviando'}
-      </span>
+      </Etiqueta>
     );
   }
 
   return (
-    <span
-      className="flex items-center gap-1 rounded-full bg-[color:var(--color-ok-suave)] px-2.5 py-1 text-xs font-semibold text-[color:var(--color-ok)]"
-      title="Tudo sincronizado"
-    >
+    <Etiqueta tom="ok" className={forma} titulo="Tudo sincronizado">
       <Check size={14} /> salvo
-    </span>
+    </Etiqueta>
   );
 }

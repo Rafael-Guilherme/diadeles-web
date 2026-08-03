@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Check } from 'lucide-react';
+import { Check, Megaphone } from 'lucide-react';
 import { api } from '@/shared/api/cliente';
 import { Botao, Cartao, Carregando, Etiqueta, Vazio } from '@/shared/ui/componentes';
 
@@ -41,26 +41,32 @@ export function Comunicados() {
 
   return (
     <div className="mx-auto w-full max-w-md">
-      <header className="area-segura-topo px-5 pb-3">
-        <h1 className="text-2xl font-bold tracking-tight">Avisos da escola</h1>
+      <header className="area-segura-topo px-5 pb-4">
+        <h1 className="display text-2xl">Avisos da escola</h1>
       </header>
 
-      <main className="space-y-3 px-4 pb-6">
-        {data?.length === 0 && <Vazio titulo="Nenhum aviso por enquanto" />}
+      <main className="space-y-(--gap-lista) px-4 pb-6">
+        {data?.length === 0 && (
+          <Vazio
+            icone={<Megaphone size={22} />}
+            titulo="Nenhum aviso por enquanto"
+            descricao="Quando a escola publicar algo, aparece aqui e você recebe um alerta."
+          />
+        )}
 
         {data?.map((comunicado) => (
-          <Cartao key={comunicado.id} className="space-y-2 p-4">
+          <Cartao key={comunicado.id} interno className="space-y-2">
             <div className="flex items-start justify-between gap-2">
-              <h2 className="font-semibold leading-snug">{comunicado.titulo}</h2>
+              <h2 className="text-[15px] leading-snug">{comunicado.titulo}</h2>
               {comunicado.lido && (
-                <Etiqueta tom="ok">
+                <Etiqueta tom="ok" className="mt-0.5 shrink-0">
                   <Check size={11} /> lido
                 </Etiqueta>
               )}
             </div>
 
             {comunicado.publicadoEm && (
-              <p className="text-xs text-[color:var(--color-tinta-suave)]">
+              <p className="text-2xs uppercase tracking-wide text-[color:var(--color-tinta-tenue)]">
                 {new Date(comunicado.publicadoEm).toLocaleDateString('pt-BR', {
                   day: '2-digit',
                   month: 'long',

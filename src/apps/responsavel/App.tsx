@@ -49,20 +49,32 @@ function BarraInferior() {
   ];
 
   return (
-    <nav className="area-segura-base fixed inset-x-0 bottom-0 z-20 flex border-t border-[color:var(--color-borda)] bg-white/95 pt-1 backdrop-blur">
+    <nav className="area-segura-base fixed inset-x-0 bottom-0 z-20 mx-auto flex max-w-md border-t border-[color:var(--color-borda)] bg-white/90 pt-1 backdrop-blur-md">
       {itens.map(({ para, rotulo, Icone }) => (
         <NavLink
           key={para}
           to={para}
           end={para === '/'}
           className={({ isActive }) =>
-            `flex flex-1 flex-col items-center gap-0.5 py-2 text-xs font-semibold ${
-              isActive ? 'text-[--cor-acao]' : 'text-neutral-400'
+            `flex flex-1 flex-col items-center gap-1 py-2 text-2xs font-semibold transition ${
+              isActive ? 'text-(color:--cor-acao)' : 'text-[color:var(--color-tinta-tenue)]'
             }`
           }
         >
-          <Icone size={20} />
-          {rotulo}
+          {({ isActive }) => (
+            <>
+              {/* A pílula atrás do ícone é o que marca a aba ativa à distância;
+                  só a cor do traço se perde na tela do celular ao sol. */}
+              <span
+                className={`flex h-7 w-14 items-center justify-center rounded-full transition ${
+                  isActive ? 'bg-(color:--cor-acao-suave)' : ''
+                }`}
+              >
+                <Icone size={20} />
+              </span>
+              {rotulo}
+            </>
+          )}
         </NavLink>
       ))}
     </nav>

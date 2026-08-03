@@ -68,14 +68,14 @@ export function Chamada() {
         voltarPara={`/turma/${turmaId}`}
       />
 
-      <ul className="space-y-2 px-4 py-4">
+      <ul className="space-y-(--gap-lista) px-4 py-4">
         {data.criancas.map((crianca) => {
           const carregando = emAndamento === crianca.id;
 
           return (
             <li
               key={crianca.id}
-              className="flex items-center gap-3 rounded-2xl border border-[color:var(--color-borda)] bg-white p-3"
+              className="flex items-center gap-3 rounded-(--raio-lg) border border-[color:var(--color-borda)] bg-white p-3"
             >
               <div className="min-w-0 flex-1">
                 <p className="font-semibold">{crianca.nomeSocial ?? crianca.nome}</p>
@@ -106,7 +106,7 @@ export function Chamada() {
                   onClick={() => marcar(crianca.id, false)}
                   disabled={carregando}
                   aria-label={`Marcar ${crianca.nome} como presente`}
-                  className={`flex h-11 w-11 items-center justify-center rounded-xl border-2 transition ${
+                  className={`flex h-11 w-11 items-center justify-center rounded-(--raio) border-2 transition ${
                     crianca.presente
                       ? 'border-[color:var(--color-ok)] bg-[color:var(--color-ok)] text-white'
                       : 'border-[color:var(--color-borda)] text-neutral-400'
@@ -118,7 +118,7 @@ export function Chamada() {
                   onClick={() => marcar(crianca.id, true)}
                   disabled={carregando}
                   aria-label={`Marcar ${crianca.nome} como ausente`}
-                  className={`flex h-11 w-11 items-center justify-center rounded-xl border-2 transition ${
+                  className={`flex h-11 w-11 items-center justify-center rounded-(--raio) border-2 transition ${
                     crianca.ausente
                       ? 'border-[color:var(--color-alerta)] bg-[color:var(--color-alerta)] text-white'
                       : 'border-[color:var(--color-borda)] text-neutral-400'

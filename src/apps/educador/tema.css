@@ -1,6 +1,27 @@
-/* Verde: ferramenta de trabalho. A família tem outra identidade, de propósito. */
+/*
+  App do educador — sóbrio e denso.
+
+  Ferramenta de trabalho usada de pé, com pressa, dezenas de vezes por turno.
+  Cantos discretos, pouca sombra, informação próxima: cada pixel de respiro a
+  mais é uma criança a menos visível sem rolar a tela.
+*/
 :root {
   --cor-acao: var(--color-marca-500);
   --cor-acao-suave: var(--color-marca-50);
   --cor-acao-forte: var(--color-marca-700);
+  --cor-acao-borda: var(--color-marca-200);
+
+  --raio-sm: 0.375rem;
+  --raio: 0.625rem;
+  --raio-lg: 0.75rem;
+  --raio-xl: 0.875rem;
+
+  --sombra-cartao: none;
+  --sombra-elevada: 0 -8px 24px -12px rgb(23 33 30 / 0.16);
+
+  --padding-cartao: 0.75rem;
+  --gap-lista: 0.5rem;
+
+  --peso-titulo: 650;
+  --tracking-titulo: -0.021em;
 }

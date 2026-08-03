@@ -1,12 +1,51 @@
-/* O site usa o verde da marca como ação e o laranja da família como destaque. */
+/* Usada só na amostra do app da família — ver a nota em shared/ui/estilos.css. */
+@font-face {
+  font-family: 'Fraunces';
+  src: url('../../shared/ui/fontes/Fraunces.woff2') format('woff2');
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/*
+  Site — sóbrio, na mesma família do app do educador.
+
+  Quem decide a compra é a gestora, e ela precisa ver algo que pareça
+  institucional. O calor da marca aparece nas amostras do app da família,
+  onde ele é a mensagem.
+*/
 :root {
   --cor-acao: var(--color-marca-500);
   --cor-acao-suave: var(--color-marca-50);
   --cor-acao-forte: var(--color-marca-700);
+  --cor-acao-borda: var(--color-marca-200);
   --cor-destaque: var(--color-sol-500);
+
+  --raio-sm: 0.375rem;
+  --raio: 0.625rem;
+  --raio-lg: 0.875rem;
+  --raio-xl: 1.125rem;
+
+  --sombra-cartao: none;
+  --sombra-elevada: 0 12px 40px -20px rgb(23 33 30 / 0.22);
+
+  --padding-cartao: 1.5rem;
+  --gap-lista: 1rem;
+
+  --peso-titulo: 650;
+  --tracking-titulo: -0.025em;
+
   scroll-behavior: smooth;
 }
 
 body {
   background: #ffffff;
+}
+
+/* Amostras do app da família dentro do site herdam o tom quente dele. */
+.amostra-familia {
+  --cor-acao: var(--color-sol-600);
+  --cor-acao-suave: var(--color-sol-50);
+  --raio: 1rem;
+  --raio-lg: 1.25rem;
 }

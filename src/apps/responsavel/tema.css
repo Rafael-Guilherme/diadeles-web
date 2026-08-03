@@ -1,6 +1,37 @@
-/* Laranja quente: o app da família é sobre a criança, não sobre trabalho. */
+/* A Fraunces entra só onde é usada — ver a nota em shared/ui/estilos.css. */
+@font-face {
+  font-family: 'Fraunces';
+  src: url('../../shared/ui/fontes/Fraunces.woff2') format('woff2');
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/*
+  App da família — caloroso.
+
+  A pessoa abre isto no meio do dia para saber se o filho comeu. Cantos
+  generosos, ar entre os elementos e laranja como cor de ação. É o oposto
+  deliberado do app do educador, que é uma ferramenta de trabalho.
+*/
 :root {
   --cor-acao: var(--color-sol-600);
   --cor-acao-suave: var(--color-sol-50);
   --cor-acao-forte: var(--color-sol-700);
+  --cor-acao-borda: var(--color-sol-200);
+
+  --raio-sm: 0.625rem;
+  --raio: 1rem;
+  --raio-lg: 1.25rem;
+  --raio-xl: 1.5rem;
+
+  --sombra-cartao: 0 1px 2px rgb(23 33 30 / 0.04), 0 8px 24px -16px rgb(122 67 16 / 0.25);
+  --sombra-elevada: 0 8px 30px -12px rgb(122 67 16 / 0.28);
+
+  /* Mais respiro que o app do educador: aqui ninguém está com pressa. */
+  --padding-cartao: 1rem;
+  --gap-lista: 0.75rem;
+
+  --peso-titulo: 600;
+  --tracking-titulo: -0.018em;
 }

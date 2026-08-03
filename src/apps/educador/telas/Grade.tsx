@@ -5,7 +5,7 @@ import { AlertTriangle, ClipboardList, Pill, UserCheck } from 'lucide-react';
 import { api } from '@/shared/api/cliente';
 import { fila, type TipoRegistro } from '@/shared/offline/fila';
 import { sincronizar, notificarMudancaNaFila } from '@/shared/offline/sincronizador';
-import { Botao, Carregando, Etiqueta, Vazio } from '@/shared/ui/componentes';
+import { Botao, Carregando, Etiqueta, RotuloSecao, Vazio } from '@/shared/ui/componentes';
 import { Cabecalho } from '../componentes/Cabecalho';
 import { PainelRegistro, ICONES_TIPO, ROTULOS_TIPO } from '../componentes/PainelRegistro';
 
@@ -131,16 +131,19 @@ export function Grade() {
         </Link>
       </div>
 
-      <div className="flex items-center justify-between px-4 pb-2">
-        <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--color-tinta-suave)]">
+      <div className="px-4 pb-2">
+        <RotuloSecao
+          apoio={
+            <button onClick={selecionarTodas} className="text-sm font-semibold text-(color:--cor-acao)">
+              {totalSelecionadas === presentes.length ? 'Limpar' : 'Selecionar todas'}
+            </button>
+          }
+        >
           Toque para selecionar
-        </p>
-        <button onClick={selecionarTodas} className="text-sm font-semibold text-[--cor-acao]">
-          {totalSelecionadas === presentes.length ? 'Limpar' : 'Selecionar todas'}
-        </button>
+        </RotuloSecao>
       </div>
 
-      <ul className="space-y-2 px-4">
+      <ul className="space-y-(--gap-lista) px-4">
         {data.criancas.map((crianca) => {
           const selecionada = selecionadas.has(crianca.id);
           const extras = recemRegistrados[crianca.id] ?? [];
@@ -153,11 +156,11 @@ export function Grade() {
               <button
                 onClick={() => !crianca.ausente && alternar(crianca.id)}
                 disabled={crianca.ausente}
-                className={`w-full rounded-2xl border p-3 text-left transition ${
+                className={`w-full rounded-(--raio-lg) border p-3 text-left transition ${
                   crianca.ausente
                     ? 'border-[color:var(--color-borda)] bg-neutral-50 opacity-60'
                     : selecionada
-                      ? 'border-[--cor-acao] bg-[--cor-acao-suave]'
+                      ? 'border-(color:--cor-acao) bg-(color:--cor-acao-suave)'
                       : 'border-[color:var(--color-borda)] bg-white'
                 }`}
               >
@@ -165,7 +168,7 @@ export function Grade() {
                   <span
                     className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md border-2 text-xs font-bold ${
                       selecionada
-                        ? 'border-[--cor-acao] bg-[--cor-acao] text-white'
+                        ? 'border-(color:--cor-acao) bg-(color:--cor-acao) text-white'
                         : 'border-neutral-300'
                     }`}
                   >
@@ -226,8 +229,11 @@ export function Grade() {
       </ul>
 
       {totalSelecionadas > 0 && (
-        <div className="area-segura-base fixed inset-x-0 bottom-0 z-20 border-t border-[color:var(--color-borda)] bg-white px-4 pt-3 shadow-[0_-8px_24px_rgba(0,0,0,0.06)]">
-          <p className="pb-2 text-sm font-semibold">
+        <div
+          className="area-segura-base fixed inset-x-0 bottom-0 z-20 border-t border-[color:var(--color-borda)] bg-white px-4 pt-3"
+          style={{ boxShadow: 'var(--sombra-elevada)' }}
+        >
+          <p className="numerico pb-2 text-sm font-semibold">
             {totalSelecionadas} {totalSelecionadas === 1 ? 'criança' : 'crianças'} · registrar
           </p>
           <div className="grid grid-cols-4 gap-2">
@@ -235,7 +241,7 @@ export function Grade() {
               <button
                 key={tipo}
                 onClick={() => setTipoAberto(tipo)}
-                className="flex flex-col items-center gap-1 rounded-xl border border-[color:var(--color-borda)] py-2.5 text-xs font-semibold active:bg-neutral-50"
+                className="flex flex-col items-center gap-1 rounded-(--raio) border border-[color:var(--color-borda)] py-2.5 text-xs font-semibold active:bg-neutral-50"
               >
                 {ICONES_TIPO[tipo]}
                 {ROTULOS_TIPO[tipo]}
