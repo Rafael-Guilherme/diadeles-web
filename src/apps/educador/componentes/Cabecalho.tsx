@@ -32,7 +32,9 @@ export function Cabecalho({
           <button
             onClick={() => navegar(voltarPara)}
             aria-label="Voltar"
-            className="-ml-2 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[color:var(--color-tinta-suave)] transition active:bg-neutral-100"
+            // h-11 = 44px, o mesmo alvo do `Botao`. A margem negativa cresce
+            // junto para o ícone não deslocar da posição que já tinha.
+            className="-ml-3 flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-[color:var(--color-tinta-suave)] transition active:bg-neutral-100"
           >
             <ArrowLeft size={20} />
           </button>
@@ -56,7 +58,7 @@ export function Cabecalho({
           <Link
             to="/instalar"
             aria-label="Instalar aplicativo"
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-(color:--cor-acao) transition active:bg-neutral-100"
+            className="-mr-1 flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-(color:--cor-acao) transition active:bg-neutral-100"
           >
             <Download size={18} />
           </Link>

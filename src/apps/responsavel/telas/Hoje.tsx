@@ -97,7 +97,7 @@ export function Hoje() {
           {!instalado && (
             <Link
               to="/instalar"
-              className="flex shrink-0 items-center gap-1.5 rounded-full bg-white px-3 py-2 text-xs font-semibold text-(color:--cor-acao) ring-1 ring-(color:--cor-acao-borda) transition active:scale-95"
+              className="flex min-h-11 shrink-0 items-center gap-1.5 rounded-full bg-white px-3.5 text-xs font-semibold text-(color:--cor-acao) ring-1 ring-(color:--cor-acao-borda) transition active:scale-95"
             >
               <Download size={14} /> Instalar
             </Link>

@@ -134,7 +134,12 @@ export function Grade() {
       <div className="px-4 pb-2">
         <RotuloSecao
           apoio={
-            <button onClick={selecionarTodas} className="text-sm font-semibold text-(color:--cor-acao)">
+            // `py-3 -my-3` amplia a área de toque para 44px sem empurrar o
+            // layout: o texto continua alinhado ao rótulo ao lado.
+            <button
+              onClick={selecionarTodas}
+              className="-my-3 py-3 text-sm font-semibold text-(color:--cor-acao)"
+            >
               {totalSelecionadas === presentes.length ? 'Limpar' : 'Selecionar todas'}
             </button>
           }

@@ -7,7 +7,7 @@ import { sessaoStore } from '../auth/sessao';
  * porque é assim que a API os publica. Manter o prefixo aqui e nas rotas
  * duplicaria o caminho — e o typecheck avisaria, que é o ponto de gerar tipos.
  */
-export const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:3000';
+export const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:3100';
 export const API_URL = `${API_BASE}/v1`;
 
 export interface ErroApi {

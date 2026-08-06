@@ -13,7 +13,7 @@
     "build:responsavel": "tsc -b && vite build --config vite.config.responsavel.ts",
     "preview:educador": "vite preview --config vite.config.educador.ts",
     "preview:responsavel": "vite preview --config vite.config.responsavel.ts",
-    "gen:api": "openapi-typescript http://localhost:3000/docs-json -o src/shared/api/schema.d.ts",
+    "gen:api": "openapi-typescript http://localhost:3100/docs-json -o src/shared/api/schema.d.ts",
     "gen:icones": "node scripts/gerar-icones.mjs",
     "typecheck": "tsc --noEmit",
     "lint": "eslint \"src/**/*.{ts,tsx}\" --max-warnings 0",

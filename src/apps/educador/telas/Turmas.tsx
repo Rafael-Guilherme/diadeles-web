@@ -63,7 +63,7 @@ export function Turmas() {
 
         <button
           onClick={encerrar}
-          className="w-full pt-4 text-center text-sm text-[color:var(--color-tinta-tenue)] underline underline-offset-2"
+          className="min-h-11 w-full pt-4 text-center text-sm text-[color:var(--color-tinta-tenue)] underline underline-offset-2"
         >
           Sair da demonstração
         </button>
