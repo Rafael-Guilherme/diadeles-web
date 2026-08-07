@@ -1,8 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
-import { ChevronRight, Users } from 'lucide-react';
+import { BarChart3, ChevronRight, Users } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { api } from '@/shared/api/cliente';
-import { useSessao } from '@/shared/auth/sessao';
+import { ehDaGestao, useSessao } from '@/shared/auth/sessao';
 import { Cartao, Carregando, Vazio } from '@/shared/ui/componentes';
 import { Cabecalho } from '../componentes/Cabecalho';
 
@@ -25,11 +25,34 @@ export function Turmas() {
     },
   });
 
+  const gestao = ehDaGestao(usuario?.papeis ?? []);
+
   return (
     <div className="min-h-full">
       <Cabecalho titulo={`Olá, ${usuario?.nome.split(' ')[0]}`} subtitulo={usuario?.escolaNome} />
 
       <main className="space-y-(--gap-lista) px-4 py-4">
+        {/* Coordenação e gestão abrem o app para saber como está o dia inteiro,
+            não para registrar uma turma. O caminho para o painel vem antes da
+            lista por isso — para elas a lista é o detalhe. */}
+        {gestao && (
+          <Link to="/gestao" className="block">
+            <Cartao
+              interno
+              className="flex items-center gap-3 border-(color:--cor-acao-borda) bg-(color:--cor-acao-suave) transition active:brightness-95"
+            >
+              <BarChart3 size={19} className="shrink-0 text-(color:--cor-acao)" />
+              <div className="min-w-0 flex-1">
+                <p className="font-semibold text-(color:--cor-acao-forte)">A escola hoje</p>
+                <p className="text-xs text-[color:var(--color-tinta-suave)]">
+                  Painel, equipe e acesso das famílias
+                </p>
+              </div>
+              <ChevronRight size={20} className="shrink-0 text-(color:--cor-acao)" />
+            </Cartao>
+          </Link>
+        )}
+
         {isLoading && <Carregando texto="Buscando suas turmas…" />}
 
         {data?.length === 0 && (

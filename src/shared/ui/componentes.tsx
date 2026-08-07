@@ -1,4 +1,4 @@
-import type { ButtonHTMLAttributes, HTMLAttributes, ReactNode } from 'react';
+import { useId, useState, type ButtonHTMLAttributes, type HTMLAttributes, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes, type TextareaHTMLAttributes } from 'react';
 
 /**
  * Componentes compartilhados pelos três builds.
@@ -152,6 +152,159 @@ export function Aviso({ children, tom = 'alerta' }: { children: ReactNode; tom?:
       className={`rounded-(--raio) px-3.5 py-2.5 text-sm font-medium leading-snug ring-1 ring-inset ${tons[tom]}`}
     >
       {children}
+    </div>
+  );
+}
+
+const CONTROLE =
+  'w-full min-h-11 rounded-(--raio) border border-[color:var(--color-borda-forte)] bg-white px-3 text-[16px] leading-normal outline-none transition placeholder:text-[color:var(--color-tinta-tenue)] focus:border-(color:--cor-acao) focus:ring-2 focus:ring-(color:--cor-acao-suave) disabled:bg-[color:var(--color-papel)] disabled:text-[color:var(--color-tinta-suave)]';
+
+/**
+ * Campo de formulário com rótulo.
+ *
+ * O texto de 16px não é escolha estética: abaixo disso o Safari do iPhone dá
+ * zoom ao focar o campo, e a secretaria digita o cadastro no celular.
+ */
+export function Campo({
+  rotulo,
+  apoio,
+  erro,
+  ...props
+}: InputHTMLAttributes<HTMLInputElement> & { rotulo: string; apoio?: string; erro?: string }) {
+  const id = useId();
+
+  return (
+    <div className="space-y-1.5">
+      <label htmlFor={id} className="block text-sm font-semibold">
+        {rotulo}
+      </label>
+      <input id={id} className={CONTROLE} {...props} />
+      {erro ? (
+        <p className="text-xs text-[color:var(--color-alerta)]">{erro}</p>
+      ) : (
+        apoio && <p className="text-xs text-[color:var(--color-tinta-tenue)]">{apoio}</p>
+      )}
+    </div>
+  );
+}
+
+export function Area({
+  rotulo,
+  apoio,
+  ...props
+}: TextareaHTMLAttributes<HTMLTextAreaElement> & { rotulo: string; apoio?: string }) {
+  const id = useId();
+
+  return (
+    <div className="space-y-1.5">
+      <label htmlFor={id} className="block text-sm font-semibold">
+        {rotulo}
+      </label>
+      <textarea id={id} rows={3} className={`${CONTROLE} py-2.5`} {...props} />
+      {apoio && <p className="text-xs text-[color:var(--color-tinta-tenue)]">{apoio}</p>}
+    </div>
+  );
+}
+
+export function Selecao({
+  rotulo,
+  apoio,
+  children,
+  ...props
+}: SelectHTMLAttributes<HTMLSelectElement> & { rotulo: string; apoio?: string }) {
+  const id = useId();
+
+  return (
+    <div className="space-y-1.5">
+      <label htmlFor={id} className="block text-sm font-semibold">
+        {rotulo}
+      </label>
+      <select id={id} className={CONTROLE} {...props}>
+        {children}
+      </select>
+      {apoio && <p className="text-xs text-[color:var(--color-tinta-tenue)]">{apoio}</p>}
+    </div>
+  );
+}
+
+/**
+ * Lista de itens curtos — alergia, restrição, condição de saúde.
+ *
+ * Um campo de texto livre com vírgulas seria mais rápido de programar e
+ * traiçoeiro de ler: "amendoim, leite" viraria uma alergia só, e o educador
+ * confere isso antes de servir o almoço. Cada item entra e sai isolado.
+ */
+export function ListaDeItens({
+  rotulo,
+  apoio,
+  itens,
+  onMudar,
+  placeholder = 'Digite e toque em adicionar',
+}: {
+  rotulo: string;
+  apoio?: string;
+  itens: string[];
+  onMudar: (itens: string[]) => void;
+  placeholder?: string;
+}) {
+  const [rascunho, setRascunho] = useState('');
+  const id = useId();
+
+  function adicionar() {
+    const valor = rascunho.trim();
+    if (!valor || itens.includes(valor)) {
+      setRascunho('');
+      return;
+    }
+    onMudar([...itens, valor]);
+    setRascunho('');
+  }
+
+  return (
+    <div className="space-y-1.5">
+      <label htmlFor={id} className="block text-sm font-semibold">
+        {rotulo}
+      </label>
+
+      {itens.length > 0 && (
+        <ul className="flex flex-wrap gap-1.5 pb-1">
+          {itens.map((item) => (
+            <li key={item}>
+              <button
+                type="button"
+                onClick={() => onMudar(itens.filter((i) => i !== item))}
+                aria-label={`Remover ${item}`}
+                className="flex items-center gap-1.5 rounded-full bg-[color:var(--color-papel)] py-1.5 pl-3 pr-2 text-sm ring-1 ring-inset ring-[color:var(--color-borda)] transition active:scale-95"
+              >
+                {item}
+                <span aria-hidden className="text-[color:var(--color-tinta-tenue)]">×</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <div className="flex gap-2">
+        <input
+          id={id}
+          value={rascunho}
+          placeholder={placeholder}
+          onChange={(e) => setRascunho(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key !== 'Enter') return;
+            // Enter dentro de um formulário submeteria o cadastro inteiro com
+            // a alergia ainda por adicionar.
+            e.preventDefault();
+            adicionar();
+          }}
+          className={CONTROLE}
+        />
+        <Botao type="button" variante="secundario" onClick={adicionar} disabled={!rascunho.trim()}>
+          Adicionar
+        </Botao>
+      </div>
+
+      {apoio && <p className="text-xs text-[color:var(--color-tinta-tenue)]">{apoio}</p>}
     </div>
   );
 }

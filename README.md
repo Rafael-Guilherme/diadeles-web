@@ -39,9 +39,15 @@ src/
   apps/
     site/         landing: proposta, planos, perguntas — não usa a API
     educador/     turmas, grade em lote, chamada, fechamento do turno
+                  + gestão: painel do dia, equipe e acesso das famílias
     responsavel/  o dia, avisos, cardápio
   testes/       smoke de renderização do site e dos dois apps
 ```
+
+As rotas `/gestao` só são montadas para `GESTOR`, `COORDENADOR` e `SUPER_ADMIN` — os mesmos papéis
+que a API aceita nos endpoints correspondentes. Quem decide o acesso continua sendo a API, que
+confere o papel em cada requisição; esconder a rota aqui serve para não oferecer uma tela que
+resultaria em 403.
 
 ## O contrato com a API
 
@@ -69,5 +75,6 @@ visível no fechamento do turno — o que não pode acontecer é sumir em silên
 |---|---|
 | `pnpm build` | Constrói os três em `dist/site`, `dist/educador` e `dist/responsavel` |
 | `pnpm test` | Renderiza o site e os dois apps em jsdom |
+| `pnpm lint` | ESLint, com as regras de hooks do React |
 | `pnpm gen:api` | Regenera os tipos a partir da API |
 | `pnpm gen:icones` | Regera os ícones dos dois PWAs e o favicon do site |

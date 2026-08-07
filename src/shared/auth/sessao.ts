@@ -61,3 +61,14 @@ export const sessaoStore = useSessao;
 export function estaAutenticado(): boolean {
   return Boolean(useSessao.getState().accessToken);
 }
+
+/**
+ * Espelha `PAPEIS_GESTAO` da API (src/common/auth/tipos.ts).
+ *
+ * Aqui serve só para não oferecer uma tela que resultaria em 403 — quem decide
+ * o acesso continua sendo a API, que checa o papel em cada endpoint. Duplicar a
+ * lista é o preço de não ter um pacote compartilhado entre os dois projetos.
+ */
+export function ehDaGestao(papeis: string[]): boolean {
+  return papeis.some((papel) => ['GESTOR', 'COORDENADOR', 'SUPER_ADMIN'].includes(papel));
+}

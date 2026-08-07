@@ -42,15 +42,18 @@ export function Comunicados() {
   return (
     <div className="mx-auto w-full max-w-md">
       <header className="area-segura-topo px-5 pb-4">
-        <h1 className="display text-2xl">Avisos da escola</h1>
+        {/* "Comunicados", não "Avisos": desde que o sino existe, "aviso" é o
+            que aconteceu com a criança hoje. Circular da escola é outra coisa,
+            e chamar as duas do mesmo jeito faria a mãe procurar no lugar errado. */}
+        <h1 className="display text-2xl">Comunicados</h1>
       </header>
 
       <main className="space-y-(--gap-lista) px-4 pb-6">
         {data?.length === 0 && (
           <Vazio
             icone={<Megaphone size={22} />}
-            titulo="Nenhum aviso por enquanto"
-            descricao="Quando a escola publicar algo, aparece aqui e você recebe um alerta."
+            titulo="Nenhum comunicado por enquanto"
+            descricao="Quando a escola publicar algo, aparece aqui e você recebe um aviso."
           />
         )}
 

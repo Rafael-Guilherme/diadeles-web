@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, useParams } from 'react-router-dom';
-import { AlertTriangle, ClipboardList, Pill, UserCheck } from 'lucide-react';
+import { AlertTriangle, ClipboardList, FileText, Pill, UserCheck } from 'lucide-react';
 import { api } from '@/shared/api/cliente';
 import { fila, type TipoRegistro } from '@/shared/offline/fila';
 import { sincronizar, notificarMudancaNaFila } from '@/shared/offline/sincronizador';
@@ -157,11 +157,23 @@ export function Grade() {
           ];
 
           return (
-            <li key={crianca.id}>
+            <li key={crianca.id} className="relative">
+              {/* O atalho para a ficha fica fora do botão de seleção, não
+                  dentro: link aninhado em botão é HTML inválido, e o toque
+                  disputaria com a seleção — que é o gesto que o educador repete
+                  vinte vezes por turno. */}
+              <Link
+                to={`/turma/${turmaId}/crianca/${crianca.id}`}
+                aria-label={`Abrir a ficha de ${crianca.nomeSocial ?? crianca.nome}`}
+                className="absolute right-1 top-1 z-10 flex h-10 w-10 items-center justify-center rounded-full text-[color:var(--color-tinta-tenue)] transition active:bg-neutral-100"
+              >
+                <FileText size={16} />
+              </Link>
+
               <button
                 onClick={() => !crianca.ausente && alternar(crianca.id)}
                 disabled={crianca.ausente}
-                className={`w-full rounded-(--raio-lg) border p-3 text-left transition ${
+                className={`w-full rounded-(--raio-lg) border p-3 pr-12 text-left transition ${
                   crianca.ausente
                     ? 'border-[color:var(--color-borda)] bg-neutral-50 opacity-60'
                     : selecionada

@@ -46,11 +46,11 @@ const SESSAO: Sessao = {
   },
 };
 
-function envolver(no: React.ReactNode) {
+function envolver(no: React.ReactNode, rota = '/') {
   const cliente = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return (
     <QueryClientProvider client={cliente}>
-      <MemoryRouter>{no}</MemoryRouter>
+      <MemoryRouter initialEntries={[rota]}>{no}</MemoryRouter>
     </QueryClientProvider>
   );
 }
@@ -92,6 +92,85 @@ describe('app do educador', () => {
     expect(await screen.findByText('Berçário II')).toBeDefined();
     expect(screen.getByText('Olá, Ana')).toBeDefined();
     expect(screen.getByText(/7 crianças/)).toBeDefined();
+  });
+});
+
+/**
+ * A área de gestão existe para papéis que a API deixa entrar nela. Estes testes
+ * guardam os dois lados: quem não pode não vê o caminho nem alcança a rota
+ * digitando — do contrário a educadora encontraria três telas de erro 403.
+ */
+describe('área de gestão', () => {
+  const TURMAS = {
+    '/v1/turmas': [
+      {
+        id: 't1',
+        nome: 'Berçário II',
+        grupoEtario: 'CRIANCAS_BEM_PEQUENAS',
+        turno: 'integral',
+        cor: '#6BA292',
+        criancasAtivas: 7,
+        educadores: ['Ana Souza'],
+      },
+    ],
+  };
+
+  const RESUMO = {
+    '/v1/escola/resumo': {
+      escola: {
+        id: 'e1',
+        nome: 'Escola Modelo Cantinho Feliz',
+        slug: 'escola-modelo',
+        timezone: 'America/Sao_Paulo',
+        configuracoes: {},
+      },
+      criancasAtivas: 12,
+      turmas: 2,
+      educadores: 2,
+      familiasVinculadas: 12,
+      presentesHoje: 10,
+      ausentesHoje: 1,
+      registrosHoje: 32,
+    },
+  };
+
+  const gestora = {
+    ...SESSAO,
+    usuario: { ...SESSAO.usuario, nome: 'Carla Mendes', papeis: ['GESTOR'] },
+  };
+
+  it('não oferece o painel para quem só registra turma', async () => {
+    responderCom(TURMAS);
+
+    useSessao.getState().definir(SESSAO); // Ana, EDUCADOR
+    render(envolver(<AppEducador />));
+
+    expect(await screen.findByText('Berçário II')).toBeDefined();
+    expect(screen.queryByText('A escola hoje')).toBeNull();
+  });
+
+  it('devolve a educadora para as turmas se ela abrir /gestao direto', async () => {
+    responderCom(TURMAS);
+
+    useSessao.getState().definir(SESSAO);
+    render(envolver(<AppEducador />, '/gestao'));
+
+    expect(await screen.findByText('Berçário II')).toBeDefined();
+  });
+
+  it('mostra o painel do dia para a gestão', async () => {
+    responderCom(RESUMO);
+
+    useSessao.getState().definir(gestora);
+    render(envolver(<AppEducador />, '/gestao'));
+
+    expect(await screen.findByText('10')).toBeDefined();
+    expect(screen.getByText('presentes')).toBeDefined();
+
+    // 12 crianças, 10 presentes e 1 ausente deixam uma sem chamada — é o número
+    // que a tela calcula, e o único ali que pede providência.
+    expect(screen.getByText('sem chamada')).toBeDefined();
+    expect(screen.getAllByText('1').length).toBeGreaterThanOrEqual(2);
   });
 });
 
@@ -154,5 +233,45 @@ describe('app da família', () => {
       expect(screen.getByText(/Higienizamos e aplicamos curativo/)).toBeDefined(),
     );
     expect(screen.getByText(/Alergia registrada: Amendoim/)).toBeDefined();
+  });
+
+  /**
+   * A caixa de avisos é a fonte de verdade do que foi notificado: push não
+   * chega em aparelho desligado e e-mail cai em spam, mas o que a escola
+   * mandou tem que estar aqui de qualquer jeito.
+   *
+   * O jsdom não implementa `serviceWorker` nem `Notification` — o mesmo caso do
+   * navegador sem Web Push. A tela precisa abrir assim mesmo, sem oferecer um
+   * botão de ativar que não teria como funcionar.
+   */
+  it('lista os avisos recebidos mesmo sem suporte a push no navegador', async () => {
+    responderCom({
+      '/v1/notificacoes': {
+        naoLidas: 1,
+        itens: [
+          {
+            id: 'n1',
+            tipo: 'RESUMO_DIARIO',
+            titulo: 'O dia de Sofia',
+            corpo: 'Sofia comeu bem, dormiu e estava alegre.',
+            link: '/',
+            gravidade: 'NORMAL',
+            criadoEm: new Date().toISOString(),
+            lida: false,
+          },
+        ],
+      },
+    });
+
+    useSessao.getState().definir({
+      ...SESSAO,
+      usuario: { ...SESSAO.usuario, nome: 'Marina Prado', papeis: ['RESPONSAVEL'], app: 'responsavel' },
+    });
+
+    render(envolver(<AppResponsavel />, '/avisos'));
+
+    expect(await screen.findByText('O dia de Sofia')).toBeDefined();
+    expect(screen.getByText('Sofia comeu bem, dormiu e estava alegre.')).toBeDefined();
+    expect(screen.queryByText(/Ativar avisos/)).toBeNull();
   });
 });

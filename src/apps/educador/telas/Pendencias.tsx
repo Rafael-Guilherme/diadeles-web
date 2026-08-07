@@ -1,6 +1,6 @@
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { useParams } from 'react-router-dom';
-import { CheckCircle2 } from 'lucide-react';
+import { CheckCircle2, Send } from 'lucide-react';
 import { api } from '@/shared/api/cliente';
 import type { TipoRegistro } from '@/shared/offline/fila';
 import { useFila } from '@/shared/offline/sincronizador';
@@ -35,6 +35,16 @@ export function Pendencias() {
   useEffect(() => {
     void fila.comErro().then(setErrosNaFila);
   }, [estadoFila.comErro]);
+
+  const fechar = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await api.POST('/v1/turmas/{id}/fechar-turno', {
+        params: { path: { id: turmaId } },
+      });
+      if (error) throw error;
+      return data;
+    },
+  });
 
   if (isLoading || !data) {
     return (
@@ -118,6 +128,53 @@ export function Pendencias() {
           ))}
         </ul>
       )}
+
+      {/* Disponível mesmo com pendências: uma criança sem registro de sono não
+          pode impedir que as outras dezenove famílias saibam do dia. Um botão
+          que só libera com tudo preenchido ensina o educador a preencher
+          qualquer coisa para liberá-lo. */}
+      <div className="space-y-3 pt-2">
+        {fechar.data ? (
+          <Aviso tom="ok">
+            {fechar.data.familiasAvisadas > 0
+              ? `Turno fechado. ${fechar.data.familiasAvisadas} ${
+                  fechar.data.familiasAvisadas === 1 ? 'família recebeu' : 'famílias receberam'
+                } o resumo do dia.`
+              : 'Turno fechado. As famílias já tinham recebido o resumo de hoje.'}
+            {fechar.data.semResponsavel > 0 && (
+              <>
+                {' '}
+                {fechar.data.semResponsavel}{' '}
+                {fechar.data.semResponsavel === 1
+                  ? 'criança ainda não tem responsável'
+                  : 'crianças ainda não têm responsável'}{' '}
+                com acesso ao app — a secretaria precisa enviar o convite.
+              </>
+            )}
+          </Aviso>
+        ) : (
+          <Botao bloco disabled={fechar.isPending} onClick={() => fechar.mutate()}>
+            {fechar.isPending ? (
+              'Enviando…'
+            ) : (
+              <>
+                <Send size={16} /> Fechar turno e avisar as famílias
+              </>
+            )}
+          </Botao>
+        )}
+
+        {fechar.isError && (
+          <Aviso>Não consegui fechar o turno agora. Verifique a conexão e tente de novo.</Aviso>
+        )}
+
+        {estadoFila.pendentes > 0 && !fechar.data && (
+          <p className="text-center text-xs leading-relaxed text-[color:var(--color-tinta-suave)]">
+            O que ainda está na fila sobe sozinho e entra no dia da criança — mas não entra neste
+            resumo. Se der, espere a fila zerar antes de fechar.
+          </p>
+        )}
+      </div>
     </div>
   );
 }

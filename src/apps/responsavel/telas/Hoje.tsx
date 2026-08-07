@@ -1,8 +1,10 @@
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import {
   AlertTriangle,
   Baby,
+  Bell,
+  Check,
   Download,
   Droplets,
   LogIn,
@@ -18,6 +20,7 @@ import { api } from '@/shared/api/cliente';
 import { useSessao } from '@/shared/auth/sessao';
 import { useInstalacao } from '@/shared/pwa/instalacao';
 import { Cartao, Carregando, Etiqueta, Vazio } from '@/shared/ui/componentes';
+import { ConviteAvisos } from '../componentes/ConviteAvisos';
 
 const ICONES: Record<string, ReactNode> = {
   ALIMENTACAO: <Utensils size={16} />,
@@ -36,6 +39,13 @@ function conduta(dados: unknown): string | null {
   return typeof valor === 'string' && valor.trim() ? valor : null;
 }
 
+/** `null` quando a família ainda não confirmou que leu a ocorrência. */
+function cienteEm(dados: unknown): string | null {
+  if (typeof dados !== 'object' || !dados || !('cienteEm' in dados)) return null;
+  const valor = (dados as Record<string, unknown>).cienteEm;
+  return typeof valor === 'string' ? valor : null;
+}
+
 /**
  * A tela que a família abre. Tudo aqui é frase pronta, montada na API —
  * ninguém em casa quer decifrar "ALIMENTACAO: aceitacao=METADE".
@@ -44,6 +54,7 @@ export function Hoje() {
   const usuario = useSessao((estado) => estado.usuario);
   const encerrar = useSessao((estado) => estado.encerrar);
   const { instalado } = useInstalacao();
+  const clienteQuery = useQueryClient();
 
   const { data: criancas, isLoading: carregandoCriancas } = useQuery({
     queryKey: ['minhas-criancas'],
@@ -66,6 +77,25 @@ export function Hoje() {
       if (error) throw error;
       return data;
     },
+  });
+
+  const { data: avisos } = useQuery({
+    queryKey: ['avisos'],
+    queryFn: async () => {
+      const { data, error } = await api.GET('/v1/notificacoes');
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const confirmar = useMutation({
+    mutationFn: async (ocorrenciaId: string) => {
+      const { error } = await api.POST('/v1/ocorrencias/{id}/ciente', {
+        params: { path: { id: ocorrenciaId } },
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => clienteQuery.invalidateQueries({ queryKey: ['dia', criancaId] }),
   });
 
   if (carregandoCriancas || isLoading) return <Carregando texto="Buscando o dia…" />;
@@ -94,14 +124,32 @@ export function Hoje() {
               {dia?.crianca.turmaNome} · {dia?.crianca.idade}
             </p>
           </div>
-          {!instalado && (
+          <div className="flex shrink-0 items-center gap-2">
+            {!instalado && (
+              <Link
+                to="/instalar"
+                className="flex min-h-11 items-center gap-1.5 rounded-full bg-white px-3.5 text-xs font-semibold text-(color:--cor-acao) ring-1 ring-(color:--cor-acao-borda) transition active:scale-95"
+              >
+                <Download size={14} /> Instalar
+              </Link>
+            )}
             <Link
-              to="/instalar"
-              className="flex min-h-11 shrink-0 items-center gap-1.5 rounded-full bg-white px-3.5 text-xs font-semibold text-(color:--cor-acao) ring-1 ring-(color:--cor-acao-borda) transition active:scale-95"
+              to="/avisos"
+              aria-label={
+                avisos?.naoLidas
+                  ? `Avisos, ${avisos.naoLidas} não ${avisos.naoLidas === 1 ? 'lido' : 'lidos'}`
+                  : 'Avisos'
+              }
+              className="relative flex h-11 w-11 items-center justify-center rounded-full bg-white text-(color:--cor-acao) ring-1 ring-(color:--cor-acao-borda) transition active:scale-95"
             >
-              <Download size={14} /> Instalar
+              <Bell size={18} />
+              {Boolean(avisos?.naoLidas) && (
+                <span className="numerico absolute -right-0.5 -top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-[color:var(--color-alerta)] px-1 text-2xs font-bold text-white">
+                  {avisos!.naoLidas}
+                </span>
+              )}
             </Link>
-          )}
+          </div>
         </div>
 
         {dia && (
@@ -167,9 +215,32 @@ export function Hoje() {
                   {conduta(item.dados)}
                 </p>
               )}
+
+              {/* A confirmação fecha o ciclo: sem ela a escola não tem como
+                  provar que avisou, e é essa prova que ela precisa quando a
+                  conversa vira reclamação. */}
+              {item.categoria === 'OCORRENCIA' &&
+                (cienteEm(item.dados) ? (
+                  <p className="mt-2 flex items-center gap-1 text-xs text-[color:var(--color-ok)]">
+                    <Check size={13} /> Você confirmou que leu
+                  </p>
+                ) : (
+                  <button
+                    onClick={() => confirmar.mutate(item.id)}
+                    disabled={confirmar.isPending}
+                    className="mt-2 min-h-11 w-full rounded-(--raio) bg-(color:--cor-acao-suave) text-sm font-semibold text-(color:--cor-acao) transition active:scale-[0.99] disabled:opacity-50"
+                  >
+                    Li e estou ciente
+                  </button>
+                ))}
             </div>
           </Cartao>
         ))}
+
+        {/* Depois da timeline, não antes: o pedido de permissão só aparece
+            quando já houve o que mostrar. Pedir na primeira tela troca a chance
+            de avisar todo dia por um "Bloquear" reflexo (plano-produto §8). */}
+        {Boolean(dia?.timeline.length) && <ConviteAvisos />}
 
         {dia && !dia.saidaEm && dia.presente && (
           <p className="pt-2 text-center text-xs text-[color:var(--color-tinta-suave)]">

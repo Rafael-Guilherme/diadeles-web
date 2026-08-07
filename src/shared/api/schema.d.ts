@@ -135,7 +135,7 @@ export interface paths {
         };
         /**
          * Perfis disponíveis para experimentar
-         * @description Só responde com DEMO_MODE=true. Alimenta a tela de entrada dos dois PWAs.
+         * @description Só responde com DEMO_MODE=true. Alimenta a tela de entrada dos dois PWAs, e é onde a escola de demonstração é remontada se o dia dela já passou.
          */
         get: operations["DemoController_perfis"];
         put?: never;
@@ -310,6 +310,151 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/turmas/{id}/fechar-turno": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Fecha o turno e envia o resumo do dia às famílias
+         * @description Cada responsável com vínculo ativo recebe o dia da criança em uma frase. Fechar de novo no mesmo dia não reenvia — quem já foi avisado é contado em `jaAvisadas`.
+         */
+        post: operations["TurmasController_fecharTurno"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/notificacoes/chave-publica": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Chave pública VAPID para o navegador se inscrever */
+        get: operations["NotificacoesController_chavePublica"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/notificacoes/devices": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Registra a inscrição de push deste aparelho
+         * @description Idempotente pelo endpoint — o navegador o rotaciona por conta própria.
+         */
+        post: operations["NotificacoesController_registrarDevice"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/notificacoes/devices/remover": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Desliga os avisos deste aparelho */
+        post: operations["NotificacoesController_removerDevice"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/notificacoes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Caixa de avisos dentro do app
+         * @description O canal externo avisa, mas o app é a fonte de verdade: tudo o que foi notificado está aqui, mesmo que o push e o e-mail tenham falhado.
+         */
+        get: operations["NotificacoesController_listar"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/notificacoes/{id}/lida": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Marca um aviso como lido */
+        post: operations["NotificacoesController_marcarLida"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/notificacoes/lidas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Marca todos os avisos como lidos */
+        post: operations["NotificacoesController_marcarTodasLidas"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/notificacoes/teste": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Envia um aviso de teste para o próprio usuário */
+        post: operations["NotificacoesController_teste"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/criancas/minhas": {
         parameters: {
             query?: never;
@@ -321,6 +466,85 @@ export interface paths {
         get: operations["CriancasController_minhas"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/criancas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Crianças da escola, para o cadastro da secretaria */
+        get: operations["CriancasController_listar"];
+        put?: never;
+        /**
+         * Cadastra uma criança
+         * @description Com `turmaId`, já sai matriculada — sem turma ela não aparece na grade de ninguém.
+         */
+        post: operations["CriancasController_criar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/criancas/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Ficha da criança
+         * @description Dados, responsáveis, autorizados a retirar, medicação vigente e consentimentos. A equipe vê qualquer criança da escola; o responsável, só as suas.
+         */
+        get: operations["CriancasController_ficha"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Atualiza o cadastro da criança */
+        patch: operations["CriancasController_atualizar"];
+        trace?: never;
+    };
+    "/v1/criancas/{id}/arquivar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Arquiva a criança
+         * @description Nunca apaga: registro pedagógico tem retenção de 5 anos e excluir levaria junto a rotina, as ocorrências e as presenças.
+         */
+        post: operations["CriancasController_arquivar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/criancas/{id}/desarquivar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Traz a criança de volta ao cadastro ativo */
+        post: operations["CriancasController_desarquivar"];
         delete?: never;
         options?: never;
         head?: never;
@@ -339,6 +563,80 @@ export interface paths {
          * @description Linha do tempo em frases prontas, mais um resumo de uma linha para o card.
          */
         get: operations["CriancasController_dia"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/criancas/{id}/consentimentos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Concede ou revoga o uso de imagem da criança
+         * @description Granular por escopo e revogável a qualquer momento (LGPD art. 14). A resposta anterior não é apagada — é revogada e mantida como prova de conformidade.
+         */
+        post: operations["CriancasController_decidirConsentimento"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/matriculas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Matricula a criança numa turma
+         * @description Se ela já estiver ativa em outra, a anterior é encerrada na mesma transação e a resposta vem com `transferida: true`.
+         */
+        post: operations["MatriculasController_matricular"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/matriculas/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Tranca, encerra ou reabre a matrícula */
+        patch: operations["MatriculasController_atualizar"];
+        trace?: never;
+    };
+    "/v1/matriculas/crianca/{criancaId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Histórico de matrículas da criança */
+        get: operations["MatriculasController_historico"];
         put?: never;
         post?: never;
         delete?: never;
@@ -466,6 +764,47 @@ export interface paths {
         get: operations["CardapiosController_semana"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ocorrencias": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Ocorrências do dia, da turma ou da escola inteira */
+        get: operations["OcorrenciasController_listar"];
+        put?: never;
+        /**
+         * Registra uma ocorrência e avisa a família
+         * @description Idempotente pelo `clientId`. Gravidade GRAVE sai por push **e** e-mail; as demais seguem o roteamento normal de canal.
+         */
+        post: operations["OcorrenciasController_registrar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ocorrencias/{id}/ciente": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Responsável confirma que leu a ocorrência
+         * @description A primeira confirmação é a que vale — reabrir a tela não reescreve a hora.
+         */
+        post: operations["OcorrenciasController_confirmarCiencia"];
         delete?: never;
         options?: never;
         head?: never;
@@ -600,6 +939,10 @@ export interface components {
             /** @description Link pronto para o QR do mural */
             link: string;
         };
+        CriancaSemAcessoDto: {
+            id: string;
+            nome: string;
+        };
         TurmaDto: {
             id: string;
             nome: string;
@@ -651,6 +994,56 @@ export interface components {
             /** @description Crianças com todos os tipos esperados já registrados */
             completas: number;
         };
+        FechamentoDto: {
+            /** @example 2026-08-02 */
+            data: string;
+            /** @description Crianças presentes hoje — as ausentes não geram resumo */
+            criancas: number;
+            /** @description Responsáveis que receberam o resumo agora */
+            familiasAvisadas: number;
+            /** @description Já haviam recebido o resumo hoje; não recebem de novo */
+            jaAvisadas: number;
+            /** @description Crianças presentes sem nenhum responsável com acesso ao app */
+            semResponsavel: number;
+        };
+        ChavePublicaDto: {
+            /** @description Chave pública VAPID. `null` quando o push não está configurado no servidor. */
+            chavePublica: string | null;
+        };
+        RegistrarDeviceDto: {
+            /**
+             * @description Endpoint do Web Push devolvido por PushManager.subscribe()
+             * @example https://fcm.googleapis.com/fcm/send/…
+             */
+            endpoint: string;
+            /** @description Chave pública da inscrição (base64url) */
+            p256dh: string;
+            /** @description Segredo de autenticação da inscrição (base64url) */
+            auth: string;
+            /** @example iPhone · Safari */
+            plataforma?: string;
+        };
+        RemoverDeviceDto: {
+            endpoint: string;
+        };
+        NotificacaoDto: {
+            id: string;
+            /** @example RESUMO_DIARIO */
+            tipo: string;
+            titulo: string;
+            corpo: string;
+            link: string | null;
+            /** @example NORMAL */
+            gravidade: string;
+            /** Format: date-time */
+            criadoEm: string;
+            lida: boolean;
+        };
+        CaixaDeAvisosDto: {
+            itens: components["schemas"]["NotificacaoDto"][];
+            /** @description Contador do sino */
+            naoLidas: number;
+        };
         CriancaResumoDto: {
             id: string;
             nome: string;
@@ -659,6 +1052,127 @@ export interface components {
             idade: string;
             turmaNome?: string | null;
             alergias: string[];
+        };
+        MatriculaDto: {
+            id: string;
+            turmaId: string;
+            turmaNome: string;
+            /** @enum {string} */
+            status: "ATIVA" | "TRANCADA" | "ENCERRADA" | "LISTA_ESPERA";
+            /** @example 2026-02-01 */
+            inicio: string;
+            fim?: string | null;
+        };
+        CriancaNaListaDto: {
+            id: string;
+            nome: string;
+            nomeSocial?: string | null;
+            /** @example 2a 4m */
+            idade: string;
+            /** @example 2023-04-12 */
+            dataNascimento: string;
+            alergias: string[];
+            matricula?: components["schemas"]["MatriculaDto"] | null;
+            /** @description Responsáveis com vínculo ativo */
+            responsaveis: number;
+            arquivada: boolean;
+        };
+        CriarCriancaDto: {
+            /** @example Sofia Prado */
+            nome: string;
+            /** @description Como a criança é chamada, se diferente do registro */
+            nomeSocial?: string;
+            /**
+             * @description AAAA-MM-DD
+             * @example 2023-04-12
+             */
+            dataNascimento: string;
+            /**
+             * @example [
+             *       "Amendoim"
+             *     ]
+             */
+            alergias?: string[];
+            restricoesAlimentares?: string[];
+            condicoesSaude?: string[];
+            observacoesSaude?: string;
+            /** @description Matricula na turma já no cadastro — evita a criança nascer sem turma */
+            turmaId?: string;
+        };
+        ResponsavelDaCriancaDto: {
+            id: string;
+            nome: string;
+            celular?: string | null;
+            /** @example MAE */
+            tipo: string;
+            podeRetirar: boolean;
+            podeAutorizar: boolean;
+            /** @description Bloqueado por decisão judicial ou medida protetiva */
+            bloqueado: boolean;
+            /** @description Já abriu o app ao menos uma vez */
+            ativou: boolean;
+        };
+        AutorizadoDto: {
+            id: string;
+            nome: string;
+            documento: string;
+            parentesco?: string | null;
+            validoAte?: string | null;
+            ativo: boolean;
+        };
+        MedicacaoDoDiaDto: {
+            id: string;
+            medicamento: string;
+            dosagem: string;
+            /** @example oral */
+            via: string;
+            /** @description ["10:00","16:00"] ou { seNecessario: true } */
+            horarios: Record<string, never>;
+            /** @example 2026-08-01 */
+            inicio: string;
+            /** @example 2026-08-10 */
+            fim: string;
+            observacoes?: string | null;
+            /** @description Horários já administrados hoje — é o que diz se ainda falta dar */
+            administradoHoje: string[];
+        };
+        ConsentimentoDto: {
+            /** @enum {string} */
+            escopo: "INTERNO" | "MATERIAL_DIVULGACAO" | "REDES_SOCIAIS";
+            concedido: boolean;
+            /** @description Nunca respondido pela família */
+            semResposta: boolean;
+            /** Format: date-time */
+            decididoEm?: string | null;
+        };
+        FichaDaCriancaDto: {
+            id: string;
+            nome: string;
+            nomeSocial?: string | null;
+            /** @example 2023-04-12 */
+            dataNascimento: string;
+            /** @example 2a 4m */
+            idade: string;
+            alergias: string[];
+            restricoesAlimentares: string[];
+            condicoesSaude: string[];
+            observacoesSaude?: string | null;
+            arquivada: boolean;
+            matricula?: components["schemas"]["MatriculaDto"] | null;
+            responsaveis: components["schemas"]["ResponsavelDaCriancaDto"][];
+            autorizados: components["schemas"]["AutorizadoDto"][];
+            medicacoes: components["schemas"]["MedicacaoDoDiaDto"][];
+            consentimentos: components["schemas"]["ConsentimentoDto"][];
+        };
+        AtualizarCriancaDto: {
+            nome?: string;
+            nomeSocial?: string | null;
+            /** @example 2023-04-12 */
+            dataNascimento?: string;
+            alergias?: string[];
+            restricoesAlimentares?: string[];
+            condicoesSaude?: string[];
+            observacoesSaude?: string | null;
         };
         ItemTimelineDto: {
             id: string;
@@ -686,6 +1200,46 @@ export interface components {
             timeline: components["schemas"]["ItemTimelineDto"][];
             /** @description Resumo em uma frase, para o card e a notificação */
             resumo: string;
+            /** @description Medicação autorizada e vigente hoje — some da ficha quando a autorização vence */
+            medicacoes: components["schemas"]["MedicacaoDoDiaDto"][];
+        };
+        DecidirConsentimentoDto: {
+            /** @enum {string} */
+            escopo: "INTERNO" | "MATERIAL_DIVULGACAO" | "REDES_SOCIAIS";
+            /** @description false revoga o consentimento vigente */
+            concedido: boolean;
+        };
+        MatricularDto: {
+            criancaId: string;
+            /** @description Se a criança já estiver ativa em outra turma, isto é uma transferência */
+            turmaId: string;
+        };
+        MatriculaCompletaDto: {
+            id: string;
+            criancaId: string;
+            turmaId: string;
+            turmaNome: string;
+            /** @enum {string} */
+            status: "ATIVA" | "TRANCADA" | "ENCERRADA" | "LISTA_ESPERA";
+            /** @example 2026-02-01 */
+            inicio: string;
+            fim?: string | null;
+            /** @description Havia matrícula ativa em outra turma, que foi encerrada */
+            transferida: boolean;
+        };
+        AtualizarMatriculaDto: {
+            /** @enum {string} */
+            status: "ATIVA" | "TRANCADA" | "ENCERRADA" | "LISTA_ESPERA";
+        };
+        HistoricoMatriculaDto: {
+            id: string;
+            turmaId: string;
+            turmaNome: string;
+            /** @enum {string} */
+            status: "ATIVA" | "TRANCADA" | "ENCERRADA" | "LISTA_ESPERA";
+            /** @example 2026-02-01 */
+            inicio: string;
+            fim?: string | null;
         };
         CheckinDto: {
             criancaId: string;
@@ -774,6 +1328,49 @@ export interface components {
              *     }
              */
             refeicoes: Record<string, never>;
+        };
+        CriarOcorrenciaDto: {
+            /** @description UUID gerado no cliente — reenvio não cria uma segunda ocorrência */
+            clientId: string;
+            criancaId: string;
+            /** @enum {string} */
+            tipo: "FEBRE" | "QUEDA" | "MORDIDA" | "MACHUCADO" | "ALERGIA" | "VOMITO" | "CHORO_PROLONGADO" | "COMPORTAMENTO" | "OUTRO";
+            /** @enum {string} */
+            gravidade: "LEVE" | "MODERADA" | "GRAVE";
+            /** @example 2026-08-06T18:20:00.000Z */
+            ocorridoEm: string;
+            /** @example Parque */
+            local?: string;
+            /** @description O que aconteceu */
+            descricao: string;
+            /** @description O que a escola fez — é isto que transforma o registro em prova de cuidado */
+            conduta: string;
+            /** @example 38.4 */
+            temperatura?: number;
+        };
+        OcorrenciaDto: {
+            id: string;
+            criancaId: string;
+            criancaNome: string;
+            /** @enum {string} */
+            tipo: "FEBRE" | "QUEDA" | "MORDIDA" | "MACHUCADO" | "ALERGIA" | "VOMITO" | "CHORO_PROLONGADO" | "COMPORTAMENTO" | "OUTRO";
+            /** @enum {string} */
+            gravidade: "LEVE" | "MODERADA" | "GRAVE";
+            /** Format: date-time */
+            ocorridoEm: string;
+            local?: string | null;
+            descricao: string;
+            conduta: string;
+            temperatura?: number | null;
+            /** @description Frase pronta, no tom em que a família lê */
+            titulo: string;
+            /**
+             * Format: date-time
+             * @description Quando a família confirmou que leu — o que fecha o ciclo da comunicação
+             */
+            cienteEm?: string | null;
+            /** @description Responsáveis avisados no registro */
+            familiasAvisadas: number;
         };
     };
     responses: never;
@@ -1123,7 +1720,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["CriancaSemAcessoDto"][];
+                };
             };
         };
     };
@@ -1169,6 +1768,164 @@ export interface operations {
             };
         };
     };
+    TurmasController_fecharTurno: {
+        parameters: {
+            query?: {
+                data?: string;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FechamentoDto"];
+                };
+            };
+        };
+    };
+    NotificacoesController_chavePublica: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChavePublicaDto"];
+                };
+            };
+        };
+    };
+    NotificacoesController_registrarDevice: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RegistrarDeviceDto"];
+            };
+        };
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    NotificacoesController_removerDevice: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RemoverDeviceDto"];
+            };
+        };
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    NotificacoesController_listar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CaixaDeAvisosDto"];
+                };
+            };
+        };
+    };
+    NotificacoesController_marcarLida: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    NotificacoesController_marcarTodasLidas: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    NotificacoesController_teste: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificacaoDto"];
+                };
+            };
+        };
+    };
     CriancasController_minhas: {
         parameters: {
             query?: never;
@@ -1184,6 +1941,139 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CriancaResumoDto"][];
+                };
+            };
+        };
+    };
+    CriancasController_listar: {
+        parameters: {
+            query?: {
+                turmaId?: string;
+                arquivadas?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CriancaNaListaDto"][];
+                };
+            };
+        };
+    };
+    CriancasController_criar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CriarCriancaDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CriancaNaListaDto"];
+                };
+            };
+        };
+    };
+    CriancasController_ficha: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FichaDaCriancaDto"];
+                };
+            };
+        };
+    };
+    CriancasController_atualizar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AtualizarCriancaDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FichaDaCriancaDto"];
+                };
+            };
+        };
+    };
+    CriancasController_arquivar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FichaDaCriancaDto"];
+                };
+            };
+        };
+    };
+    CriancasController_desarquivar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FichaDaCriancaDto"];
                 };
             };
         };
@@ -1207,6 +2097,100 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DiaDaCriancaDto"];
+                };
+            };
+        };
+    };
+    CriancasController_decidirConsentimento: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DecidirConsentimentoDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConsentimentoDto"][];
+                };
+            };
+        };
+    };
+    MatriculasController_matricular: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MatricularDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MatriculaCompletaDto"];
+                };
+            };
+        };
+    };
+    MatriculasController_atualizar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AtualizarMatriculaDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MatriculaCompletaDto"];
+                };
+            };
+        };
+    };
+    MatriculasController_historico: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                criancaId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HistoricoMatriculaDto"][];
                 };
             };
         };
@@ -1362,6 +2346,72 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CardapioDto"][];
+                };
+            };
+        };
+    };
+    OcorrenciasController_listar: {
+        parameters: {
+            query?: {
+                turmaId?: string;
+                data?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OcorrenciaDto"][];
+                };
+            };
+        };
+    };
+    OcorrenciasController_registrar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CriarOcorrenciaDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OcorrenciaDto"];
+                };
+            };
+        };
+    };
+    OcorrenciasController_confirmarCiencia: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OcorrenciaDto"];
                 };
             };
         };

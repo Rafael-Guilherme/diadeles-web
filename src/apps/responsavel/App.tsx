@@ -1,11 +1,13 @@
 import { Navigate, NavLink, Route, Routes, useNavigate } from 'react-router-dom';
-import { CalendarDays, Home, Megaphone } from 'lucide-react';
+import { Baby, CalendarDays, Home, Megaphone } from 'lucide-react';
 import { useSessao } from '@/shared/auth/sessao';
 import { Entrada } from '@/shared/telas/Entrada';
 import { Instalar } from '@/shared/telas/Instalar';
 import { Hoje } from './telas/Hoje';
 import { Comunicados } from './telas/Comunicados';
 import { Cardapio } from './telas/Cardapio';
+import { Avisos } from './telas/Avisos';
+import { Crianca } from './telas/Crianca';
 
 export function App() {
   const usuario = useSessao((estado) => estado.usuario);
@@ -27,6 +29,11 @@ export function App() {
           <Route path="/" element={<Hoje />} />
           <Route path="/comunicados" element={<Comunicados />} />
           <Route path="/cardapio" element={<Cardapio />} />
+          <Route path="/crianca" element={<Crianca />} />
+          {/* Fora da barra inferior de propósito: o sino no cabeçalho de Hoje é
+              o caminho, e uma quarta aba disputaria espaço com o que a família
+              abre o app para ver. */}
+          <Route path="/avisos" element={<Avisos />} />
           <Route path="/instalar" element={<TelaInstalar />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
@@ -44,8 +51,9 @@ function TelaInstalar() {
 function BarraInferior() {
   const itens = [
     { para: '/', rotulo: 'Hoje', Icone: Home },
-    { para: '/comunicados', rotulo: 'Avisos', Icone: Megaphone },
+    { para: '/comunicados', rotulo: 'Comunicados', Icone: Megaphone },
     { para: '/cardapio', rotulo: 'Cardápio', Icone: CalendarDays },
+    { para: '/crianca', rotulo: 'Ficha', Icone: Baby },
   ];
 
   return (

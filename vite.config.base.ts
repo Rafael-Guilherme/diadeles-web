@@ -64,7 +64,10 @@ export function configurarApp(opcoes: OpcoesApp): UserConfig {
         // nossos, não dá para delegar ao gerador padrão.
         strategies: 'injectManifest',
         srcDir: resolve(__dirname, 'src/sw'),
-        filename: 'sw.ts',
+        // Uma entrada por app, sobre o mesmo corpo em `src/sw/base.ts`. É o que
+        // dá ao service worker a identidade do build sem depender de `define`,
+        // que não chega ao worker servido em desenvolvimento (src/sw/base.ts).
+        filename: `sw.${opcoes.app}.ts`,
         // 'prompt' e nunca 'autoUpdate': recarregar por baixo de um educador no
         // meio da chamada perde trabalho e queima a confiança no app.
         registerType: 'prompt',
