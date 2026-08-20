@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link, useParams } from 'react-router-dom';
 import {
@@ -21,6 +22,8 @@ import type { ReactNode } from 'react';
 import { api } from '@/shared/api/cliente';
 import { Botao, Cartao, Carregando, Etiqueta, RotuloSecao, Vazio } from '@/shared/ui/componentes';
 import { Cabecalho } from '../componentes/Cabecalho';
+import { RegistrarDose } from '../componentes/RegistrarDose';
+import { Recados } from '../componentes/Recados';
 
 const VINCULOS: Record<string, string> = {
   MAE: 'Mãe',
@@ -52,6 +55,7 @@ const ICONES: Record<string, ReactNode> = {
  */
 export function FichaCrianca() {
   const { turmaId = '', criancaId = '' } = useParams();
+  const [doseAberta, setDoseAberta] = useState<string | null>(null);
 
   const dia = useQuery({
     queryKey: ['dia', criancaId],
@@ -214,14 +218,40 @@ export function FichaCrianca() {
                             {m.observacoes}
                           </p>
                         )}
+
+                        {doseAberta === m.id ? null : (
+                          <button
+                            onClick={() => setDoseAberta(m.id)}
+                            className="mt-2 min-h-11 w-full rounded-(--raio) bg-(color:--cor-acao-suave) text-sm font-semibold text-(color:--cor-acao) transition active:scale-[0.99]"
+                          >
+                            {dado ? 'Registrar outra dose' : 'Registrar dose'}
+                          </button>
+                        )}
                       </div>
                     </Cartao>
+
+                    {doseAberta === m.id && (
+                      <div className="pt-2">
+                        <RegistrarDose
+                          medicacao={{
+                            id: m.id,
+                            medicamento: m.medicamento,
+                            dosagem: m.dosagem,
+                            via: m.via,
+                          }}
+                          criancaId={criancaId}
+                          aoFechar={() => setDoseAberta(null)}
+                        />
+                      </div>
+                    )}
                   </li>
                 );
               })}
             </ul>
           </section>
         )}
+
+        <Recados criancaId={criancaId} incluirLidos titulo="Recados da família" />
 
         {/* Fora de qualquer seção e sempre visível: quando o educador abre esta
             tela porque algo aconteceu, procurar onde registrar é tempo que a

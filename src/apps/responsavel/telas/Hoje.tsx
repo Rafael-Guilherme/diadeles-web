@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import {
@@ -14,10 +15,12 @@ import {
   Sparkles,
   Utensils,
   NotebookPen,
+  MessageSquarePlus,
 } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { api } from '@/shared/api/cliente';
 import { useSessao } from '@/shared/auth/sessao';
+import { sair } from '@/shared/auth/sair';
 import { useInstalacao } from '@/shared/pwa/instalacao';
 import { Cartao, Carregando, Etiqueta, Vazio } from '@/shared/ui/componentes';
 import { ConviteAvisos } from '../componentes/ConviteAvisos';
@@ -52,7 +55,7 @@ function cienteEm(dados: unknown): string | null {
  */
 export function Hoje() {
   const usuario = useSessao((estado) => estado.usuario);
-  const encerrar = useSessao((estado) => estado.encerrar);
+  const [saindo, setSaindo] = useState(false);
   const { instalado } = useInstalacao();
   const clienteQuery = useQueryClient();
 
@@ -125,6 +128,16 @@ export function Hoje() {
             </p>
           </div>
           <div className="flex shrink-0 items-center gap-2">
+            {/* "Avisar a escola" fica no cabeçalho, ao lado do sino, e não na
+                barra de baixo: é ação ocasional — a família abre o app para ver
+                o dia, não para escrever. */}
+            <Link
+              to="/recado"
+              aria-label="Avisar a escola"
+              className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-(color:--cor-acao) ring-1 ring-(color:--cor-acao-borda) transition active:scale-95"
+            >
+              <MessageSquarePlus size={18} />
+            </Link>
             {!instalado && (
               <Link
                 to="/instalar"
@@ -249,10 +262,14 @@ export function Hoje() {
         )}
 
         <button
-          onClick={encerrar}
-          className="w-full pt-6 text-center text-sm text-[color:var(--color-tinta-suave)] underline"
+          onClick={() => {
+            setSaindo(true);
+            void sair();
+          }}
+          disabled={saindo}
+          className="w-full pt-6 text-center text-sm text-[color:var(--color-tinta-suave)] underline disabled:opacity-50"
         >
-          Sair da demonstração
+          {saindo ? 'Saindo…' : 'Sair'}
         </button>
       </main>
     </div>

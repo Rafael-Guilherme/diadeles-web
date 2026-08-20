@@ -1,18 +1,20 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Link } from 'react-router-dom';
 import {
   AlertTriangle,
   Check,
   HeartPulse,
   IdCard,
+  MessageSquarePlus,
   Pill,
-  ShieldCheck,
+  ScrollText,
   UserRound,
   Utensils,
-  X,
 } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { api, mensagemDeErro } from '@/shared/api/cliente';
-import { Cartao, Carregando, Etiqueta, RotuloSecao, Vazio } from '@/shared/ui/componentes';
+import { Botao, Cartao, Carregando, Etiqueta, RotuloSecao, Vazio } from '@/shared/ui/componentes';
+import { AutorizarMedicamento } from '../componentes/AutorizarMedicamento';
 
 const VINCULOS: Record<string, string> = {
   MAE: 'Mãe',
@@ -24,30 +26,15 @@ const VINCULOS: Record<string, string> = {
   OUTRO: 'Responsável',
 };
 
-const CONSENTIMENTOS: Record<string, { titulo: string; descricao: string }> = {
-  INTERNO: {
-    titulo: 'Fotos dentro do app',
-    descricao: 'A escola pode registrar fotos e enviá-las só para você, aqui no aplicativo.',
-  },
-  MATERIAL_DIVULGACAO: {
-    titulo: 'Material impresso da escola',
-    descricao: 'Mural, informativo e álbum de fim de ano feitos pela própria escola.',
-  },
-  REDES_SOCIAIS: {
-    titulo: 'Redes sociais da escola',
-    descricao: 'Publicações abertas no Instagram, Facebook e site da escola.',
-  },
-};
-
 /**
  * A ficha da criança na mão da família.
  *
- * Duas coisas aqui não são informativas, são operacionais: **quem pode buscar**
- * — a lista que a portaria confere e que a mãe precisa reconhecer como certa —
- * e o **uso de imagem**, que a lei manda ser revogável a qualquer momento, com
- * efeito imediato (LGPD art. 14, docs/plano-produto.md §11). Por isso o
- * consentimento é um botão, não um texto explicando que basta ligar para a
- * secretaria.
+ * Uma coisa aqui não é informativa, é operacional: **quem pode buscar** — a
+ * lista que a portaria confere e que a mãe precisa reconhecer como certa.
+ *
+ * O consentimento de uso de imagem saiu junto com a mídia, adiada para uma
+ * atualização futura: os três escopos existiam só para filtrar a galeria, e sem
+ * foto no produto não sobrava nada para eles governarem.
  */
 export function Crianca() {
   const clienteQuery = useQueryClient();
@@ -75,11 +62,10 @@ export function Crianca() {
     },
   });
 
-  const decidir = useMutation({
-    mutationFn: async (params: { escopo: string; concedido: boolean }) => {
-      const { error } = await api.POST('/v1/criancas/{id}/consentimentos', {
-        params: { path: { id: criancaId! } },
-        body: params as { escopo: 'INTERNO' | 'MATERIAL_DIVULGACAO' | 'REDES_SOCIAIS'; concedido: boolean },
+  const revogar = useMutation({
+    mutationFn: async (autorizacaoId: string) => {
+      const { error } = await api.POST('/v1/medicamentos/autorizacoes/{id}/revogar', {
+        params: { path: { id: autorizacaoId } },
       });
       if (error) throw error;
     },
@@ -187,6 +173,31 @@ export function Crianca() {
             A escola só entrega a criança a quem está nesta lista. Para incluir ou remover alguém,
             fale com a secretaria.
           </p>
+
+          {/* A exceção de um dia — "hoje quem busca é a avó" — não muda o
+              cadastro, e por isso não passa pela secretaria: vira recado. */}
+          <Link to="/recado" className="block pt-1">
+            <Botao variante="secundario" bloco>
+              <MessageSquarePlus size={16} /> Avisar quem busca hoje
+            </Botao>
+          </Link>
+        </section>
+
+        <section className="space-y-2">
+          <RotuloSecao>Desenvolvimento</RotuloSecao>
+          <Link to="/pareceres" className="block">
+            <Cartao interno className="flex items-center gap-3 transition active:bg-neutral-50">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-(color:--cor-acao-suave) text-(color:--cor-acao)">
+                <ScrollText size={16} />
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="font-semibold">Pareceres do semestre</p>
+                <p className="text-xs text-[color:var(--color-tinta-suave)]">
+                  O relatório de desenvolvimento que a escola publica
+                </p>
+              </div>
+            </Cartao>
+          </Link>
         </section>
 
         <section className="space-y-2">
@@ -203,104 +214,57 @@ export function Crianca() {
             <ul className="space-y-(--gap-lista)">
               {dados.medicacoes.map((m) => (
                 <li key={m.id}>
-                  <Cartao interno className="flex gap-3">
-                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-(--raio) bg-(color:--cor-acao-suave) text-(color:--cor-acao)">
-                      <Pill size={16} />
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <p className="font-semibold">{m.medicamento}</p>
-                      <p className="text-sm text-[color:var(--color-tinta-suave)]">
-                        {m.dosagem} · via {m.via} · até {formatarData(m.fim)}
-                      </p>
-                      {m.administradoHoje.length > 0 && (
-                        <p className="mt-1.5 text-xs text-[color:var(--color-ok)]">
-                          <Check size={12} className="mr-0.5 inline" />
-                          Administrado hoje às{' '}
-                          {m.administradoHoje
-                            .map((iso) =>
-                              new Date(iso).toLocaleTimeString('pt-BR', {
-                                hour: '2-digit',
-                                minute: '2-digit',
-                              }),
-                            )
-                            .join(', ')}
+                  <Cartao interno className="space-y-2.5">
+                    <div className="flex gap-3">
+                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-(--raio) bg-(color:--cor-acao-suave) text-(color:--cor-acao)">
+                        <Pill size={16} />
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <p className="font-semibold">{m.medicamento}</p>
+                        <p className="text-sm text-[color:var(--color-tinta-suave)]">
+                          {m.dosagem} · via {m.via} · até {formatarData(m.fim)}
                         </p>
-                      )}
+                        {m.administradoHoje.length > 0 && (
+                          <p className="mt-1.5 text-xs text-[color:var(--color-ok)]">
+                            <Check size={12} className="mr-0.5 inline" />
+                            Administrado hoje às{' '}
+                            {m.administradoHoje
+                              .map((iso) =>
+                                new Date(iso).toLocaleTimeString('pt-BR', {
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                                }),
+                              )
+                              .join(', ')}
+                          </p>
+                        )}
+                      </div>
                     </div>
+
+                    {/* Cancelar vale na hora: o médico suspender o remédio de
+                        manhã não pode esperar a escola ler um recado. */}
+                    <button
+                      onClick={() => revogar.mutate(m.id)}
+                      disabled={revogar.isPending}
+                      className="min-h-11 w-full rounded-(--raio) text-sm font-semibold text-[color:var(--color-alerta)] ring-1 ring-inset ring-[color:var(--color-alerta)]/25 transition active:scale-[0.99] disabled:opacity-50"
+                    >
+                      Cancelar esta autorização
+                    </button>
                   </Cartao>
                 </li>
               ))}
             </ul>
           )}
-        </section>
 
-        <section className="space-y-2">
-          <RotuloSecao>Uso de imagem</RotuloSecao>
+          <AutorizarMedicamento criancaId={dados.id} />
 
-          <p className="px-1 text-xs leading-relaxed text-[color:var(--color-tinta-suave)]">
-            Você decide cada uso separadamente e pode mudar de ideia quando quiser — vale na hora.
-          </p>
-
-          <ul className="space-y-(--gap-lista)">
-            {dados.consentimentos.map((c) => {
-              const texto = CONSENTIMENTOS[c.escopo];
-              return (
-                <li key={c.escopo}>
-                  <Cartao interno className="space-y-2.5">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <p className="font-semibold">{texto?.titulo ?? c.escopo}</p>
-                        <p className="mt-0.5 text-sm leading-relaxed text-[color:var(--color-tinta-suave)]">
-                          {texto?.descricao}
-                        </p>
-                      </div>
-                      {c.semResposta ? (
-                        <Etiqueta>sem resposta</Etiqueta>
-                      ) : c.concedido ? (
-                        <Etiqueta tom="ok">
-                          <Check size={11} /> autorizado
-                        </Etiqueta>
-                      ) : (
-                        <Etiqueta tom="alerta">
-                          <X size={11} /> negado
-                        </Etiqueta>
-                      )}
-                    </div>
-
-                    <div className="flex gap-2">
-                      <BotaoEscolha
-                        ativo={!c.semResposta && c.concedido}
-                        disabled={decidir.isPending}
-                        onClick={() => decidir.mutate({ escopo: c.escopo, concedido: true })}
-                      >
-                        Autorizo
-                      </BotaoEscolha>
-                      <BotaoEscolha
-                        ativo={!c.semResposta && !c.concedido}
-                        disabled={decidir.isPending}
-                        onClick={() => decidir.mutate({ escopo: c.escopo, concedido: false })}
-                      >
-                        Não autorizo
-                      </BotaoEscolha>
-                    </div>
-                  </Cartao>
-                </li>
-              );
-            })}
-          </ul>
-
-          {decidir.isError && (
+          {revogar.isError && (
             <p className="px-1 text-xs text-[color:var(--color-alerta)]">
-              {mensagemDeErro(decidir.error)}
+              {mensagemDeErro(revogar.error)}
             </p>
           )}
-
-          <p className="flex items-start gap-1.5 px-1 pt-1 text-xs leading-relaxed text-[color:var(--color-tinta-tenue)]">
-            <ShieldCheck size={13} className="mt-0.5 shrink-0" />
-            Cada resposta fica registrada com a data. Nada é apagado — é assim que a escola comprova
-            o que foi autorizado.
-          </p>
         </section>
+
       </main>
     </div>
   );
@@ -360,33 +324,6 @@ function Pessoa({
       </div>
       {nota && <Etiqueta>{nota}</Etiqueta>}
     </Cartao>
-  );
-}
-
-function BotaoEscolha({
-  ativo,
-  disabled,
-  onClick,
-  children,
-}: {
-  ativo: boolean;
-  disabled?: boolean;
-  onClick: () => void;
-  children: ReactNode;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      disabled={disabled}
-      aria-pressed={ativo}
-      className={`min-h-11 flex-1 rounded-(--raio) text-sm font-semibold transition disabled:opacity-50 ${
-        ativo
-          ? 'bg-(color:--cor-acao) text-white'
-          : 'bg-white text-[color:var(--color-tinta-suave)] ring-1 ring-inset ring-[color:var(--color-borda-forte)]'
-      }`}
-    >
-      {children}
-    </button>
   );
 }
 

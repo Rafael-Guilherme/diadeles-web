@@ -198,6 +198,87 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/escola/adesao": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Adesão por turma: quem registra e quem abre
+         * @description Registros por educador e último acesso das famílias no período. É o relatório que diz se o produto está sendo usado, e não só assinado.
+         */
+        get: operations["EscolasController_adesao"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/recados/meus": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Recados que a família enviou
+         * @description Com a confirmação de leitura — é o retorno que o bilhete na mochila nunca deu.
+         */
+        get: operations["RecadosController_meus"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/recados": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Recados recebidos pela escola
+         * @description Não lidos primeiro. `pendentes=true` traz só o que ainda exige leitura.
+         */
+        get: operations["RecadosController_listar"];
+        put?: never;
+        /**
+         * Manda um recado para a escola
+         * @description Assíncrono: a escola lê quando pode. Categoria `retirada` aparece na hora de registrar a saída da criança.
+         */
+        post: operations["RecadosController_criar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/recados/{id}/lido": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Dá o recado por lido — a família vê quem leu */
+        post: operations["RecadosController_marcarLido"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/equipe": {
         parameters: {
             query?: never;
@@ -208,11 +289,35 @@ export interface paths {
         /** Equipe da escola */
         get: operations["UsuariosController_equipe"];
         put?: never;
-        post?: never;
+        /**
+         * Cadastra um membro da equipe
+         * @description Sem `senha`, a API gera uma provisória e a devolve uma única vez — não fica recuperável depois.
+         */
+        post: operations["UsuariosController_criarMembro"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/v1/equipe/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Edita nome, papéis ou desativa um membro
+         * @description Recusa com 409 quando a mudança deixaria a escola sem nenhum gestor ativo. Desativar encerra o acesso e preserva o histórico.
+         */
+        patch: operations["UsuariosController_atualizarMembro"];
         trace?: never;
     };
     "/v1/criancas/{criancaId}/responsaveis": {
@@ -273,6 +378,47 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/anos-letivos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Anos letivos da escola, do mais recente para o mais antigo */
+        get: operations["AnosLetivosController_listar"];
+        put?: never;
+        /**
+         * Abre um ano letivo
+         * @description Início e fim são opcionais — o padrão segue o calendário letivo brasileiro.
+         */
+        post: operations["AnosLetivosController_criar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/anos-letivos/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Ajusta as datas ou encerra o ano letivo
+         * @description Encerrar impede turmas novas e não apaga nada do que já foi registrado.
+         */
+        patch: operations["AnosLetivosController_atualizar"];
+        trace?: never;
+    };
     "/v1/turmas": {
         parameters: {
             query?: never;
@@ -283,8 +429,70 @@ export interface paths {
         /** Turmas do usuário (gestão vê todas) */
         get: operations["TurmasController_listar"];
         put?: never;
-        post?: never;
+        /**
+         * Cria uma turma
+         * @description Sem `anoLetivoId`, entra no ano letivo corrente da escola.
+         */
+        post: operations["TurmasController_criar"];
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/turmas/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Exclui uma turma vazia
+         * @description Recusa com 409 se houver matrícula ativa: apagar a turma levaria junto presença, rotina e ocorrência.
+         */
+        delete: operations["TurmasController_excluir"];
+        options?: never;
+        head?: never;
+        /** Edita nome, faixa, turno, capacidade ou cor da turma */
+        patch: operations["TurmasController_atualizar"];
+        trace?: never;
+    };
+    "/v1/turmas/{id}/educadores": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Põe um membro da equipe na turma
+         * @description Idempotente. Marcar `principal` rebaixa o regente anterior na mesma operação.
+         */
+        post: operations["TurmasController_atribuirEducador"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/turmas/{id}/educadores/{usuarioId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Tira um educador da turma */
+        delete: operations["TurmasController_removerEducador"];
         options?: never;
         head?: never;
         patch?: never;
@@ -502,7 +710,7 @@ export interface paths {
         };
         /**
          * Ficha da criança
-         * @description Dados, responsáveis, autorizados a retirar, medicação vigente e consentimentos. A equipe vê qualquer criança da escola; o responsável, só as suas.
+         * @description Dados, responsáveis, autorizados a retirar e medicação vigente. A equipe vê qualquer criança da escola; o responsável, só as suas.
          */
         get: operations["CriancasController_ficha"];
         put?: never;
@@ -571,26 +779,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/v1/criancas/{id}/consentimentos": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Concede ou revoga o uso de imagem da criança
-         * @description Granular por escopo e revogável a qualquer momento (LGPD art. 14). A resposta anterior não é apagada — é revogada e mantida como prova de conformidade.
-         */
-        post: operations["CriancasController_decidirConsentimento"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/v1/matriculas": {
         parameters: {
             query?: never;
@@ -645,6 +833,107 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/criancas/{criancaId}/vinculos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Vínculos da criança com as permissões de cada responsável
+         * @description Inclui os bloqueados, com o motivo — a equipe precisa ver quem está de fora.
+         */
+        get: operations["VinculosController_listar"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/vinculos/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Ajusta o que um responsável pode fazer
+         * @description Visualizar, retirar e autorizar são independentes. Recusa com 409 se o vínculo estiver bloqueado.
+         */
+        patch: operations["VinculosController_atualizar"];
+        trace?: never;
+    };
+    "/v1/vinculos/{id}/bloqueio": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Bloqueia ou desbloqueia um responsável
+         * @description Para decisão judicial e medida protetiva. Bloquear exige motivo e desliga visualizar, retirar e autorizar de uma vez. Fica na trilha de auditoria com quem aplicou.
+         */
+        post: operations["VinculosController_bloquear"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/criancas/{criancaId}/autorizados": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Quem pode buscar a criança sem ser usuário do app */
+        get: operations["VinculosController_listarAutorizados"];
+        put?: never;
+        /**
+         * Cadastra um autorizado a retirar
+         * @description Com `validoAte`, a autorização deixa de valer sozinha na data — sem faxina manual.
+         */
+        post: operations["VinculosController_criarAutorizado"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/autorizados/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Edita ou revoga um autorizado
+         * @description `ativo: false` revoga sem apagar — o histórico de quem podia buscar é preservado.
+         */
+        patch: operations["VinculosController_atualizarAutorizado"];
+        trace?: never;
+    };
     "/v1/presencas/checkin": {
         parameters: {
             query?: never;
@@ -673,9 +962,29 @@ export interface paths {
         put?: never;
         /**
          * Registra saída da criança
-         * @description Confere quem retira contra vínculos e autorizados — recusa quem não está na lista.
+         * @description Escolha quem retirou em `/presencas/quem-pode-retirar/{criancaId}`. Sem ninguém da lista, exige `justificativa` — a saída entra como excepcional na trilha de auditoria.
          */
         post: operations["PresencasController_checkout"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/presencas/quem-pode-retirar/{criancaId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Quem pode levar a criança embora
+         * @description Vínculos com permissão de retirada e autorizados avulsos vigentes, na mesma lista. É o que a portaria confere.
+         */
+        get: operations["PresencasController_quemPodeRetirar"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -726,8 +1035,72 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Comunicados publicados pela escola */
+        /**
+         * Comunicados da escola
+         * @description A família recebe só os publicados e dirigidos à turma da criança dela; a equipe vê também os rascunhos.
+         */
         get: operations["ComunicadosController_listar"];
+        put?: never;
+        /**
+         * Escreve um comunicado
+         * @description Publica de imediato por padrão. `publicar: false` grava rascunho. `alvoTurmas` vazio manda para a escola inteira.
+         */
+        post: operations["ComunicadosController_criar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/comunicados/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Edita um rascunho
+         * @description Recusa com 409 se já foi publicado — o texto que a família recebeu não muda.
+         */
+        patch: operations["ComunicadosController_atualizar"];
+        trace?: never;
+    };
+    "/v1/comunicados/{id}/publicar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Publica um rascunho */
+        post: operations["ComunicadosController_publicar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/comunicados/{id}/leituras": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Taxa de leitura de um comunicado
+         * @description Quem deveria ler, quem leu e quem falta — nessa ordem, com os pendentes no topo.
+         */
+        get: operations["ComunicadosController_leituras"];
         put?: never;
         post?: never;
         delete?: never;
@@ -770,6 +1143,147 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/cardapios": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Define o cardápio de um ou mais dias
+         * @description Substitui o que existir em cada data enviada. Dia com `refeicoes` vazio é apagado, e volta a aparecer como não publicado. Responde com a semana do primeiro dia enviado.
+         */
+        put: operations["CardapiosController_definir"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/relatorios/meus": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Pareceres publicados das crianças da família
+         * @description Só os publicados: rascunho é trabalho em andamento da escola.
+         */
+        get: operations["RelatoriosController_meus"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/relatorios/turma/{turmaId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Situação dos pareceres da turma no período
+         * @description Todas as crianças ativas, com ou sem parecer — a lista existe para não esquecer ninguém.
+         */
+        get: operations["RelatoriosController_listar"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/relatorios/gerar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Monta o rascunho a partir dos registros do período
+         * @description Idempotente: se o parecer já existe, devolve o que está lá sem tocar no que já foi escrito. O texto gerado é evidência contável — o juízo pedagógico é de quem revisa.
+         */
+        post: operations["RelatoriosController_gerar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/relatorios/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Um parecer completo */
+        get: operations["RelatoriosController_buscar"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Escreve o parecer
+         * @description Recusa com 409 depois de publicado — o texto que a família recebeu não muda.
+         */
+        patch: operations["RelatoriosController_atualizar"];
+        trace?: never;
+    };
+    "/v1/relatorios/{id}/revisao": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Manda para a coordenação revisar
+         * @description Exige os cinco campos de experiência escritos.
+         */
+        post: operations["RelatoriosController_enviarParaRevisao"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/relatorios/{id}/publicar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Publica o parecer para a família
+         * @description Só a coordenação. Avisa cada responsável com vínculo ativo.
+         */
+        post: operations["RelatoriosController_publicar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/ocorrencias": {
         parameters: {
             query?: never;
@@ -805,6 +1319,70 @@ export interface paths {
          * @description A primeira confirmação é a que vale — reabrir a tela não reescreve a hora.
          */
         post: operations["OcorrenciasController_confirmarCiencia"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/medicamentos/autorizacoes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Autorizações de uma criança ou da turma
+         * @description Traz as administrações de hoje junto — é o que diz se a dose ainda falta.
+         */
+        get: operations["MedicamentosController_listar"];
+        put?: never;
+        /**
+         * Responsável autoriza um medicamento
+         * @description Só o responsável com permissão de autorizar no vínculo. A escola não registra isto em nome da família: a autorização é a prova de quem consentiu.
+         */
+        post: operations["MedicamentosController_autorizar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/medicamentos/autorizacoes/{id}/revogar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Cancela a autorização com efeito imediato
+         * @description "O médico suspendeu." A próxima dose de hoje já não pode ser dada.
+         */
+        post: operations["MedicamentosController_revogar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/medicamentos/administracoes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Registra a dose administrada
+         * @description Recusa quando não há autorização vigente. Idempotente pelo `clientId` — dois toques no botão não viram duas doses.
+         */
+        post: operations["MedicamentosController_administrar"];
         delete?: never;
         options?: never;
         head?: never;
@@ -873,6 +1451,8 @@ export interface components {
             timezone: string;
             /** @description Módulos ativos e campos de rotina habilitados */
             configuracoes: Record<string, never>;
+            /** @description Tipos de rotina que esta escola pratica — é o que o app do educador oferece e o que o fechamento do turno cobra */
+            registrosHabilitados: ("ALIMENTACAO" | "SONO" | "HIGIENE" | "HIDRATACAO" | "HUMOR" | "ATIVIDADE" | "OBSERVACAO")[];
         };
         ResumoEscolaDto: {
             escola: components["schemas"]["EscolaDto"];
@@ -888,11 +1468,103 @@ export interface components {
             ausentesHoje: number;
             /** @description Registros de rotina lançados hoje */
             registrosHoje: number;
+            /** @description Ocorrências dos últimos 7 dias que nenhuma família confirmou ter lido — é o número que pede telefonema */
+            ocorrenciasAbertas: number;
+            /** @description Recados das famílias que a escola ainda não deu por lidos */
+            recadosPendentes: number;
+        };
+        EducadorNaAdesaoDto: {
+            usuarioId: string;
+            nome: string;
+            /** @description Registros lançados por esta pessoa no período */
+            registros: number;
+            /** Format: date-time */
+            ultimoRegistroEm?: string | null;
+        };
+        TurmaNaAdesaoDto: {
+            turmaId: string;
+            nome: string;
+            criancasAtivas: number;
+            /** @description Crianças com chamada feita hoje */
+            chamadaHoje: number;
+            /** @description Crianças com ao menos um registro de rotina hoje */
+            criancasComRegistroHoje: number;
+            /** @description Registros de rotina no período */
+            registros: number;
+            /** @description Dias do período em que a turma registrou alguma coisa */
+            diasComRegistro: number;
+            educadores: components["schemas"]["EducadorNaAdesaoDto"][];
+            /** @description Responsáveis que já entraram no app alguma vez */
+            familiasComAcesso: number;
+            /** @description Responsáveis que abriram o app dentro do período */
+            familiasAtivas: number;
+        };
+        FamiliaNaAdesaoDto: {
+            criancaId: string;
+            crianca: string;
+            turma: string;
+            responsavelId: string;
+            responsavel: string;
+            /**
+             * Format: date-time
+             * @description Nulo quando a família nunca entrou — é caso de convite, não de lembrete
+             */
+            ultimoAcessoEm?: string | null;
+        };
+        AdesaoDto: {
+            /** @example 7 */
+            dias: number;
+            /** @example 2026-08-12 */
+            desde: string;
+            /** @example 2026-08-19 */
+            data: string;
+            turmas: components["schemas"]["TurmaNaAdesaoDto"][];
+            /** @description Quem não abriu o app no período, sem acesso primeiro */
+            familiasParadas: components["schemas"]["FamiliaNaAdesaoDto"][];
         };
         AtualizarEscolaDto: {
+            /** @description Substitui a lista inteira. Ao menos um tipo — escola sem registro não existe. */
+            registrosHabilitados?: ("ALIMENTACAO" | "SONO" | "HIGIENE" | "HIDRATACAO" | "HUMOR" | "ATIVIDADE" | "OBSERVACAO")[];
             nome?: string;
             telefone?: string;
             email?: string;
+        };
+        RecadoDto: {
+            id: string;
+            criancaId: string;
+            criancaNome: string;
+            turmaNome?: string | null;
+            /** @enum {string} */
+            categoria: "retirada" | "ausencia" | "saude" | "geral";
+            corpo: string;
+            /**
+             * @description Dia a que o recado se refere — "vai faltar amanhã" não é sobre hoje
+             * @example 2026-08-19
+             */
+            referenteA?: string | null;
+            autorId: string;
+            autorNome: string;
+            /** Format: date-time */
+            criadoEm: string;
+            /** Format: date-time */
+            lidoEm?: string | null;
+            /** @description Quem da escola deu por lido — é o que a família vê como confirmação */
+            lidoPorNome?: string | null;
+        };
+        CriarRecadoDto: {
+            criancaId: string;
+            /**
+             * @example retirada
+             * @enum {string}
+             */
+            categoria: "retirada" | "ausencia" | "saude" | "geral";
+            /** @example Hoje quem busca é a avó Marta. */
+            corpo: string;
+            /**
+             * @description Padrão: hoje. Use para avisar de um dia que ainda vai chegar.
+             * @example 2026-08-19
+             */
+            referenteA?: string;
         };
         MembroEquipeDto: {
             id: string;
@@ -904,6 +1576,26 @@ export interface components {
             ultimoAcesso?: string | null;
             /** @description Turmas em que atua */
             turmas: string[];
+        };
+        CriarMembroEquipeDto: {
+            /** @example Ana Souza */
+            nome: string;
+            /** @example ana.souza@escolamodelo.com.br */
+            email: string;
+            papeis: ("GESTOR" | "COORDENADOR" | "EDUCADOR" | "AUXILIAR")[];
+            /** @description Sem senha, a API gera uma provisória e devolve em `senhaProvisoria` */
+            senha?: string;
+        };
+        MembroCriadoDto: {
+            membro: components["schemas"]["MembroEquipeDto"];
+            /** @description Só vem quando a API gerou a senha. Não é recuperável depois. */
+            senhaProvisoria?: string | null;
+        };
+        AtualizarMembroEquipeDto: {
+            nome?: string;
+            papeis?: ("GESTOR" | "COORDENADOR" | "EDUCADOR" | "AUXILIAR")[];
+            /** @description Desativar encerra o acesso sem apagar o histórico */
+            ativo?: boolean;
         };
         ResponsavelDto: {
             id: string;
@@ -943,6 +1635,48 @@ export interface components {
             id: string;
             nome: string;
         };
+        AnoLetivoDto: {
+            id: string;
+            /** @example 2026 */
+            ano: number;
+            /** @example 2026-02-02 */
+            inicio: string;
+            /** @example 2026-12-18 */
+            fim: string;
+            encerrado: boolean;
+            /** @description Turmas abertas neste ano */
+            turmas: number;
+            /** @description Ano que cobre a data de hoje e não está encerrado */
+            corrente: boolean;
+        };
+        CriarAnoLetivoDto: {
+            /** @example 2026 */
+            ano: number;
+            /**
+             * @description Padrão: 1º de fevereiro
+             * @example 2026-02-02
+             */
+            inicio?: string;
+            /**
+             * @description Padrão: 20 de dezembro
+             * @example 2026-12-18
+             */
+            fim?: string;
+        };
+        AtualizarAnoLetivoDto: {
+            /** @example 2026-02-02 */
+            inicio?: string;
+            /** @example 2026-12-18 */
+            fim?: string;
+            /** @description Encerrar impede novas turmas, mas não apaga as existentes */
+            encerrado?: boolean;
+        };
+        EducadorDaTurmaDto: {
+            usuarioId: string;
+            nome: string;
+            /** @description Regente da turma; os demais são apoio */
+            principal: boolean;
+        };
         TurmaDto: {
             id: string;
             nome: string;
@@ -951,8 +1685,43 @@ export interface components {
             /** @example integral */
             turno: string;
             cor?: string | null;
+            capacidade?: number | null;
+            anoLetivoId: string;
+            /** @example 2026 */
+            ano: number;
             criancasAtivas: number;
-            educadores: string[];
+            educadores: components["schemas"]["EducadorDaTurmaDto"][];
+        };
+        CriarTurmaDto: {
+            /** @example Berçário II */
+            nome: string;
+            /** @enum {string} */
+            grupoEtario: "BEBES" | "CRIANCAS_BEM_PEQUENAS" | "CRIANCAS_PEQUENAS";
+            /** @enum {string} */
+            turno: "manha" | "tarde" | "integral";
+            /** @description Padrão: o ano letivo corrente da escola */
+            anoLetivoId?: string;
+            /** @example 15 */
+            capacidade?: number;
+            /** @example #7C9CBF */
+            cor?: string;
+        };
+        AtualizarTurmaDto: {
+            /** @example Berçário II */
+            nome?: string;
+            /** @enum {string} */
+            grupoEtario?: "BEBES" | "CRIANCAS_BEM_PEQUENAS" | "CRIANCAS_PEQUENAS";
+            /** @enum {string} */
+            turno?: "manha" | "tarde" | "integral";
+            /** @example 15 */
+            capacidade?: number;
+            /** @example #7C9CBF */
+            cor?: string;
+        };
+        AtribuirEducadorDto: {
+            usuarioId: string;
+            /** @description Regente da turma. Só um por turma. */
+            principal?: boolean;
         };
         RegistroResumoDto: {
             id: string;
@@ -980,6 +1749,12 @@ export interface components {
             entradaEm?: string | null;
             /** Format: date-time */
             saidaEm?: string | null;
+            /** @description Quem entregou a criança na porta */
+            entreguePorNome?: string | null;
+            /** @description Quem retirou — já conferido contra a lista de autorizados */
+            retiradoPorNome?: string | null;
+            /** @description Motivo da falta, quando a família avisou */
+            justificativa?: string | null;
             registros: components["schemas"]["RegistroResumoDto"][];
             /** @description Tipos ainda não registrados hoje — alimenta a tela de fechamento do turno */
             pendencias: ("ALIMENTACAO" | "SONO" | "HIGIENE" | "HIDRATACAO" | "HUMOR" | "ATIVIDADE" | "OBSERVACAO")[];
@@ -990,6 +1765,8 @@ export interface components {
             turma: components["schemas"]["TurmaDto"];
             /** @example 2026-08-02 */
             data: string;
+            /** @description Tipos de rotina que esta escola pratica — é o que a barra de registro em lote oferece */
+            registrosHabilitados: ("ALIMENTACAO" | "SONO" | "HIGIENE" | "HIDRATACAO" | "HUMOR" | "ATIVIDADE" | "OBSERVACAO")[];
             criancas: components["schemas"]["CriancaNaGradeDto"][];
             /** @description Crianças com todos os tipos esperados já registrados */
             completas: number;
@@ -1136,15 +1913,6 @@ export interface components {
             /** @description Horários já administrados hoje — é o que diz se ainda falta dar */
             administradoHoje: string[];
         };
-        ConsentimentoDto: {
-            /** @enum {string} */
-            escopo: "INTERNO" | "MATERIAL_DIVULGACAO" | "REDES_SOCIAIS";
-            concedido: boolean;
-            /** @description Nunca respondido pela família */
-            semResposta: boolean;
-            /** Format: date-time */
-            decididoEm?: string | null;
-        };
         FichaDaCriancaDto: {
             id: string;
             nome: string;
@@ -1162,7 +1930,6 @@ export interface components {
             responsaveis: components["schemas"]["ResponsavelDaCriancaDto"][];
             autorizados: components["schemas"]["AutorizadoDto"][];
             medicacoes: components["schemas"]["MedicacaoDoDiaDto"][];
-            consentimentos: components["schemas"]["ConsentimentoDto"][];
         };
         AtualizarCriancaDto: {
             nome?: string;
@@ -1203,12 +1970,6 @@ export interface components {
             /** @description Medicação autorizada e vigente hoje — some da ficha quando a autorização vence */
             medicacoes: components["schemas"]["MedicacaoDoDiaDto"][];
         };
-        DecidirConsentimentoDto: {
-            /** @enum {string} */
-            escopo: "INTERNO" | "MATERIAL_DIVULGACAO" | "REDES_SOCIAIS";
-            /** @description false revoga o consentimento vigente */
-            concedido: boolean;
-        };
         MatricularDto: {
             criancaId: string;
             /** @description Se a criança já estiver ativa em outra turma, isto é uma transferência */
@@ -1241,6 +2002,69 @@ export interface components {
             inicio: string;
             fim?: string | null;
         };
+        VinculoDto: {
+            id: string;
+            criancaId: string;
+            usuarioId: string;
+            nome: string;
+            celular?: string | null;
+            /** @enum {string} */
+            tipo: "MAE" | "PAI" | "AVO" | "TIO" | "PADRASTO_MADRASTA" | "RESPONSAVEL_LEGAL" | "OUTRO";
+            podeVisualizar: boolean;
+            /** @description Pode buscar a criança na saída */
+            podeRetirar: boolean;
+            /** @description Pode autorizar medicação e passeio */
+            podeAutorizar: boolean;
+            bloqueado: boolean;
+            motivoBloqueio?: string | null;
+        };
+        AtualizarVinculoDto: {
+            podeVisualizar?: boolean;
+            podeRetirar?: boolean;
+            podeAutorizar?: boolean;
+        };
+        BloquearVinculoDto: {
+            /** @description false remove o bloqueio */
+            bloqueado: boolean;
+            /** @description Obrigatório ao bloquear. Fica no vínculo e na trilha de auditoria. */
+            motivo?: string;
+        };
+        AutorizadoRetiradaDto: {
+            id: string;
+            criancaId: string;
+            nome: string;
+            documento: string;
+            parentesco?: string | null;
+            /** @example 2026-12-18 */
+            validoAte?: string | null;
+            /** @description Ativo e dentro da validade — a resposta que a portaria precisa hoje */
+            ativo: boolean;
+        };
+        CriarAutorizadoDto: {
+            /** @example Marta Prado */
+            nome: string;
+            /**
+             * @description Documento conferido na portaria
+             * @example 123.456.789-00
+             */
+            documento: string;
+            /** @example Avó */
+            parentesco?: string;
+            /**
+             * @description Autorização temporária — vencida, deixa de valer sozinha
+             * @example 2026-12-18
+             */
+            validoAte?: string;
+        };
+        AtualizarAutorizadoDto: {
+            nome?: string;
+            documento?: string;
+            parentesco?: string;
+            /** @example 2026-12-18 */
+            validoAte?: string;
+            /** @description false revoga a autorização sem apagar o histórico */
+            ativo?: boolean;
+        };
         CheckinDto: {
             criancaId: string;
             turmaId: string;
@@ -1265,10 +2089,35 @@ export interface components {
         };
         CheckoutDto: {
             criancaId: string;
-            /** @description Quem retirou — conferido contra a lista de autorizados */
-            retiradoPorNome: string;
+            /** @description Vínculo escolhido na lista de quem pode retirar */
             retiradoPorVinculoId?: string;
+            /** @description Autorizado avulso escolhido na lista */
             retiradoPorAutorizadoId?: string;
+            /** @description Nome de quem retirou. Derivado do vínculo ou do autorizado quando um deles é informado; obrigatório na saída excepcional. */
+            retiradoPorNome?: string;
+            /**
+             * @description Obrigatória quando ninguém da lista é escolhido. Fica na trilha de auditoria com quem liberou.
+             * @example Tia apresentou autorização por escrito da mãe, conferida pela coordenação.
+             */
+            justificativa?: string;
+        };
+        QuemRetiraDto: {
+            /** @description Id do vínculo ou do autorizado, conforme `origem` */
+            id: string;
+            /** @enum {string} */
+            origem: "vinculo" | "autorizado";
+            nome: string;
+            /**
+             * @description Parentesco, para conferência na portaria
+             * @example Mãe
+             */
+            papel: string;
+            documento?: string | null;
+            /**
+             * @description Autorização com prazo; vencida não entra na lista
+             * @example 2026-12-20
+             */
+            validoAte?: string | null;
         };
         EnvelopeRegistroDto: {
             /** @description UUID gerado no cliente — chave de idempotência */
@@ -1313,6 +2162,50 @@ export interface components {
             lido: boolean;
             /** @description Confirmações de leitura — o que a escola cobra */
             totalLeituras: number;
+            /** @description Turmas destinatárias. Vazio significa a escola inteira. */
+            alvoTurmas: string[];
+            /** @description Ainda não publicado — só a equipe enxerga */
+            rascunho: boolean;
+        };
+        CriarComunicadoDto: {
+            /** @example Reunião de pais — 22/08 */
+            titulo: string;
+            corpo: string;
+            /** @description Turmas destinatárias. Omitir ou enviar vazio manda para a escola inteira. */
+            alvoTurmas?: string[];
+            /** @description Pede confirmação de leitura de cada família */
+            exigeCiencia?: boolean;
+            /** @description false grava como rascunho, para publicar depois */
+            publicar?: boolean;
+        };
+        AtualizarComunicadoDto: {
+            titulo?: string;
+            corpo?: string;
+            alvoTurmas?: string[];
+            exigeCiencia?: boolean;
+        };
+        LeituraDaFamiliaDto: {
+            criancaId: string;
+            crianca: string;
+            turma: string;
+            responsavelId: string;
+            responsavel: string;
+            /** Format: date-time */
+            lidoEm?: string | null;
+        };
+        TaxaDeLeituraDto: {
+            comunicadoId: string;
+            titulo: string;
+            /** @description Pares responsável × criança que deveriam ler */
+            destinatarios: number;
+            leram: number;
+            /**
+             * @description Percentual inteiro, 0 quando não há destinatário
+             * @example 62
+             */
+            percentual: number;
+            /** @description Quem ainda não leu vem com lidoEm nulo */
+            familias: components["schemas"]["LeituraDaFamiliaDto"][];
         };
         MarcarLidoDto: {
             criancaId: string;
@@ -1327,7 +2220,85 @@ export interface components {
              *       "almoco": "Arroz, feijão, frango e legumes"
              *     }
              */
-            refeicoes: Record<string, never>;
+            refeicoes: {
+                [key: string]: string;
+            };
+        };
+        DiaDoCardapioDto: {
+            /** @example 2026-08-03 */
+            data: string;
+            /**
+             * @description Refeições do dia. Objeto vazio apaga o cardápio daquele dia.
+             * @example {
+             *       "lancheManha": "Fruta da estação",
+             *       "almoco": "Arroz, feijão, frango e legumes"
+             *     }
+             */
+            refeicoes: {
+                [key: string]: string;
+            };
+        };
+        DefinirCardapioDto: {
+            dias: components["schemas"]["DiaDoCardapioDto"][];
+        };
+        ItemRelatorioDto: {
+            /** @enum {string} */
+            campo: "EU_OUTRO_NOS" | "CORPO_GESTOS_MOVIMENTOS" | "TRACOS_SONS_CORES_FORMAS" | "ESCUTA_FALA_PENSAMENTO_IMAGINACAO" | "ESPACOS_TEMPOS_QUANTIDADES";
+            /** @example O eu, o outro e o nós */
+            campoNome: string;
+            /** @description Vazio quando os registros não sustentam nada neste campo */
+            texto: string;
+            /** @enum {string|null} */
+            nivel?: "EM_CONSTRUCAO" | "EM_DESENVOLVIMENTO" | "CONSOLIDADO" | null;
+        };
+        RelatorioDto: {
+            id: string;
+            criancaId: string;
+            criancaNome: string;
+            turmaId: string;
+            turmaNome: string;
+            /** @example 2026-1 */
+            periodo: string;
+            /** @example 1º semestre de 2026 */
+            periodoNome: string;
+            /** @enum {string} */
+            status: "RASCUNHO" | "EM_REVISAO" | "PUBLICADO";
+            textoGeral?: string | null;
+            autorNome: string;
+            revisorNome?: string | null;
+            /** Format: date-time */
+            publicadoEm?: string | null;
+            itens: components["schemas"]["ItemRelatorioDto"][];
+        };
+        RelatorioNaListaDto: {
+            criancaId: string;
+            criancaNome: string;
+            /** @description Nulo: ainda não foi gerado */
+            relatorioId?: string | null;
+            /** @enum {string|null} */
+            status?: "RASCUNHO" | "EM_REVISAO" | "PUBLICADO" | null;
+            /** @description Campos de experiência já escritos, de 5 */
+            camposEscritos: number;
+        };
+        GerarRelatorioDto: {
+            criancaId: string;
+            /**
+             * @description AAAA-1 ou AAAA-2
+             * @example 2026-1
+             */
+            periodo: string;
+        };
+        ItemEntradaDto: {
+            /** @enum {string} */
+            campo: "EU_OUTRO_NOS" | "CORPO_GESTOS_MOVIMENTOS" | "TRACOS_SONS_CORES_FORMAS" | "ESCUTA_FALA_PENSAMENTO_IMAGINACAO" | "ESPACOS_TEMPOS_QUANTIDADES";
+            texto: string;
+            /** @enum {string} */
+            nivel?: "EM_CONSTRUCAO" | "EM_DESENVOLVIMENTO" | "CONSOLIDADO";
+        };
+        AtualizarRelatorioDto: {
+            /** @description Abertura do parecer — frequência e visão geral */
+            textoGeral?: string;
+            itens?: components["schemas"]["ItemEntradaDto"][];
         };
         CriarOcorrenciaDto: {
             /** @description UUID gerado no cliente — reenvio não cria uma segunda ocorrência */
@@ -1371,6 +2342,75 @@ export interface components {
             cienteEm?: string | null;
             /** @description Responsáveis avisados no registro */
             familiasAvisadas: number;
+        };
+        AutorizarMedicamentoDto: {
+            criancaId: string;
+            /** @example Amoxicilina 250mg/5ml */
+            medicamento: string;
+            /** @example 5 ml */
+            dosagem: string;
+            /** @example oral */
+            via: string;
+            /**
+             * @description Vazio junto com `seNecessario: true`
+             * @example [
+             *       "10:00",
+             *       "16:00"
+             *     ]
+             */
+            horarios?: string[];
+            /** @description Dar só se a criança apresentar o sintoma */
+            seNecessario?: boolean;
+            /**
+             * @description AAAA-MM-DD
+             * @example 2026-08-06
+             */
+            inicio: string;
+            /** @example 2026-08-13 */
+            fim: string;
+            /** @example Só se a febre passar de 37,8°C. */
+            observacoes?: string;
+        };
+        AdministracaoDto: {
+            id: string;
+            /** Format: date-time */
+            administradoEm: string;
+            dose: string;
+            autorNome: string;
+            /** @description Quem conferiu — a dupla checagem que o protocolo de medicação exige */
+            testemunhaNome?: string | null;
+            observacao?: string | null;
+        };
+        AutorizacaoDto: {
+            id: string;
+            criancaId: string;
+            criancaNome: string;
+            medicamento: string;
+            dosagem: string;
+            via: string;
+            horarios: string[];
+            seNecessario: boolean;
+            /** @example 2026-08-06 */
+            inicio: string;
+            /** @example 2026-08-13 */
+            fim: string;
+            observacoes?: string | null;
+            autorizadoPorNome: string;
+            /** Format: date-time */
+            autorizadoEm: string;
+            /** @description Vigente hoje — só estas podem ser administradas */
+            vigente: boolean;
+            administracoesHoje: components["schemas"]["AdministracaoDto"][];
+        };
+        RegistrarAdministracaoDto: {
+            /** @description UUID gerado no cliente — reenvio não registra uma segunda dose */
+            clientId: string;
+            autorizacaoId: string;
+            /** @example 5 ml */
+            dose: string;
+            /** @description Quem conferiu a dose junto — segunda pessoa da equipe */
+            testemunhaId?: string;
+            observacao?: string;
         };
     };
     responses: never;
@@ -1625,6 +2665,115 @@ export interface operations {
             };
         };
     };
+    EscolasController_adesao: {
+        parameters: {
+            query?: {
+                /** @description 1 a 90; padrão 7 */
+                dias?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdesaoDto"];
+                };
+            };
+        };
+    };
+    RecadosController_meus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecadoDto"][];
+                };
+            };
+        };
+    };
+    RecadosController_listar: {
+        parameters: {
+            query?: {
+                turmaId?: string;
+                criancaId?: string;
+                categoria?: "retirada" | "ausencia" | "saude" | "geral";
+                pendentes?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecadoDto"][];
+                };
+            };
+        };
+    };
+    RecadosController_criar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CriarRecadoDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecadoDto"];
+                };
+            };
+        };
+    };
+    RecadosController_marcarLido: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecadoDto"];
+                };
+            };
+        };
+    };
     UsuariosController_equipe: {
         parameters: {
             query?: never;
@@ -1640,6 +2789,54 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MembroEquipeDto"][];
+                };
+            };
+        };
+    };
+    UsuariosController_criarMembro: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CriarMembroEquipeDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MembroCriadoDto"];
+                };
+            };
+        };
+    };
+    UsuariosController_atualizarMembro: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AtualizarMembroEquipeDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MembroEquipeDto"];
                 };
             };
         };
@@ -1726,6 +2923,73 @@ export interface operations {
             };
         };
     };
+    AnosLetivosController_listar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AnoLetivoDto"][];
+                };
+            };
+        };
+    };
+    AnosLetivosController_criar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CriarAnoLetivoDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AnoLetivoDto"];
+                };
+            };
+        };
+    };
+    AnosLetivosController_atualizar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AtualizarAnoLetivoDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AnoLetivoDto"];
+                };
+            };
+        };
+    };
     TurmasController_listar: {
         parameters: {
             query?: never;
@@ -1741,6 +3005,120 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TurmaDto"][];
+                };
+            };
+        };
+    };
+    TurmasController_criar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CriarTurmaDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TurmaDto"];
+                };
+            };
+        };
+    };
+    TurmasController_excluir: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    TurmasController_atualizar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AtualizarTurmaDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TurmaDto"];
+                };
+            };
+        };
+    };
+    TurmasController_atribuirEducador: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AtribuirEducadorDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TurmaDto"];
+                };
+            };
+        };
+    };
+    TurmasController_removerEducador: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                usuarioId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TurmaDto"];
                 };
             };
         };
@@ -2101,31 +3479,6 @@ export interface operations {
             };
         };
     };
-    CriancasController_decidirConsentimento: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["DecidirConsentimentoDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ConsentimentoDto"][];
-                };
-            };
-        };
-    };
     MatriculasController_matricular: {
         parameters: {
             query?: never;
@@ -2195,6 +3548,148 @@ export interface operations {
             };
         };
     };
+    VinculosController_listar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                criancaId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VinculoDto"][];
+                };
+            };
+        };
+    };
+    VinculosController_atualizar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AtualizarVinculoDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VinculoDto"];
+                };
+            };
+        };
+    };
+    VinculosController_bloquear: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BloquearVinculoDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VinculoDto"];
+                };
+            };
+        };
+    };
+    VinculosController_listarAutorizados: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                criancaId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AutorizadoRetiradaDto"][];
+                };
+            };
+        };
+    };
+    VinculosController_criarAutorizado: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                criancaId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CriarAutorizadoDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AutorizadoRetiradaDto"];
+                };
+            };
+        };
+    };
+    VinculosController_atualizarAutorizado: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AtualizarAutorizadoDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AutorizadoRetiradaDto"];
+                };
+            };
+        };
+    };
     PresencasController_checkin: {
         parameters: {
             query?: never;
@@ -2237,6 +3732,27 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PresencaDto"];
+                };
+            };
+        };
+    };
+    PresencasController_quemPodeRetirar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                criancaId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QuemRetiraDto"][];
                 };
             };
         };
@@ -2306,6 +3822,96 @@ export interface operations {
             };
         };
     };
+    ComunicadosController_criar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CriarComunicadoDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ComunicadoDto"];
+                };
+            };
+        };
+    };
+    ComunicadosController_atualizar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AtualizarComunicadoDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ComunicadoDto"];
+                };
+            };
+        };
+    };
+    ComunicadosController_publicar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ComunicadoDto"];
+                };
+            };
+        };
+    };
+    ComunicadosController_leituras: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaxaDeLeituraDto"];
+                };
+            };
+        };
+    };
     ComunicadosController_marcarLido: {
         parameters: {
             query?: never;
@@ -2346,6 +3952,182 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CardapioDto"][];
+                };
+            };
+        };
+    };
+    CardapiosController_definir: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DefinirCardapioDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CardapioDto"][];
+                };
+            };
+        };
+    };
+    RelatoriosController_meus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RelatorioDto"][];
+                };
+            };
+        };
+    };
+    RelatoriosController_listar: {
+        parameters: {
+            query?: {
+                periodo?: string;
+            };
+            header?: never;
+            path: {
+                turmaId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RelatorioNaListaDto"][];
+                };
+            };
+        };
+    };
+    RelatoriosController_gerar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GerarRelatorioDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RelatorioDto"];
+                };
+            };
+        };
+    };
+    RelatoriosController_buscar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RelatorioDto"];
+                };
+            };
+        };
+    };
+    RelatoriosController_atualizar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AtualizarRelatorioDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RelatorioDto"];
+                };
+            };
+        };
+    };
+    RelatoriosController_enviarParaRevisao: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RelatorioDto"];
+                };
+            };
+        };
+    };
+    RelatoriosController_publicar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RelatorioDto"];
                 };
             };
         };
@@ -2412,6 +4194,95 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["OcorrenciaDto"];
+                };
+            };
+        };
+    };
+    MedicamentosController_listar: {
+        parameters: {
+            query?: {
+                criancaId?: string;
+                turmaId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AutorizacaoDto"][];
+                };
+            };
+        };
+    };
+    MedicamentosController_autorizar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AutorizarMedicamentoDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AutorizacaoDto"];
+                };
+            };
+        };
+    };
+    MedicamentosController_revogar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AutorizacaoDto"];
+                };
+            };
+        };
+    };
+    MedicamentosController_administrar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RegistrarAdministracaoDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AutorizacaoDto"];
                 };
             };
         };

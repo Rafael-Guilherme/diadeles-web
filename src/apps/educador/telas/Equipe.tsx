@@ -1,7 +1,18 @@
-import { useQuery } from '@tanstack/react-query';
-import { UserX } from 'lucide-react';
-import { api } from '@/shared/api/cliente';
-import { Cartao, Carregando, Etiqueta, Vazio } from '@/shared/ui/componentes';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { KeyRound, Plus, UserX } from 'lucide-react';
+import { useState } from 'react';
+import { api, mensagemDeErro } from '@/shared/api/cliente';
+import {
+  Aviso,
+  Botao,
+  Campo,
+  Cartao,
+  Carregando,
+  Etiqueta,
+  RotuloSecao,
+  Selecao,
+  Vazio,
+} from '@/shared/ui/componentes';
 import { Cabecalho } from '../componentes/Cabecalho';
 
 const PAPEIS: Record<string, string> = {
@@ -14,7 +25,24 @@ const PAPEIS: Record<string, string> = {
   RESPONSAVEL: 'Família',
 };
 
+/** O que a gestão pode conceder pela tela. `SUPER_ADMIN` não entra aqui. */
+const ATRIBUIVEIS = ['EDUCADOR', 'AUXILIAR', 'COORDENADOR', 'GESTOR'] as const;
+
+type PapelAtribuivel = (typeof ATRIBUIVEIS)[number];
+
+interface NovoMembro {
+  nome: string;
+  email: string;
+  papel: PapelAtribuivel;
+}
+
+const VAZIO: NovoMembro = { nome: '', email: '', papel: 'EDUCADOR' };
+
 export function Equipe() {
+  const cliente = useQueryClient();
+  const [novo, setNovo] = useState<NovoMembro | null>(null);
+  const [senhaGerada, setSenhaGerada] = useState<{ nome: string; senha: string } | null>(null);
+
   const { data, isLoading } = useQuery({
     queryKey: ['equipe'],
     queryFn: async () => {
@@ -22,6 +50,40 @@ export function Equipe() {
       if (error) throw error;
       return data;
     },
+  });
+
+  const recarregar = () => cliente.invalidateQueries({ queryKey: ['equipe'] });
+
+  const criar = useMutation({
+    mutationFn: async (dados: NovoMembro) => {
+      const { data, error } = await api.POST('/v1/equipe', {
+        body: {
+          nome: dados.nome.trim(),
+          email: dados.email.trim(),
+          papeis: [dados.papel],
+        },
+      });
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: async (resposta) => {
+      setNovo(null);
+      if (resposta?.senhaProvisoria) {
+        setSenhaGerada({ nome: resposta.membro.nome, senha: resposta.senhaProvisoria });
+      }
+      await recarregar();
+    },
+  });
+
+  const alternarAtivo = useMutation({
+    mutationFn: async ({ id, ativo }: { id: string; ativo: boolean }) => {
+      const { error } = await api.PATCH('/v1/equipe/{id}', {
+        params: { path: { id } },
+        body: { ativo },
+      });
+      if (error) throw error;
+    },
+    onSuccess: recarregar,
   });
 
   if (isLoading || !data) {
@@ -42,6 +104,76 @@ export function Equipe() {
       />
 
       <main className="space-y-(--gap-lista) px-4 py-4">
+        {(criar.error || alternarAtivo.error) && (
+          <Aviso>{mensagemDeErro(criar.error ?? alternarAtivo.error)}</Aviso>
+        )}
+
+        {/* A senha provisória aparece uma única vez. Some ao sair da tela, e a
+            secretaria precisa passá-la à pessoa antes disso. */}
+        {senhaGerada && (
+          <Cartao interno className="space-y-2">
+            <RotuloSecao>Senha de {senhaGerada.nome}</RotuloSecao>
+            <p className="numerico rounded-(--raio) bg-[color:var(--color-papel)] p-3 text-center text-lg font-semibold tracking-widest">
+              {senhaGerada.senha}
+            </p>
+            <p className="flex items-start gap-1.5 text-xs leading-relaxed text-[color:var(--color-tinta-suave)]">
+              <KeyRound size={13} className="mt-0.5 shrink-0" />
+              Anote e entregue agora: esta senha não fica guardada e não dá para consultá-la de
+              novo.
+            </p>
+            <Botao variante="secundario" bloco onClick={() => setSenhaGerada(null)}>
+              Já anotei
+            </Botao>
+          </Cartao>
+        )}
+
+        {novo ? (
+          <Cartao interno className="space-y-3">
+            <RotuloSecao>Nova pessoa</RotuloSecao>
+            <Campo
+              rotulo="Nome"
+              value={novo.nome}
+              onChange={(e) => setNovo({ ...novo, nome: e.target.value })}
+            />
+            <Campo
+              rotulo="E-mail"
+              type="email"
+              autoCapitalize="none"
+              value={novo.email}
+              apoio="É por ele que a pessoa entra no app."
+              onChange={(e) => setNovo({ ...novo, email: e.target.value })}
+            />
+            <Selecao
+              rotulo="Papel"
+              value={novo.papel}
+              onChange={(e) => setNovo({ ...novo, papel: e.target.value as PapelAtribuivel })}
+              apoio="Educador e auxiliar registram a rotina; coordenação e gestão administram a escola."
+            >
+              {ATRIBUIVEIS.map((papel) => (
+                <option key={papel} value={papel}>
+                  {PAPEIS[papel]}
+                </option>
+              ))}
+            </Selecao>
+            <div className="flex gap-2">
+              <Botao
+                bloco
+                disabled={criar.isPending || novo.nome.trim().length < 2 || !novo.email.includes('@')}
+                onClick={() => criar.mutate(novo)}
+              >
+                {criar.isPending ? 'Cadastrando…' : 'Cadastrar'}
+              </Botao>
+              <Botao variante="secundario" onClick={() => setNovo(null)}>
+                Cancelar
+              </Botao>
+            </div>
+          </Cartao>
+        ) : (
+          <Botao bloco onClick={() => setNovo(VAZIO)}>
+            <Plus size={16} /> Nova pessoa
+          </Botao>
+        )}
+
         {data.length === 0 && (
           <Vazio
             icone={<UserX size={22} />}
@@ -82,6 +214,15 @@ export function Equipe() {
                 ? `Último acesso ${formatarAcesso(membro.ultimoAcesso)}`
                 : 'Nunca acessou o app'}
             </p>
+
+            <Botao
+              variante="fantasma"
+              bloco
+              disabled={alternarAtivo.isPending}
+              onClick={() => alternarAtivo.mutate({ id: membro.id, ativo: !membro.ativo })}
+            >
+              {membro.ativo ? 'Desativar acesso' : 'Reativar acesso'}
+            </Botao>
           </Cartao>
         ))}
       </main>

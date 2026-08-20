@@ -183,3 +183,59 @@ time,
     scroll-behavior: auto !important;
   }
 }
+
+/* ─────────────────────────── Impressão ───────────────────────────
+
+   Só o parecer descritivo é feito para sair no papel. É documento escolar:
+   a família guarda, imprime e leva à reunião, e a escola arquiva.
+
+   Um PDF gerado no servidor exigiria Chromium na API e um bucket para
+   guardá-lo (docs/arquitetura.md §7 e §8) — e o S3 está adiado junto com a
+   mídia. Até lá, o "Salvar como PDF" do próprio navegador entrega o mesmo
+   arquivo, e estas regras é que fazem a página sair como documento em vez de
+   captura de tela de celular. */
+
+.nao-imprimir {
+  display: revert;
+}
+
+@media print {
+  /* Nada de app: sem barra de navegação, sem botões, sem cabeçalho fixo. */
+  .nao-imprimir,
+  nav,
+  header.area-segura-topo button {
+    display: none !important;
+  }
+
+  body {
+    background: #fff;
+    color: #000;
+  }
+
+  /* A largura de celular deixaria o texto numa coluna estreita no meio da
+     folha A4. */
+  main,
+  .mx-auto {
+    max-width: none !important;
+    padding: 0 !important;
+  }
+
+  .documento {
+    page-break-after: always;
+    break-after: page;
+    font-size: 11.5pt;
+    line-height: 1.6;
+  }
+
+  .documento:last-child {
+    page-break-after: auto;
+    break-after: auto;
+  }
+
+  /* Um campo de experiência cortado ao meio pela quebra de página faz o
+     parecer parecer incompleto. */
+  .documento section {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+}

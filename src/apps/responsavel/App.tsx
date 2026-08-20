@@ -8,6 +8,8 @@ import { Comunicados } from './telas/Comunicados';
 import { Cardapio } from './telas/Cardapio';
 import { Avisos } from './telas/Avisos';
 import { Crianca } from './telas/Crianca';
+import { Recado } from './telas/Recado';
+import { Pareceres } from './telas/Pareceres';
 
 export function App() {
   const usuario = useSessao((estado) => estado.usuario);
@@ -32,8 +34,11 @@ export function App() {
           <Route path="/crianca" element={<Crianca />} />
           {/* Fora da barra inferior de propósito: o sino no cabeçalho de Hoje é
               o caminho, e uma quarta aba disputaria espaço com o que a família
-              abre o app para ver. */}
+              abre o app para ver. O recado segue o mesmo raciocínio — é uma
+              ação ocasional, não um destino. */}
           <Route path="/avisos" element={<Avisos />} />
+          <Route path="/recado" element={<Recado />} />
+          <Route path="/pareceres" element={<Pareceres />} />
           <Route path="/instalar" element={<TelaInstalar />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

@@ -15,6 +15,15 @@ import { Equipe } from './telas/Equipe';
 import { Acesso } from './telas/Acesso';
 import { Criancas } from './telas/Criancas';
 import { CriancaCadastro } from './telas/CriancaCadastro';
+import { AcessoDaCrianca } from './telas/AcessoDaCrianca';
+import { AnosLetivos } from './telas/AnosLetivos';
+import { TurmasGestao } from './telas/TurmasGestao';
+import { ComunicadosGestao } from './telas/ComunicadosGestao';
+import { CardapioGestao } from './telas/CardapioGestao';
+import { Adesao } from './telas/Adesao';
+import { RotinaGestao } from './telas/RotinaGestao';
+import { Pareceres } from './telas/Pareceres';
+import { ParecerEditor } from './telas/ParecerEditor';
 
 export function App() {
   const usuario = useSessao((estado) => estado.usuario);
@@ -37,6 +46,8 @@ export function App() {
       <Route path="/turma/:turmaId" element={<Grade />} />
       <Route path="/turma/:turmaId/chamada" element={<Chamada />} />
       <Route path="/turma/:turmaId/pendencias" element={<Pendencias />} />
+      <Route path="/turma/:turmaId/pareceres" element={<Pareceres />} />
+      <Route path="/turma/:turmaId/parecer/:parecerId" element={<ParecerEditor />} />
       <Route path="/turma/:turmaId/crianca/:criancaId" element={<FichaCrianca />} />
       <Route
         path="/turma/:turmaId/crianca/:criancaId/ocorrencia"
@@ -55,6 +66,13 @@ export function App() {
           {/* "nova" cai no mesmo componente, que abre em branco — cadastrar e
               editar têm exatamente os mesmos campos. */}
           <Route path="criancas/:criancaId" element={<CriancaCadastro />} />
+          <Route path="criancas/:criancaId/acesso" element={<AcessoDaCrianca />} />
+          <Route path="ano-letivo" element={<AnosLetivos />} />
+          <Route path="turmas" element={<TurmasGestao />} />
+          <Route path="comunicados" element={<ComunicadosGestao />} />
+          <Route path="cardapio" element={<CardapioGestao />} />
+          <Route path="adesao" element={<Adesao />} />
+          <Route path="rotina" element={<RotinaGestao />} />
         </Route>
       )}
 

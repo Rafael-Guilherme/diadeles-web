@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
-import { AlertTriangle, ArrowLeft, Bell, Sun } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { AlertTriangle, ArrowLeft, Bell, ScrollText, Sun } from 'lucide-react';
 import { api } from '@/shared/api/cliente';
 import { Cartao, Carregando, Vazio } from '@/shared/ui/componentes';
 import { ControleAvisos } from '../componentes/ConviteAvisos';
@@ -9,6 +9,7 @@ import { ControleAvisos } from '../componentes/ConviteAvisos';
 const ICONES: Record<string, typeof Bell> = {
   RESUMO_DIARIO: Sun,
   OCORRENCIA_GRAVE: AlertTriangle,
+  RELATORIO: ScrollText,
 };
 
 /**
@@ -78,8 +79,13 @@ export function Avisos() {
             const Icone = ICONES[aviso.tipo] ?? Bell;
             const grave = aviso.gravidade === 'GRAVE';
 
-            return (
-              <Cartao key={aviso.id} interno className="flex gap-3">
+            /*
+             * `link` era gravado em toda notificação e nunca usado: o aviso
+             * dizia "o parecer está pronto" e a mãe ficava procurando onde.
+             * Quando ele existe, o cartão inteiro leva ao lugar.
+             */
+            const conteudo = (
+              <Cartao interno className="flex gap-3">
                 <span
                   className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-(--raio) ${
                     grave
@@ -102,6 +108,16 @@ export function Avisos() {
                   </p>
                 </div>
               </Cartao>
+            );
+
+            return aviso.link ? (
+              <Link key={aviso.id} to={aviso.link} className="block">
+                {conteudo}
+              </Link>
+            ) : (
+              <li key={aviso.id} className="list-none">
+                {conteudo}
+              </li>
             );
           })}
         </ul>

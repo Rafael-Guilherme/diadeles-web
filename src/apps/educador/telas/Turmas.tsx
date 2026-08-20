@@ -1,8 +1,10 @@
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { BarChart3, ChevronRight, Users } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { api } from '@/shared/api/cliente';
 import { ehDaGestao, useSessao } from '@/shared/auth/sessao';
+import { sair } from '@/shared/auth/sair';
 import { Cartao, Carregando, Vazio } from '@/shared/ui/componentes';
 import { Cabecalho } from '../componentes/Cabecalho';
 
@@ -14,7 +16,7 @@ const GRUPOS: Record<string, string> = {
 
 export function Turmas() {
   const usuario = useSessao((estado) => estado.usuario);
-  const encerrar = useSessao((estado) => estado.encerrar);
+  const [saindo, setSaindo] = useState(false);
 
   const { data, isLoading } = useQuery({
     queryKey: ['turmas'],
@@ -85,10 +87,14 @@ export function Turmas() {
         ))}
 
         <button
-          onClick={encerrar}
-          className="min-h-11 w-full pt-4 text-center text-sm text-[color:var(--color-tinta-tenue)] underline underline-offset-2"
+          onClick={() => {
+            setSaindo(true);
+            void sair();
+          }}
+          disabled={saindo}
+          className="min-h-11 w-full pt-4 text-center text-sm text-[color:var(--color-tinta-tenue)] underline underline-offset-2 disabled:opacity-50"
         >
-          Sair da demonstração
+          {saindo ? 'Saindo…' : 'Sair'}
         </button>
       </main>
     </div>

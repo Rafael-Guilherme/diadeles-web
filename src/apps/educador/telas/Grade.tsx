@@ -1,13 +1,14 @@
 import { useMemo, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, useParams } from 'react-router-dom';
-import { AlertTriangle, ClipboardList, FileText, Pill, UserCheck } from 'lucide-react';
+import { AlertTriangle, ClipboardList, FileText, Pill, ScrollText, UserCheck } from 'lucide-react';
 import { api } from '@/shared/api/cliente';
 import { fila, type TipoRegistro } from '@/shared/offline/fila';
 import { sincronizar, notificarMudancaNaFila } from '@/shared/offline/sincronizador';
 import { Botao, Carregando, Etiqueta, RotuloSecao, Vazio } from '@/shared/ui/componentes';
 import { Cabecalho } from '../componentes/Cabecalho';
 import { PainelRegistro, ICONES_TIPO, ROTULOS_TIPO } from '../componentes/PainelRegistro';
+import { Recados } from '../componentes/Recados';
 
 /**
  * A tela principal do educador.
@@ -129,6 +130,21 @@ export function Grade() {
             <ClipboardList size={16} /> Fechar turno
           </Botao>
         </Link>
+      </div>
+
+      {/* Fora da linha de cima de propósito: chamada e fechamento são do dia,
+          e o parecer é do semestre — misturá-los na mesma fileira sugeriria uma
+          rotina que não existe. */}
+      <div className="px-4 pb-1">
+        <Link to={`/turma/${turmaId}/pareceres`}>
+          <Botao variante="fantasma" bloco>
+            <ScrollText size={16} /> Pareceres do semestre
+          </Botao>
+        </Link>
+      </div>
+
+      <div className="px-4 pb-1">
+        <Recados turmaId={turmaId} />
       </div>
 
       <div className="px-4 pb-2">
@@ -254,14 +270,18 @@ export function Grade() {
             {totalSelecionadas} {totalSelecionadas === 1 ? 'criança' : 'crianças'} · registrar
           </p>
           <div className="grid grid-cols-4 gap-2">
-            {(['ALIMENTACAO', 'SONO', 'HIGIENE', 'HUMOR'] as TipoRegistro[]).map((tipo) => (
+            {/* Quem manda aqui é a escola, não esta tela: a API devolve os tipos
+                que ela pratica, na ordem em que o educador decorou os botões.
+                Uma creche que não usa o campo de fralda não vê o botão — e
+                também não recebe pendência de higiene no fim do turno. */}
+            {data.registrosHabilitados.map((tipo) => (
               <button
                 key={tipo}
-                onClick={() => setTipoAberto(tipo)}
+                onClick={() => setTipoAberto(tipo as TipoRegistro)}
                 className="flex flex-col items-center gap-1 rounded-(--raio) border border-[color:var(--color-borda)] py-2.5 text-xs font-semibold active:bg-neutral-50"
               >
-                {ICONES_TIPO[tipo]}
-                {ROTULOS_TIPO[tipo]}
+                {ICONES_TIPO[tipo as TipoRegistro]}
+                {ROTULOS_TIPO[tipo as TipoRegistro]}
               </button>
             ))}
           </div>

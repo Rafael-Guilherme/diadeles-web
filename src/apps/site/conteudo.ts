@@ -84,7 +84,7 @@ export const DIFERENCIAIS = [
   {
     titulo: 'Dado de criança tratado como tal',
     texto:
-      'Consentimento de imagem separado por finalidade e revogável, foto em armazenamento privado com link temporário, e bloqueio individual de visualização e retirada para casos de guarda compartilhada.',
+      'Bloqueio individual de visualização e de retirada para casos de guarda compartilhada e medida protetiva, com registro de quem aplicou. Ninguém vê o dia de uma criança sem vínculo ativo.',
   },
 ];
 
@@ -98,7 +98,7 @@ export const PLANOS = [
     itens: [
       'Chamada com entrada e saída',
       'Rotina: alimentação, sono, higiene, humor',
-      'Fotos com controle de consentimento',
+      'Resumo do dia por push e e-mail',
       'Comunicados e cardápio',
       'App da família ilimitado',
     ],
@@ -149,9 +149,9 @@ export const PERGUNTAS = [
       'A educadora continua registrando normalmente. Os lançamentos ficam guardados no aparelho, o app mostra quantos estão aguardando e tudo é enviado sozinho quando a conexão volta. Nada se perde e nada é registrado em duplicidade.',
   },
   {
-    pergunta: 'Quem consegue ver as fotos do meu filho?',
+    pergunta: 'Quem consegue ver o dia do meu filho?',
     resposta:
-      'Apenas os responsáveis com vínculo ativo, e apenas fotos em que a criança está marcada. O uso de imagem é autorizado por finalidade — uso interno, material impresso, redes sociais — e cada autorização pode ser retirada a qualquer momento, com efeito imediato.',
+      'Apenas os responsáveis com vínculo ativo e não bloqueado, e a equipe da escola. Cada acesso é conferido a cada leitura, não apenas na hora de entrar — revogar um vínculo tem efeito imediato.',
   },
   {
     pergunta: 'Como funciona em caso de guarda compartilhada?',

@@ -1,7 +1,14 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useNavigate, useParams } from 'react-router-dom';
-import { Archive, ArchiveRestore, Check, UserRound } from 'lucide-react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+import {
+  Archive,
+  ArchiveRestore,
+  Check,
+  ChevronRight,
+  ShieldCheck,
+  UserRound,
+} from 'lucide-react';
 import { api, mensagemDeErro } from '@/shared/api/cliente';
 import {
   Area,
@@ -16,6 +23,7 @@ import {
   Selecao,
 } from '@/shared/ui/componentes';
 import { Cabecalho } from '../componentes/Cabecalho';
+import { Matricula } from '../componentes/Matricula';
 
 type Ficha = NonNullable<
   Awaited<ReturnType<typeof buscarFicha>>
@@ -146,6 +154,7 @@ function Edicao({
     void clienteQuery.invalidateQueries({ queryKey: ['criancas'] });
     void clienteQuery.invalidateQueries({ queryKey: ['crianca', criancaId] });
     void clienteQuery.invalidateQueries({ queryKey: ['turmas'] });
+    void clienteQuery.invalidateQueries({ queryKey: ['matriculas', criancaId] });
   }
 
   const salvar = useMutation({
@@ -324,6 +333,12 @@ function Edicao({
 
         {ficha && (
           <>
+            <Matricula
+              criancaId={criancaId}
+              arquivada={ficha.arquivada}
+              aoMudar={invalidar}
+            />
+
             <section className="space-y-2">
               <RotuloSecao>Responsáveis</RotuloSecao>
 
@@ -369,15 +384,40 @@ function Edicao({
                   ))}
                 </ul>
               )}
+
+              {/* Permissão e bloqueio ficam numa tela própria: são a decisão de
+                  maior consequência do cadastro, e enfiá-las entre alergia e
+                  data de nascimento convidaria ao clique distraído. */}
+              <Link to={`/gestao/criancas/${criancaId}/acesso`} className="block">
+                <Cartao interno className="flex items-center gap-3 transition active:bg-neutral-50">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-(color:--cor-acao-suave) text-(color:--cor-acao)">
+                    <ShieldCheck size={18} />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-semibold">Quem vê e quem busca</p>
+                    <p className="text-xs text-[color:var(--color-tinta-suave)]">
+                      Permissões, bloqueio judicial e autorizados a retirar
+                    </p>
+                  </div>
+                  <ChevronRight size={20} className="shrink-0 text-[color:var(--color-tinta-tenue)]" />
+                </Cartao>
+              </Link>
             </section>
 
             <section className="space-y-2">
               <RotuloSecao>Encerramento</RotuloSecao>
               <Cartao interno className="space-y-3">
                 <p className="text-sm leading-relaxed text-[color:var(--color-tinta-suave)]">
-                  Arquivar tira a criança das grades e das listagens, mas mantém tudo o que já foi
-                  registrado — a lei exige guardar o registro pedagógico por cinco anos.
+                  Arquivar tira a criança das grades e das listagens e encerra a matrícula,
+                  liberando a vaga na turma. Tudo o que já foi registrado continua guardado — a lei
+                  exige manter o registro pedagógico por cinco anos.
                 </p>
+                {!ficha.arquivada && (
+                  <p className="text-xs leading-relaxed text-[color:var(--color-tinta-tenue)]">
+                    Se a criança vai voltar, use <b className="font-semibold">Trancar matrícula</b>{' '}
+                    acima: a vaga fica reservada.
+                  </p>
+                )}
                 <Botao
                   variante="secundario"
                   bloco
@@ -386,7 +426,7 @@ function Edicao({
                 >
                   {ficha.arquivada ? (
                     <>
-                      <ArchiveRestore size={16} /> Trazer de volta
+                      <ArchiveRestore size={16} /> Trazer de volta (sem turma)
                     </>
                   ) : (
                     <>

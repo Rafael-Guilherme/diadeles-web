@@ -13,6 +13,22 @@ export const ICONES_TIPO: Record<TipoRegistro, ReactNode> = {
   OBSERVACAO: <NotebookPen size={16} />,
 };
 
+/**
+ * Os cinco campos da BNCC, em rótulo curto.
+ *
+ * O nome oficial de cada campo é uma frase — "Espaços, tempos, quantidades,
+ * relações e transformações" — que não cabe num botão de tela de celular. O
+ * nome inteiro aparece no parecer, que é onde ele importa.
+ */
+const CAMPOS_BNCC: [string, string][] = [
+  ['', 'Nenhum'],
+  ['EU_OUTRO_NOS', 'Eu, o outro e o nós'],
+  ['CORPO_GESTOS_MOVIMENTOS', 'Corpo e movimento'],
+  ['TRACOS_SONS_CORES_FORMAS', 'Traços, sons e cores'],
+  ['ESCUTA_FALA_PENSAMENTO_IMAGINACAO', 'Escuta, fala e imaginação'],
+  ['ESPACOS_TEMPOS_QUANTIDADES', 'Espaços e quantidades'],
+];
+
 export const ROTULOS_TIPO: Record<TipoRegistro, string> = {
   ALIMENTACAO: 'Refeição',
   SONO: 'Sono',
@@ -42,9 +58,31 @@ export function PainelRegistro({
   const [observacao, setObservacao] = useState('');
   const [salvando, setSalvando] = useState(false);
 
+  /*
+   * Dois tipos precisam de texto para existir: a API monta a frase da linha do
+   * tempo a partir dele (`timeline.ts`), então sem título ou sem recado a
+   * família receberia um item em branco no dia da criança.
+   */
+  const completo =
+    tipo === 'ATIVIDADE'
+      ? String(dados.titulo ?? '').trim().length > 0
+      : tipo === 'OBSERVACAO'
+        ? String(dados.texto ?? '').trim().length > 0
+        : true;
+
   async function confirmar() {
     setSalvando(true);
-    await aoConfirmar(tipo, dados, observacao.trim() || undefined);
+    await aoConfirmar(
+      tipo,
+      // O texto livre chega com espaços do teclado do celular; a frase que a
+      // família lê não deve começar com eles.
+      tipo === 'ATIVIDADE'
+        ? { ...dados, titulo: String(dados.titulo).trim() }
+        : tipo === 'OBSERVACAO'
+          ? { texto: String(dados.texto).trim() }
+          : dados,
+      observacao.trim() || undefined,
+    );
   }
 
   return (
@@ -148,6 +186,80 @@ export function PainelRegistro({
             />
           )}
 
+          {tipo === 'HIDRATACAO' && (
+            /* Em ml e por toque: a quantidade que importa para a família é a
+               ordem de grandeza, não o número exato, e teclado numérico numa
+               tela de lote custaria mais que o dado vale. */
+            <Escolha
+              rotulo="Quanto bebeu"
+              opcoes={[
+                ['100', '100 ml'],
+                ['150', '150 ml'],
+                ['200', '200 ml'],
+                ['250', '250 ml'],
+              ]}
+              valor={String(dados.quantidadeMl)}
+              aoEscolher={(v) => setDados({ ...dados, quantidadeMl: Number(v) })}
+            />
+          )}
+
+          {tipo === 'ATIVIDADE' && (
+            <>
+              {/* O título vira a frase que a família lê na linha do tempo — sem
+                  ele o dia da criança mostraria um item em branco. */}
+              <label className="block">
+                <span className="mb-1.5 block text-sm font-semibold">Qual foi a atividade</span>
+                <input
+                  value={String(dados.titulo ?? '')}
+                  onChange={(evento) => setDados({ ...dados, titulo: evento.target.value })}
+                  placeholder="Pintura com guache"
+                  className="min-h-11 w-full rounded-(--raio) border border-[color:var(--color-borda)] px-3 text-[16px] outline-none focus:border-(color:--cor-acao)"
+                />
+              </label>
+              <Escolha
+                rotulo="Como participou"
+                opcoes={[
+                  ['PARTICIPOU', 'Participou'],
+                  ['PARCIAL', 'Em parte'],
+                  ['NAO_PARTICIPOU', 'Não quis'],
+                ]}
+                valor={String(dados.participacao)}
+                aoEscolher={(v) => setDados({ ...dados, participacao: v })}
+              />
+
+              {/*
+                O toque que faz o parecer do semestre se escrever sozinho.
+                Sem o campo de experiência, a atividade fica sem lugar no
+                relatório de desenvolvimento — e a coordenação volta a redigir
+                cinco seções de memória em dezembro (docs/plano-produto.md §1).
+                Opcional de propósito: brincadeira livre não precisa entrar em
+                campo nenhum, e um campo obrigatório seria preenchido no chute.
+              */}
+              <Escolha
+                rotulo="Campo de experiência (BNCC)"
+                opcoes={CAMPOS_BNCC}
+                valor={String(dados.campoExperiencia ?? '')}
+                aoEscolher={(v) =>
+                  setDados({ ...dados, campoExperiencia: v === '' ? null : v })
+                }
+              />
+            </>
+          )}
+
+          {tipo === 'OBSERVACAO' ? (
+            /* Aqui o texto é o registro, não um complemento dele: por isso
+               substitui o campo de observação em vez de conviver com ele. */
+            <label className="block">
+              <span className="mb-1.5 block text-sm font-semibold">O recado</span>
+              <textarea
+                value={String(dados.texto ?? '')}
+                onChange={(evento) => setDados({ ...dados, texto: evento.target.value })}
+                rows={3}
+                placeholder="Levou a touca para casa; devolver amanhã"
+                className="w-full resize-none rounded-(--raio) border border-[color:var(--color-borda)] px-3 py-2 text-[16px] outline-none focus:border-(color:--cor-acao)"
+              />
+            </label>
+          ) : (
           <label className="block">
             <span className="mb-1.5 block text-sm font-semibold">Observação (opcional)</span>
             <textarea
@@ -158,13 +270,18 @@ export function PainelRegistro({
               className="w-full resize-none rounded-(--raio) border border-[color:var(--color-borda)] px-3 py-2 text-sm outline-none focus:border-(color:--cor-acao)"
             />
           </label>
+          )}
         </div>
 
         <div className="flex gap-2 py-4">
           <Botao variante="secundario" onClick={aoFechar} className="flex-1">
             Cancelar
           </Botao>
-          <Botao onClick={() => void confirmar()} disabled={salvando} className="flex-[2]">
+          <Botao
+            onClick={() => void confirmar()}
+            disabled={salvando || !completo}
+            className="flex-[2]"
+          >
             {salvando ? 'Salvando…' : `Registrar para ${quantidade}`}
           </Botao>
         </div>
@@ -245,7 +362,7 @@ function valorInicial(tipo: TipoRegistro): Record<string, unknown> {
     case 'HUMOR':
       return { humor: 'FELIZ' };
     case 'ATIVIDADE':
-      return { titulo: '', participacao: 'PARTICIPOU' };
+      return { titulo: '', campoExperiencia: null, participacao: 'PARTICIPOU' };
     default:
       return { texto: '' };
   }

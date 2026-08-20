@@ -1,5 +1,18 @@
 import { useQuery } from '@tanstack/react-query';
-import { Baby, ChevronRight, KeyRound, Users } from 'lucide-react';
+import {
+  AlertTriangle,
+  Baby,
+  CalendarDays,
+  ChevronRight,
+  KeyRound,
+  LayoutGrid,
+  ListChecks,
+  Megaphone,
+  MessageSquare,
+  TrendingUp,
+  Users,
+  UtensilsCrossed,
+} from 'lucide-react';
 import { Link } from 'react-router-dom';
 import type { ReactNode } from 'react';
 import { api } from '@/shared/api/cliente';
@@ -58,6 +71,36 @@ export function Gestao() {
               que as famílias já conseguem ver no app.
             </p>
           </Cartao>
+
+          {/* Os dois números que pedem alguém ao telefone, e não mais um
+              relatório: ocorrência que a família não confirmou ter lido e
+              recado que ninguém da escola leu. Só aparecem quando existem —
+              zero pendência não merece cartão. */}
+          {(data.ocorrenciasAbertas > 0 || data.recadosPendentes > 0) && (
+            <div className="space-y-(--gap-lista)">
+              {data.ocorrenciasAbertas > 0 && (
+                <Pendencia
+                  icone={<AlertTriangle size={16} />}
+                  texto={
+                    data.ocorrenciasAbertas === 1
+                      ? '1 ocorrência sem ciência da família nos últimos 7 dias'
+                      : `${data.ocorrenciasAbertas} ocorrências sem ciência da família nos últimos 7 dias`
+                  }
+                  alerta
+                />
+              )}
+              {data.recadosPendentes > 0 && (
+                <Pendencia
+                  icone={<MessageSquare size={16} />}
+                  texto={
+                    data.recadosPendentes === 1
+                      ? '1 recado de família ainda não lido pela escola'
+                      : `${data.recadosPendentes} recados de famílias ainda não lidos pela escola`
+                  }
+                />
+              )}
+            </div>
+          )}
         </section>
 
         <section className="space-y-2">
@@ -88,10 +131,52 @@ export function Gestao() {
             } rotina nas turmas`}
           />
           <Atalho
+            para="/gestao/turmas"
+            icone={<LayoutGrid size={18} />}
+            titulo="Turmas"
+            descricao={`${data.turmas} ${
+              data.turmas === 1 ? 'turma' : 'turmas'
+            } — faixa, turno e quem rege cada uma`}
+          />
+          <Atalho
             para="/gestao/acesso"
             icone={<KeyRound size={18} />}
             titulo="Acesso das famílias"
             descricao="Convites emitidos e quem ainda não entrou no app"
+          />
+          <Atalho
+            para="/gestao/adesao"
+            icone={<TrendingUp size={18} />}
+            titulo="Adesão"
+            descricao="Quem registra e quem abre o app, turma por turma"
+          />
+        </section>
+
+        <section className="space-y-(--gap-lista)">
+          <RotuloSecao>O que a escola publica</RotuloSecao>
+          <Atalho
+            para="/gestao/comunicados"
+            icone={<Megaphone size={18} />}
+            titulo="Comunicados"
+            descricao="Escrever, publicar e ver quem leu"
+          />
+          <Atalho
+            para="/gestao/cardapio"
+            icone={<UtensilsCrossed size={18} />}
+            titulo="Cardápio"
+            descricao="A semana que aparece no app da família"
+          />
+          <Atalho
+            para="/gestao/rotina"
+            icone={<ListChecks size={18} />}
+            titulo="Rotina"
+            descricao="Quais registros a escola usa — e quais o turno cobra"
+          />
+          <Atalho
+            para="/gestao/ano-letivo"
+            icone={<CalendarDays size={18} />}
+            titulo="Ano letivo"
+            descricao="Abrir e encerrar o ano — a moldura das turmas"
           />
         </section>
       </main>
@@ -120,6 +205,34 @@ function Indicador({
         {valor}
       </p>
       <p className="mt-1 text-2xs leading-tight text-[color:var(--color-tinta-tenue)]">{rotulo}</p>
+    </Cartao>
+  );
+}
+
+function Pendencia({
+  icone,
+  texto,
+  alerta = false,
+}: {
+  icone: ReactNode;
+  texto: string;
+  alerta?: boolean;
+}) {
+  return (
+    <Cartao
+      interno
+      className={`flex items-center gap-3 ${alerta ? 'border-[color:var(--color-alerta)]/30' : ''}`}
+    >
+      <span
+        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${
+          alerta
+            ? 'bg-[color:var(--color-alerta-suave)] text-[color:var(--color-alerta)]'
+            : 'bg-(color:--cor-acao-suave) text-(color:--cor-acao)'
+        }`}
+      >
+        {icone}
+      </span>
+      <p className="text-sm leading-snug">{texto}</p>
     </Cartao>
   );
 }

@@ -81,7 +81,10 @@ describe('app do educador', () => {
           turno: 'integral',
           cor: '#6BA292',
           criancasAtivas: 7,
-          educadores: ['Ana Souza'],
+          educadores: [{ usuarioId: 'u1', nome: 'Ana Souza', principal: true }],
+          anoLetivoId: 'a1',
+          ano: 2026,
+          capacidade: 12,
         },
       ],
     });
@@ -110,7 +113,10 @@ describe('área de gestão', () => {
         turno: 'integral',
         cor: '#6BA292',
         criancasAtivas: 7,
-        educadores: ['Ana Souza'],
+        educadores: [{ usuarioId: 'u1', nome: 'Ana Souza', principal: true }],
+        anoLetivoId: 'a1',
+        ano: 2026,
+        capacidade: 12,
       },
     ],
   };
