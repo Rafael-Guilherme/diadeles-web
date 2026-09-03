@@ -63,7 +63,16 @@ export async function sincronizar(): Promise<void> {
     });
 
     if (error || !data) {
-      // Falha de transporte: mantém tudo na fila e tenta de novo depois.
+      /*
+       * Mantém tudo na fila e tenta de novo depois — inclusive quando a recusa
+       * é o corte por inadimplência (402 `ASSINATURA_SUSPENSA`).
+       *
+       * A tentação seria marcar o lote como erro e tirá-lo da fila, mas o que
+       * o educador registrou aconteceu de verdade: a criança comeu, dormiu,
+       * trocou. Guardar e continuar tentando faz o dia inteiro subir sozinho no
+       * minuto em que a escola pagar. Quem explica a espera é a faixa de aviso,
+       * que aparece em toda tela.
+       */
       await fila.incrementarTentativa(itens.map((i) => i.clientId));
       return;
     }

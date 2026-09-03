@@ -1284,6 +1284,106 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/assinatura": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Assinatura da escola, com as faturas
+         * @description Inclui o que sairia na próxima apuração e o ambiente do provedor — sem `ASAAS_API_KEY` as cobranças são simuladas.
+         */
+        get: operations["FaturamentoController_assinatura"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/assinatura/aviso": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * O banner de inadimplência, para qualquer um da equipe
+         * @description Nulo enquanto a régua não chegou ao D+10. É o que explica ao educador por que os registros dele pararam de gravar — ele não tem acesso às faturas.
+         */
+        get: operations["FaturamentoController_aviso"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/faturamento/apurar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Roda a apuração da competência agora
+         * @description O job automático é no dia 1 às 03:00; isto existe para operar sem esperar o mês virar. Idempotente: competência já cobrada não gera segunda cobrança. Devolve nulo quando a escola está em período de avaliação.
+         */
+        post: operations["FaturamentoController_apurar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/faturamento/regua": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Roda a régua de inadimplência desta escola agora
+         * @description Aplica D+3, D+10 e D+20 sobre as faturas vencidas. Idempotente: a etapa já aplicada não é repetida. Devolve o aviso resultante, ou nulo quando não há nada a avisar.
+         */
+        post: operations["FaturamentoController_rodarRegua"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/webhooks/asaas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Notificações de cobrança do Asaas
+         * @description Exige o token em `asaas-access-token`, igual a `ASAAS_WEBHOOK_TOKEN`. Idempotente pelo id do evento: um reenvio do provedor não gera segunda baixa. O status vem de uma reconsulta ao provedor, nunca do corpo recebido.
+         */
+        post: operations["WebhooksController_asaas"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/ocorrencias": {
         parameters: {
             query?: never;
@@ -2299,6 +2399,108 @@ export interface components {
             /** @description Abertura do parecer — frequência e visão geral */
             textoGeral?: string;
             itens?: components["schemas"]["ItemEntradaDto"][];
+        };
+        FaturaDto: {
+            id: string;
+            /** @example 2026-08 */
+            competencia: string;
+            /** @example agosto de 2026 */
+            competenciaNome: string;
+            /** @description Crianças medidas na apuração */
+            criancasAtivas: number;
+            /** @description Quantidade cobrada — o mínimo do plano quando a escola tem menos */
+            criancasCobradas: number;
+            /** @example 714.00 */
+            valor: string;
+            /** @example 2026-08-10 */
+            vencimento: string;
+            /** @enum {string} */
+            status: "PENDENTE" | "PAGA" | "VENCIDA" | "CANCELADA";
+            /** @description Pendente e com vencimento no passado */
+            emAtraso: boolean;
+            linkPagamento?: string | null;
+            /** Format: date-time */
+            pagoEm?: string | null;
+            /** @description Emitida em modo simulado, sem provedor por trás */
+            simulada: boolean;
+        };
+        AssinaturaDto: {
+            /** @example profissional */
+            plano: string;
+            /** @enum {string} */
+            status: "TRIAL" | "ATIVA" | "INADIMPLENTE" | "SUSPENSA" | "CANCELADA";
+            /** @example 11.90 */
+            precoPorCrianca: string;
+            /** @example 20 */
+            minimoCriancas: number;
+            /** @example 10 */
+            diaVencimento: number;
+            /** @example 2026-09-15 */
+            trialAte?: string | null;
+            /** @description Dias que faltam do período de avaliação; 0 quando acabou */
+            diasDeTrial: number;
+            /** @description Matrículas ativas agora */
+            criancasAtivas: number;
+            /** @description O que sairia na próxima apuração, com o mínimo aplicado */
+            valorEstimado: string;
+            /**
+             * @description Quando a próxima apuração roda
+             * @example 2026-09-01
+             */
+            proximaApuracao: string;
+            /**
+             * @description Sem ASAAS_API_KEY as cobranças são simuladas e ninguém é cobrado de verdade
+             * @enum {string}
+             */
+            ambiente: "simulado" | "sandbox" | "producao";
+            faturas: components["schemas"]["FaturaDto"][];
+        };
+        AvisoAssinaturaDto: {
+            /**
+             * @description Etapa da régua já aplicada
+             * @enum {number}
+             */
+            etapa: 10 | 20;
+            /** @description A escrita da equipe está cortada */
+            bloqueado: boolean;
+            /** @description A frase pronta para o banner */
+            mensagem: string;
+            /** @example 28 */
+            atrasoEmDias?: number | null;
+            /** @example julho de 2026 */
+            competenciaNome?: string | null;
+            /** @example 238.00 */
+            valor?: string | null;
+        };
+        ApurarDto: {
+            /**
+             * @description Padrão: a competência corrente
+             * @example 2026-08
+             */
+            competencia?: string;
+        };
+        PagamentoAsaasDto: {
+            /** @example pay_8021991822 */
+            id: string;
+            /** @example RECEIVED */
+            status?: string;
+            /** @description O id da nossa Fatura, mandado na emissão */
+            externalReference?: string;
+            /** @example 2026-08-09 */
+            paymentDate?: string;
+        };
+        EventoAsaasDto: {
+            /**
+             * @description Único por evento
+             * @example evt_05b708f961d739ea7eba7e4db318f621
+             */
+            id: string;
+            /**
+             * @description PAYMENT_RECEIVED, PAYMENT_CONFIRMED e PAYMENT_OVERDUE são tratados
+             * @example PAYMENT_RECEIVED
+             */
+            event: string;
+            payment: components["schemas"]["PagamentoAsaasDto"];
         };
         CriarOcorrenciaDto: {
             /** @description UUID gerado no cliente — reenvio não cria uma segunda ocorrência */
@@ -4129,6 +4331,108 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["RelatorioDto"];
                 };
+            };
+        };
+    };
+    FaturamentoController_assinatura: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssinaturaDto"];
+                };
+            };
+        };
+    };
+    FaturamentoController_aviso: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AvisoAssinaturaDto"];
+                };
+            };
+        };
+    };
+    FaturamentoController_apurar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ApurarDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FaturaDto"];
+                };
+            };
+        };
+    };
+    FaturamentoController_rodarRegua: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AvisoAssinaturaDto"];
+                };
+            };
+        };
+    };
+    WebhooksController_asaas: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EventoAsaasDto"];
+            };
+        };
+        responses: {
+            /** @description Recebido — o processamento acontece na fila. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

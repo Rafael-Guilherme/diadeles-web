@@ -6,6 +6,7 @@ import {
   ChevronRight,
   KeyRound,
   LayoutGrid,
+  CreditCard,
   ListChecks,
   Megaphone,
   MessageSquare,
@@ -149,6 +150,12 @@ export function Gestao() {
             icone={<TrendingUp size={18} />}
             titulo="Adesão"
             descricao="Quem registra e quem abre o app, turma por turma"
+          />
+          <Atalho
+            para="/gestao/assinatura"
+            icone={<CreditCard size={18} />}
+            titulo="Assinatura"
+            descricao="Plano, faturas e o que sai na próxima cobrança"
           />
         </section>
 

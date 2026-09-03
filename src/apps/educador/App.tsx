@@ -24,6 +24,8 @@ import { Adesao } from './telas/Adesao';
 import { RotinaGestao } from './telas/RotinaGestao';
 import { Pareceres } from './telas/Pareceres';
 import { ParecerEditor } from './telas/ParecerEditor';
+import { Assinatura } from './telas/Assinatura';
+import { AvisoDeAssinatura } from './componentes/AvisoDeAssinatura';
 
 export function App() {
   const usuario = useSessao((estado) => estado.usuario);
@@ -41,44 +43,51 @@ export function App() {
   }
 
   return (
-    <Routes>
-      <Route path="/" element={<Turmas />} />
-      <Route path="/turma/:turmaId" element={<Grade />} />
-      <Route path="/turma/:turmaId/chamada" element={<Chamada />} />
-      <Route path="/turma/:turmaId/pendencias" element={<Pendencias />} />
-      <Route path="/turma/:turmaId/pareceres" element={<Pareceres />} />
-      <Route path="/turma/:turmaId/parecer/:parecerId" element={<ParecerEditor />} />
-      <Route path="/turma/:turmaId/crianca/:criancaId" element={<FichaCrianca />} />
-      <Route
-        path="/turma/:turmaId/crianca/:criancaId/ocorrencia"
-        element={<RegistrarOcorrencia />}
-      />
+    <>
+      {/* Acima de tudo e em toda tela: no D+20 o educador aperta salvar e nada
+          grava, e a explicação não pode estar só na tela de gestão. */}
+      <AvisoDeAssinatura />
 
-      {/* As rotas de gestão só existem para quem a API deixa entrar nelas. Um
-          educador que digitasse /gestao veria três telas de erro 403; mandá-lo
-          de volta para as turmas é a resposta honesta. */}
-      {ehDaGestao(usuario.papeis) && (
-        <Route path="/gestao">
-          <Route index element={<Gestao />} />
-          <Route path="equipe" element={<Equipe />} />
-          <Route path="acesso" element={<Acesso />} />
-          <Route path="criancas" element={<Criancas />} />
-          {/* "nova" cai no mesmo componente, que abre em branco — cadastrar e
-              editar têm exatamente os mesmos campos. */}
-          <Route path="criancas/:criancaId" element={<CriancaCadastro />} />
-          <Route path="criancas/:criancaId/acesso" element={<AcessoDaCrianca />} />
-          <Route path="ano-letivo" element={<AnosLetivos />} />
-          <Route path="turmas" element={<TurmasGestao />} />
-          <Route path="comunicados" element={<ComunicadosGestao />} />
-          <Route path="cardapio" element={<CardapioGestao />} />
-          <Route path="adesao" element={<Adesao />} />
-          <Route path="rotina" element={<RotinaGestao />} />
-        </Route>
-      )}
+      <Routes>
+        <Route path="/" element={<Turmas />} />
+        <Route path="/turma/:turmaId" element={<Grade />} />
+        <Route path="/turma/:turmaId/chamada" element={<Chamada />} />
+        <Route path="/turma/:turmaId/pendencias" element={<Pendencias />} />
+        <Route path="/turma/:turmaId/pareceres" element={<Pareceres />} />
+        <Route path="/turma/:turmaId/parecer/:parecerId" element={<ParecerEditor />} />
+        <Route path="/turma/:turmaId/crianca/:criancaId" element={<FichaCrianca />} />
+        <Route
+          path="/turma/:turmaId/crianca/:criancaId/ocorrencia"
+          element={<RegistrarOcorrencia />}
+        />
 
-      <Route path="/instalar" element={<TelaInstalar />} />
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+        {/* As rotas de gestão só existem para quem a API deixa entrar nelas. Um
+            educador que digitasse /gestao veria três telas de erro 403; mandá-lo
+            de volta para as turmas é a resposta honesta. */}
+        {ehDaGestao(usuario.papeis) && (
+          <Route path="/gestao">
+            <Route index element={<Gestao />} />
+            <Route path="equipe" element={<Equipe />} />
+            <Route path="acesso" element={<Acesso />} />
+            <Route path="criancas" element={<Criancas />} />
+            {/* "nova" cai no mesmo componente, que abre em branco — cadastrar e
+                editar têm exatamente os mesmos campos. */}
+            <Route path="criancas/:criancaId" element={<CriancaCadastro />} />
+            <Route path="criancas/:criancaId/acesso" element={<AcessoDaCrianca />} />
+            <Route path="ano-letivo" element={<AnosLetivos />} />
+            <Route path="turmas" element={<TurmasGestao />} />
+            <Route path="comunicados" element={<ComunicadosGestao />} />
+            <Route path="cardapio" element={<CardapioGestao />} />
+            <Route path="adesao" element={<Adesao />} />
+            <Route path="rotina" element={<RotinaGestao />} />
+            <Route path="assinatura" element={<Assinatura />} />
+          </Route>
+        )}
+
+        <Route path="/instalar" element={<TelaInstalar />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </>
   );
 }
 
