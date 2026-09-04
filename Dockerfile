@@ -20,8 +20,13 @@ WORKDIR /app
 
 # Dependências antes do código: enquanto o lockfile não muda, o install inteiro
 # vem do cache do Docker.
+#
+# `--prod=false` explícito: o pnpm pula as devDependencies sozinho quando
+# enxerga `NODE_ENV=production`, e o Coolify injeta as variáveis da aplicação
+# como build args. Sem a flag o build morre em `vite: not found` — o Vite, o
+# TypeScript e o Tailwind são todos devDependencies.
 COPY package.json pnpm-lock.yaml ./
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --frozen-lockfile --prod=false
 
 COPY . .
 
