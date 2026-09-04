@@ -94,6 +94,7 @@ async function abrirLoteDe(tipo: string) {
   render(envolver('/turma/t2'));
 
   fireEvent.click(await screen.findByText('Arthur Vieira'));
+  fireEvent.click(screen.getByRole('button', { name: 'Registrar' }));
   fireEvent.click(screen.getByRole('button', { name: tipo }));
 }
 
@@ -109,6 +110,7 @@ describe('registro em lote', () => {
     render(envolver('/turma/t2'));
 
     fireEvent.click(await screen.findByText('Arthur Vieira'));
+    fireEvent.click(screen.getByRole('button', { name: 'Registrar' }));
 
     for (const tipo of ['Refeição', 'Sono', 'Fralda', 'Humor', 'Atividade', 'Água', 'Recado']) {
       expect(screen.getByRole('button', { name: tipo })).toBeDefined();
@@ -123,7 +125,7 @@ describe('registro em lote', () => {
   it('não deixa registrar atividade sem dizer qual foi', async () => {
     await abrirLoteDe('Atividade');
 
-    const registrar = await screen.findByRole('button', { name: /Registrar para 1/ });
+    const registrar = await screen.findByRole('button', { name: /Aplicar a 1 criança/ });
     expect((registrar as HTMLButtonElement).disabled).toBe(true);
 
     fireEvent.change(screen.getByLabelText('Qual foi a atividade'), {
@@ -135,7 +137,7 @@ describe('registro em lote', () => {
   it('não deixa registrar recado vazio', async () => {
     await abrirLoteDe('Recado');
 
-    const registrar = await screen.findByRole('button', { name: /Registrar para 1/ });
+    const registrar = await screen.findByRole('button', { name: /Aplicar a 1 criança/ });
     expect((registrar as HTMLButtonElement).disabled).toBe(true);
 
     fireEvent.change(screen.getByLabelText('O recado'), {
@@ -148,7 +150,7 @@ describe('registro em lote', () => {
     await abrirLoteDe('Água');
 
     expect(await screen.findByRole('button', { name: '150 ml' })).toBeDefined();
-    expect((screen.getByRole('button', { name: /Registrar para 1/ }) as HTMLButtonElement).disabled)
+    expect((screen.getByRole('button', { name: /Aplicar a 1 criança/ }) as HTMLButtonElement).disabled)
       .toBe(false);
   });
 });

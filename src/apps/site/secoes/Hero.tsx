@@ -1,22 +1,23 @@
-import { ArrowRight, Baby, Moon, Utensils, WifiOff } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 
-/** Amostra da tela da família. Dados ilustrativos, iguais aos da demonstração. */
-const LINHA_DO_TEMPO = [
-  { hora: '07h42', icone: <Utensils size={14} />, titulo: 'Chegou na escola', detalhe: 'Entregue por Marina' },
-  {
-    hora: '09h15',
-    icone: <Utensils size={14} />,
-    titulo: 'No lanche da manhã, comeu tudo',
-    detalhe: 'Fruta da estação, suco natural',
-  },
-  { hora: '10h10', icone: <Baby size={14} />, titulo: 'Troca de fralda (xixi e cocô)', detalhe: null },
-  {
-    hora: '12h45',
-    icone: <Moon size={14} />,
-    titulo: 'Dormiu tranquila',
-    detalhe: 'das 12h45 às 14h15',
-  },
+/**
+ * A amostra do hero é a grade de rotina, não a tela da família.
+ *
+ * Quem lê esta página é a gestora, e o que ela precisa acreditar em dois
+ * segundos é que a turma inteira cabe numa tela e que dá para ver o que falta.
+ * A tela da família aparece logo abaixo, em "para quem é" — ali ela é o
+ * argumento; aqui, seria uma promessa para a pessoa errada.
+ */
+const COLUNAS = ['CHA', 'REF', 'SON', 'FRA'];
+
+const LINHAS: { nome: string; feitos: boolean[]; atencao?: boolean }[] = [
+  { nome: 'Ana Clara', feitos: [true, true, false, false], atencao: true },
+  { nome: 'Benjamim Rocha', feitos: [true, true, true, true] },
+  { nome: 'Cecília Prado', feitos: [true, false, false, false], atencao: true },
+  { nome: 'Davi Nakamura', feitos: [true, true, true, true] },
 ];
+
+const FATOS = ['30 dias grátis', 'Sem anúncios, nunca', 'Funciona sem internet'];
 
 export function Hero() {
   return (
@@ -28,20 +29,22 @@ export function Hero() {
 
       <div className="relative mx-auto grid max-w-6xl gap-12 px-5 pb-20 pt-12 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:pt-20">
         <div>
-          <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-[color:var(--color-borda)] bg-white px-3 py-1 text-xs font-semibold text-(color:--cor-acao)">
-            Para creches e pré-escolas
+          <p className="text-2xs font-semibold uppercase tracking-[0.14em] text-[color:var(--color-tinta-tenue)]">
+            Rotina diária para creche e pré-escola
           </p>
 
-          {/* Os tamanhos vêm da escala em estilos.css. Havia um `lg:text-[3.4rem]`
-              aqui que, depois da escala nova, ficou menor que o `sm:text-5xl` —
-              o título encolhia ao passar para telas grandes. */}
-          <h1 className="text-balance text-4xl sm:text-5xl">
-            O dia deles, para quem não pode estar lá.
+          {/* 56px uma única vez em todo o sistema, e é aqui. Os tamanhos vêm da
+              escala em estilos.css: havia um `lg:text-[3.4rem]` que, depois da
+              escala nova, ficou menor que o `sm:text-5xl` — o título encolhia ao
+              passar para telas grandes. */}
+          <h1 className="mt-3 text-balance text-4xl sm:text-5xl">
+            A turma inteira registrada antes do café.
           </h1>
 
           <p className="mt-5 max-w-xl text-lg leading-relaxed text-[color:var(--color-tinta-suave)]">
-            A educadora registra a turma inteira em segundos — com ou sem internet. A família
-            acompanha em tempo real, em português claro. E o relatório do semestre já sai pronto.
+            A educadora registra chamada, refeição, sono, fralda e humor em lote, de pé, com uma
+            mão. A família acompanha em tempo real. E o parecer descritivo do semestre sai pronto do
+            que já foi registrado.
           </p>
 
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -59,66 +62,108 @@ export function Hero() {
             </a>
           </div>
 
-          <p className="mt-4 text-sm text-[color:var(--color-tinta-suave)]">
-            Demonstração aberta, sem cadastro. 30 dias grátis para a escola quando decidir começar.
-          </p>
+          {/* Três fatos, sem adjetivo, separados do bloco por uma linha: é o que
+              a gestora leva anotado para a reunião do conselho. */}
+          <ul className="mt-8 flex flex-wrap gap-x-8 gap-y-2 border-t border-[color:var(--color-borda)] pt-4 text-sm text-[color:var(--color-tinta-suave)]">
+            {FATOS.map((fato) => (
+              <li key={fato}>{fato}</li>
+            ))}
+          </ul>
         </div>
 
-        {/* `amostra-familia` troca os tokens de cor e raio pelos do app da
-            família: a amostra tem que parecer o produto, não o site. */}
-        <div className="amostra-familia relative mx-auto w-full max-w-[320px]">
-          <div className="rounded-[2.2rem] border-[10px] border-neutral-900 bg-white shadow-2xl">
-            <div className="rounded-[1.6rem] bg-(color:--cor-acao-suave) px-4 pb-4 pt-5">
-              <p className="text-2xs font-bold uppercase tracking-wider text-(color:--cor-acao)">
-                Escola Modelo
-              </p>
-              <p className="display text-xl leading-tight">Sofia Prado</p>
-              <p className="text-xs text-[color:var(--color-tinta-suave)]">Berçário II · 2a 4m</p>
-              <p className="display mt-3 text-[15px] leading-snug text-[color:var(--color-sol-700)]">
-                Sofia comeu bem, dormiu e estava alegre.
-              </p>
-            </div>
-
-            <ul className="space-y-2 p-3">
-              {LINHA_DO_TEMPO.map((item) => (
-                <li
-                  key={item.hora}
-                  className="flex gap-2.5 rounded-(--raio) border border-[color:var(--color-borda)] p-2.5"
-                >
-                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-(--raio-sm) bg-(color:--cor-acao-suave) text-(color:--cor-acao)">
-                    {item.icone}
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-baseline justify-between gap-2">
-                      <p className="truncate text-[13px] font-semibold leading-tight">
-                        {item.titulo}
-                      </p>
-                      <time className="shrink-0 text-2xs text-[color:var(--color-tinta-tenue)]">
-                        {item.hora}
-                      </time>
-                    </div>
-                    {item.detalhe && (
-                      <p className="truncate text-[11px] text-[color:var(--color-tinta-suave)]">
-                        {item.detalhe}
-                      </p>
-                    )}
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div className="absolute -bottom-4 -left-6 hidden items-center gap-2 rounded-(--raio) border border-[color:var(--color-borda)] bg-white px-3 py-2 shadow-lg sm:flex">
-            <WifiOff size={16} className="text-[color:var(--color-marca-500)]" />
-            <span className="text-xs font-semibold">
-              Registrado sem internet
-              <span className="block font-normal text-[color:var(--color-tinta-suave)]">
-                enviado sozinho depois
-              </span>
-            </span>
-          </div>
-        </div>
+        <AmostraDaGrade />
       </div>
     </section>
+  );
+}
+
+function AmostraDaGrade() {
+  return (
+    <div className="mx-auto w-full max-w-[420px] overflow-hidden rounded-(--raio-lg) border border-[color:var(--color-borda-forte)] bg-white">
+      <p className="border-b border-[color:var(--color-borda)] bg-[color:var(--color-papel)] px-3 py-2 text-2xs uppercase tracking-[0.1em] text-[color:var(--color-tinta-tenue)]">
+        Grade de rotina · Berçário II
+      </p>
+
+      <div className="border-b border-[color:var(--color-borda)] px-3 py-2.5">
+        <div className="flex items-baseline justify-between gap-3">
+          <p className="text-sm">
+            <strong className="numerico font-semibold">14 de 22</strong> com o dia completo
+          </p>
+          <p className="numerico text-xs font-semibold text-[color:var(--color-sol-700)]">
+            28 faltando
+          </p>
+        </div>
+        <div className="mt-2 flex h-1.5 overflow-hidden rounded-full bg-[color:var(--color-sol-50)]">
+          <span className="block h-full w-[64%] bg-[color:var(--color-marca-500)]" />
+          <span className="block h-full w-[12%] bg-[color:var(--color-sol-300)]" />
+        </div>
+      </div>
+
+      <table className="w-full border-collapse text-left" style={{ tableLayout: 'fixed' }}>
+        <colgroup>
+          <col />
+          {COLUNAS.map((c) => (
+            <col key={c} style={{ width: 44 }} />
+          ))}
+        </colgroup>
+        <thead>
+          <tr className="bg-[color:var(--color-papel)]">
+            <th className="border-b border-[color:var(--color-borda)] px-3 py-1.5 text-2xs font-medium uppercase tracking-[0.1em] text-[color:var(--color-tinta-tenue)]">
+              Criança
+            </th>
+            {COLUNAS.map((coluna) => (
+              <th
+                key={coluna}
+                className="border-b border-l border-[color:var(--color-borda)] py-1.5 text-center text-2xs font-semibold text-[color:var(--color-tinta-suave)]"
+              >
+                {coluna}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {LINHAS.map((linha) => (
+            <tr key={linha.nome} className="border-b border-[color:var(--color-borda)] last:border-b-0">
+              <th
+                scope="row"
+                style={{
+                  borderLeft: `3px solid ${
+                    linha.atencao ? 'var(--color-sol-300)' : 'var(--color-marca-300)'
+                  }`,
+                }}
+                className="h-11 px-2.5 text-left text-sm font-normal"
+              >
+                {linha.nome}
+              </th>
+              {linha.feitos.map((feito, indice) => (
+                <td
+                  key={indice}
+                  className={`h-11 border-l border-[color:var(--color-borda)] ${
+                    feito ? '' : 'bg-[color:var(--color-sol-50)]'
+                  }`}
+                >
+                  <span className="flex h-11 items-center justify-center" aria-hidden>
+                    {feito ? (
+                      <span className="flex h-[22px] w-[22px] items-center justify-center rounded-md bg-[color:var(--color-marca-500)] text-xs text-white">
+                        ✓
+                      </span>
+                    ) : (
+                      <span className="h-2.5 w-2.5 rounded-full border-[1.5px] border-[color:var(--color-borda-forte)]" />
+                    )}
+                  </span>
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      <div className="flex items-center justify-between gap-3 border-t border-[color:var(--color-borda-forte)] bg-[color:var(--color-papel)] px-3 py-2.5">
+        <span className="numerico text-sm font-semibold">3 selecionadas</span>
+        <span className="rounded-(--raio) bg-(color:--cor-acao) px-3 py-2 text-sm font-semibold text-white">
+          Registrar em lote
+        </span>
+      </div>
+    </div>
   );
 }

@@ -4,6 +4,7 @@ import { ComoFunciona } from './secoes/ComoFunciona';
 import { Publicos } from './secoes/Publicos';
 import { Experimentar } from './secoes/Experimentar';
 import { Diferenciais } from './secoes/Diferenciais';
+import { ProvaSocial } from './secoes/ProvaSocial';
 import { Planos } from './secoes/Planos';
 import { Perguntas } from './secoes/Perguntas';
 import { Rodape } from './secoes/Rodape';
@@ -22,6 +23,7 @@ export function Site() {
         <Publicos />
         <Experimentar />
         <Diferenciais />
+        <ProvaSocial />
         <Planos />
         <Perguntas />
       </main>

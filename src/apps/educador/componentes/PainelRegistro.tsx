@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from 'react';
 import { Baby, Droplets, Moon, Smile, Sparkles, Utensils, NotebookPen } from 'lucide-react';
 import type { TipoRegistro } from '@/shared/offline/fila';
-import { Botao } from '@/shared/ui/componentes';
+import { Aviso, Botao, Opcoes, RotuloCampo } from '@/shared/ui/componentes';
 
 export const ICONES_TIPO: Record<TipoRegistro, ReactNode> = {
   ALIMENTACAO: <Utensils size={16} />,
@@ -12,22 +12,6 @@ export const ICONES_TIPO: Record<TipoRegistro, ReactNode> = {
   ATIVIDADE: <Sparkles size={16} />,
   OBSERVACAO: <NotebookPen size={16} />,
 };
-
-/**
- * Os cinco campos da BNCC, em rótulo curto.
- *
- * O nome oficial de cada campo é uma frase — "Espaços, tempos, quantidades,
- * relações e transformações" — que não cabe num botão de tela de celular. O
- * nome inteiro aparece no parecer, que é onde ele importa.
- */
-const CAMPOS_BNCC: [string, string][] = [
-  ['', 'Nenhum'],
-  ['EU_OUTRO_NOS', 'Eu, o outro e o nós'],
-  ['CORPO_GESTOS_MOVIMENTOS', 'Corpo e movimento'],
-  ['TRACOS_SONS_CORES_FORMAS', 'Traços, sons e cores'],
-  ['ESCUTA_FALA_PENSAMENTO_IMAGINACAO', 'Escuta, fala e imaginação'],
-  ['ESPACOS_TEMPOS_QUANTIDADES', 'Espaços e quantidades'],
-];
 
 export const ROTULOS_TIPO: Record<TipoRegistro, string> = {
   ALIMENTACAO: 'Refeição',
@@ -40,23 +24,75 @@ export const ROTULOS_TIPO: Record<TipoRegistro, string> = {
 };
 
 /**
- * Preenchimento do lote. Poucas opções, alvos grandes, uma decisão por tela —
- * quem usa isso está de pé, com uma criança no colo.
+ * Três letras por coluna da grade.
+ *
+ * A coluna tem 40px: o rótulo inteiro não cabe, e abreviar por conta própria
+ * daria "REF" em uma tela e "ALI" em outra. O `title` da coluna e o texto para
+ * leitor de tela continuam com o nome por extenso.
+ */
+export const SIGLAS_TIPO: Record<TipoRegistro, string> = {
+  ALIMENTACAO: 'REF',
+  SONO: 'SON',
+  HIGIENE: 'FRA',
+  HIDRATACAO: 'ÁGU',
+  HUMOR: 'HUM',
+  ATIVIDADE: 'ATV',
+  OBSERVACAO: 'REC',
+};
+
+/**
+ * Os cinco campos da BNCC, em rótulo curto.
+ *
+ * O nome oficial de cada campo é uma frase — "Espaços, tempos, quantidades,
+ * relações e transformações" — que não cabe num botão de tela de celular. O
+ * nome inteiro aparece no parecer, que é onde ele importa.
+ */
+const CAMPOS_BNCC = [
+  { valor: '', texto: 'Nenhum' },
+  { valor: 'EU_OUTRO_NOS', texto: 'Eu, o outro e o nós' },
+  { valor: 'CORPO_GESTOS_MOVIMENTOS', texto: 'Corpo e movimento' },
+  { valor: 'TRACOS_SONS_CORES_FORMAS', texto: 'Traços, sons e cores' },
+  { valor: 'ESCUTA_FALA_PENSAMENTO_IMAGINACAO', texto: 'Escuta, fala e imaginação' },
+  { valor: 'ESPACOS_TEMPOS_QUANTIDADES', texto: 'Espaços e quantidades' },
+] as const;
+
+export interface RestricaoDoLote {
+  nome: string;
+  itens: string[];
+}
+
+/**
+ * A folha que sobe do rodapé da grade.
+ *
+ * O tipo de registro é escolhido aqui dentro, não na barra de baixo: com a
+ * seleção já feita, trocar "fralda" por "sono" é um toque, e não voltar,
+ * desfazer e recomeçar. Poucas opções, alvos de 44px, uma decisão por bloco —
+ * quem usa isto está de pé, com uma criança no colo.
  */
 export function PainelRegistro({
-  tipo,
-  quantidade,
+  tiposHabilitados,
+  nomes,
+  restricoes,
   aoFechar,
   aoConfirmar,
 }: {
-  tipo: TipoRegistro;
-  quantidade: number;
+  tiposHabilitados: TipoRegistro[];
+  nomes: string[];
+  restricoes: RestricaoDoLote[];
   aoFechar: () => void;
   aoConfirmar: (tipo: TipoRegistro, dados: unknown, observacao?: string) => Promise<void>;
 }) {
-  const [dados, setDados] = useState<Record<string, unknown>>(() => valorInicial(tipo));
+  const [tipo, setTipo] = useState<TipoRegistro>(tiposHabilitados[0] ?? 'ALIMENTACAO');
+  const [dados, setDados] = useState<Record<string, unknown>>(() => valorInicial(tiposHabilitados[0] ?? 'ALIMENTACAO'));
   const [observacao, setObservacao] = useState('');
   const [salvando, setSalvando] = useState(false);
+
+  const quantidade = nomes.length;
+
+  function trocarTipo(novo: TipoRegistro) {
+    setTipo(novo);
+    setDados(valorInicial(novo));
+  }
 
   /*
    * Dois tipos precisam de texto para existir: a API monta a frase da linha do
@@ -88,236 +124,236 @@ export function PainelRegistro({
   return (
     <div className="fixed inset-0 z-30 flex items-end bg-black/40" onClick={aoFechar}>
       <div
-        className="area-segura-base w-full rounded-t-3xl bg-white px-5 pt-5"
+        className="area-segura-base flex max-h-[92vh] w-full flex-col gap-3.5 overflow-y-auto rounded-t-(--raio-lg) border-t border-[color:var(--color-borda-forte)] bg-[color:var(--color-papel)] px-3 pt-3"
         onClick={(evento) => evento.stopPropagation()}
       >
-        <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-neutral-300" />
+        <div className="flex items-center gap-2.5">
+          <div className="min-w-0 flex-1">
+            <h2 className="text-xl font-semibold">Registrar em lote</h2>
+            <p className="truncate text-xs text-[color:var(--color-tinta-tenue)]">
+              {nomes.join(' · ')}
+            </p>
+          </div>
+          <button
+            onClick={aoFechar}
+            aria-label="Fechar"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-(--raio) border border-[color:var(--color-borda-forte)] bg-white text-[color:var(--color-tinta-suave)]"
+          >
+            ✕
+          </button>
+        </div>
 
-        <h2 className="text-lg font-bold">{ROTULOS_TIPO[tipo]}</h2>
-        <p className="mb-4 text-sm text-[color:var(--color-tinta-suave)]">
-          Vale para {quantidade} {quantidade === 1 ? 'criança selecionada' : 'crianças selecionadas'}.
-        </p>
+        <Opcoes
+          rotulo="Tipo de registro"
+          opcoes={tiposHabilitados.map((t) => ({ valor: t, texto: ROTULOS_TIPO[t] }))}
+          valor={tipo}
+          aoEscolher={trocarTipo}
+        />
 
-        <div className="space-y-4 pb-2">
-          {tipo === 'ALIMENTACAO' && (
-            <>
-              <Escolha
-                rotulo="Refeição"
-                opcoes={[
-                  ['CAFE_MANHA', 'Café'],
-                  ['LANCHE_MANHA', 'Lanche manhã'],
-                  ['ALMOCO', 'Almoço'],
-                  ['LANCHE_TARDE', 'Lanche tarde'],
-                ]}
-                valor={String(dados.refeicao)}
-                aoEscolher={(v) => setDados({ ...dados, refeicao: v })}
-              />
-              <Escolha
-                rotulo="Aceitação"
-                opcoes={[
-                  ['TUDO', 'Comeu tudo'],
-                  ['METADE', 'Metade'],
-                  ['POUCO', 'Pouco'],
-                  ['RECUSOU', 'Recusou'],
-                ]}
-                valor={String(dados.aceitacao)}
-                aoEscolher={(v) => setDados({ ...dados, aceitacao: v })}
-              />
-            </>
-          )}
-
-          {tipo === 'SONO' && (
-            <Escolha
-              rotulo="Como dormiu"
+        {tipo === 'ALIMENTACAO' && (
+          <>
+            <Opcoes
+              rotulo="Refeição"
               opcoes={[
-                ['TRANQUILO', 'Tranquilo'],
-                ['AGITADO', 'Agitado'],
-                ['NAO_DORMIU', 'Não dormiu'],
+                { valor: 'CAFE_MANHA', texto: 'Café' },
+                { valor: 'LANCHE_MANHA', texto: 'Lanche manhã' },
+                { valor: 'ALMOCO', texto: 'Almoço' },
+                { valor: 'LANCHE_TARDE', texto: 'Lanche tarde' },
               ]}
-              valor={String(dados.qualidade)}
-              aoEscolher={(v) => setDados({ ...dados, qualidade: v })}
+              valor={String(dados.refeicao)}
+              aoEscolher={(v) => setDados({ ...dados, refeicao: v })}
             />
-          )}
-
-          {tipo === 'HIGIENE' && (
-            <>
-              <Escolha
-                rotulo="Onde"
-                opcoes={[
-                  ['FRALDA', 'Fralda'],
-                  ['BANHEIRO', 'Banheiro'],
-                ]}
-                valor={String(dados.tipo)}
-                aoEscolher={(v) => setDados({ ...dados, tipo: v })}
-              />
-              <div className="flex gap-2">
-                <Alternador
-                  rotulo="Xixi"
-                  ativo={Boolean(dados.urina)}
-                  aoAlternar={() => setDados({ ...dados, urina: !dados.urina })}
-                />
-                <Alternador
-                  rotulo="Cocô"
-                  ativo={Boolean(dados.evacuacao)}
-                  aoAlternar={() => setDados({ ...dados, evacuacao: !dados.evacuacao })}
-                />
-                <Alternador
-                  rotulo="Trocou roupa"
-                  ativo={Boolean(dados.trocaRoupa)}
-                  aoAlternar={() => setDados({ ...dados, trocaRoupa: !dados.trocaRoupa })}
-                />
-              </div>
-            </>
-          )}
-
-          {tipo === 'HUMOR' && (
-            <Escolha
-              rotulo="Como estava"
+            <Opcoes
+              rotulo="Quanto comeu"
+              colunas={4}
               opcoes={[
-                ['FELIZ', 'Alegre'],
-                ['TRANQUILO', 'Tranquila'],
-                ['CHOROSO', 'Chorosa'],
-                ['IRRITADO', 'Irritada'],
-                ['SONOLENTO', 'Com sono'],
-                ['ADOENTADO', 'Adoentada'],
+                { valor: 'RECUSOU', texto: 'Nada' },
+                { valor: 'POUCO', texto: 'Pouco' },
+                { valor: 'METADE', texto: 'Metade' },
+                { valor: 'TUDO', texto: 'Tudo' },
               ]}
-              valor={String(dados.humor)}
-              aoEscolher={(v) => setDados({ ...dados, humor: v })}
+              valor={String(dados.aceitacao)}
+              aoEscolher={(v) => setDados({ ...dados, aceitacao: v })}
             />
-          )}
+          </>
+        )}
 
-          {tipo === 'HIDRATACAO' && (
-            /* Em ml e por toque: a quantidade que importa para a família é a
-               ordem de grandeza, não o número exato, e teclado numérico numa
-               tela de lote custaria mais que o dado vale. */
-            <Escolha
-              rotulo="Quanto bebeu"
+        {tipo === 'SONO' && (
+          <Opcoes
+            rotulo="Como dormiu"
+            opcoes={[
+              { valor: 'TRANQUILO', texto: 'Tranquilo' },
+              { valor: 'AGITADO', texto: 'Agitado' },
+              { valor: 'NAO_DORMIU', texto: 'Não dormiu' },
+            ]}
+            valor={String(dados.qualidade)}
+            aoEscolher={(v) => setDados({ ...dados, qualidade: v })}
+          />
+        )}
+
+        {tipo === 'HIGIENE' && (
+          <>
+            <Opcoes
+              rotulo="Onde"
               opcoes={[
-                ['100', '100 ml'],
-                ['150', '150 ml'],
-                ['200', '200 ml'],
-                ['250', '250 ml'],
+                { valor: 'FRALDA', texto: 'Fralda' },
+                { valor: 'BANHEIRO', texto: 'Banheiro' },
               ]}
-              valor={String(dados.quantidadeMl)}
-              aoEscolher={(v) => setDados({ ...dados, quantidadeMl: Number(v) })}
+              valor={String(dados.tipo)}
+              aoEscolher={(v) => setDados({ ...dados, tipo: v })}
             />
-          )}
-
-          {tipo === 'ATIVIDADE' && (
-            <>
-              {/* O título vira a frase que a família lê na linha do tempo — sem
-                  ele o dia da criança mostraria um item em branco. */}
-              <label className="block">
-                <span className="mb-1.5 block text-sm font-semibold">Qual foi a atividade</span>
-                <input
-                  value={String(dados.titulo ?? '')}
-                  onChange={(evento) => setDados({ ...dados, titulo: evento.target.value })}
-                  placeholder="Pintura com guache"
-                  className="min-h-11 w-full rounded-(--raio) border border-[color:var(--color-borda)] px-3 text-[16px] outline-none focus:border-(color:--cor-acao)"
-                />
-              </label>
-              <Escolha
-                rotulo="Como participou"
-                opcoes={[
-                  ['PARTICIPOU', 'Participou'],
-                  ['PARCIAL', 'Em parte'],
-                  ['NAO_PARTICIPOU', 'Não quis'],
-                ]}
-                valor={String(dados.participacao)}
-                aoEscolher={(v) => setDados({ ...dados, participacao: v })}
+            <div className="flex gap-2">
+              <Alternador
+                rotulo="Xixi"
+                ativo={Boolean(dados.urina)}
+                aoAlternar={() => setDados({ ...dados, urina: !dados.urina })}
               />
-
-              {/*
-                O toque que faz o parecer do semestre se escrever sozinho.
-                Sem o campo de experiência, a atividade fica sem lugar no
-                relatório de desenvolvimento — e a coordenação volta a redigir
-                cinco seções de memória em dezembro (docs/plano-produto.md §1).
-                Opcional de propósito: brincadeira livre não precisa entrar em
-                campo nenhum, e um campo obrigatório seria preenchido no chute.
-              */}
-              <Escolha
-                rotulo="Campo de experiência (BNCC)"
-                opcoes={CAMPOS_BNCC}
-                valor={String(dados.campoExperiencia ?? '')}
-                aoEscolher={(v) =>
-                  setDados({ ...dados, campoExperiencia: v === '' ? null : v })
-                }
+              <Alternador
+                rotulo="Cocô"
+                ativo={Boolean(dados.evacuacao)}
+                aoAlternar={() => setDados({ ...dados, evacuacao: !dados.evacuacao })}
               />
-            </>
-          )}
+              <Alternador
+                rotulo="Trocou roupa"
+                ativo={Boolean(dados.trocaRoupa)}
+                aoAlternar={() => setDados({ ...dados, trocaRoupa: !dados.trocaRoupa })}
+              />
+            </div>
+          </>
+        )}
 
-          {tipo === 'OBSERVACAO' ? (
-            /* Aqui o texto é o registro, não um complemento dele: por isso
-               substitui o campo de observação em vez de conviver com ele. */
-            <label className="block">
-              <span className="mb-1.5 block text-sm font-semibold">O recado</span>
-              <textarea
-                value={String(dados.texto ?? '')}
-                onChange={(evento) => setDados({ ...dados, texto: evento.target.value })}
-                rows={3}
-                placeholder="Levou a touca para casa; devolver amanhã"
-                className="w-full resize-none rounded-(--raio) border border-[color:var(--color-borda)] px-3 py-2 text-[16px] outline-none focus:border-(color:--cor-acao)"
+        {tipo === 'HUMOR' && (
+          <Opcoes
+            rotulo="Como estava"
+            opcoes={[
+              { valor: 'FELIZ', texto: 'Alegre' },
+              { valor: 'TRANQUILO', texto: 'Tranquila' },
+              { valor: 'CHOROSO', texto: 'Chorosa' },
+              { valor: 'IRRITADO', texto: 'Irritada' },
+              { valor: 'SONOLENTO', texto: 'Com sono' },
+              { valor: 'ADOENTADO', texto: 'Adoentada' },
+            ]}
+            valor={String(dados.humor)}
+            aoEscolher={(v) => setDados({ ...dados, humor: v })}
+          />
+        )}
+
+        {tipo === 'HIDRATACAO' && (
+          /* Em ml e por toque: a quantidade que importa para a família é a
+             ordem de grandeza, não o número exato, e teclado numérico numa
+             tela de lote custaria mais que o dado vale. */
+          <Opcoes
+            rotulo="Quanto bebeu"
+            colunas={4}
+            opcoes={[
+              { valor: '100', texto: '100 ml' },
+              { valor: '150', texto: '150 ml' },
+              { valor: '200', texto: '200 ml' },
+              { valor: '250', texto: '250 ml' },
+            ]}
+            valor={String(dados.quantidadeMl)}
+            aoEscolher={(v) => setDados({ ...dados, quantidadeMl: Number(v) })}
+          />
+        )}
+
+        {tipo === 'ATIVIDADE' && (
+          <>
+            {/* O título vira a frase que a família lê na linha do tempo — sem
+                ele o dia da criança mostraria um item em branco. */}
+            <label className="block space-y-1.5">
+              <RotuloCampo>Qual foi a atividade</RotuloCampo>
+              <input
+                value={String(dados.titulo ?? '')}
+                onChange={(evento) => setDados({ ...dados, titulo: evento.target.value })}
+                placeholder="Pintura com guache"
+                className="w-full rounded-(--raio) border border-[color:var(--color-borda-forte)] bg-white px-3 text-[16px] outline-none focus:border-(color:--cor-acao)"
+                style={{ minHeight: 'var(--altura-controle)' }}
               />
             </label>
-          ) : (
-          <label className="block">
-            <span className="mb-1.5 block text-sm font-semibold">Observação (opcional)</span>
+            <Opcoes
+              rotulo="Como participou"
+              opcoes={[
+                { valor: 'PARTICIPOU', texto: 'Participou' },
+                { valor: 'PARCIAL', texto: 'Em parte' },
+                { valor: 'NAO_PARTICIPOU', texto: 'Não quis' },
+              ]}
+              valor={String(dados.participacao)}
+              aoEscolher={(v) => setDados({ ...dados, participacao: v })}
+            />
+
+            {/*
+              O toque que faz o parecer do semestre se escrever sozinho.
+              Sem o campo de experiência, a atividade fica sem lugar no
+              relatório de desenvolvimento — e a coordenação volta a redigir
+              cinco seções de memória em dezembro (docs/plano-produto.md §1).
+              Opcional de propósito: brincadeira livre não precisa entrar em
+              campo nenhum, e um campo obrigatório seria preenchido no chute.
+            */}
+            <Opcoes
+              rotulo="Campo de experiência (BNCC)"
+              opcoes={CAMPOS_BNCC}
+              valor={String(dados.campoExperiencia ?? '')}
+              aoEscolher={(v) => setDados({ ...dados, campoExperiencia: v === '' ? null : v })}
+            />
+          </>
+        )}
+
+        {tipo === 'OBSERVACAO' ? (
+          /* Aqui o texto é o registro, não um complemento dele: por isso
+             substitui o campo de observação em vez de conviver com ele. */
+          <label className="block space-y-1.5">
+            <RotuloCampo>O recado</RotuloCampo>
+            <textarea
+              value={String(dados.texto ?? '')}
+              onChange={(evento) => setDados({ ...dados, texto: evento.target.value })}
+              rows={3}
+              placeholder="Levou a touca para casa; devolver amanhã"
+              className="w-full resize-none rounded-(--raio) border border-[color:var(--color-borda-forte)] bg-white px-3 py-2.5 text-[16px] outline-none focus:border-(color:--cor-acao)"
+            />
+          </label>
+        ) : (
+          <label className="block space-y-1.5">
+            <RotuloCampo>
+              Observação · opcional, vai para {quantidade === 1 ? 'a família' : `as ${quantidade} famílias`}
+            </RotuloCampo>
             <textarea
               value={observacao}
               onChange={(evento) => setObservacao(evento.target.value)}
               rows={2}
-              placeholder="Algo que a família precisa saber"
-              className="w-full resize-none rounded-(--raio) border border-[color:var(--color-borda)] px-3 py-2 text-sm outline-none focus:border-(color:--cor-acao)"
+              placeholder="Ex.: pediu repetição"
+              className="w-full resize-none rounded-(--raio) border border-[color:var(--color-borda-forte)] bg-white px-3 py-2.5 text-[16px] outline-none focus:border-(color:--cor-acao)"
             />
           </label>
-          )}
-        </div>
+        )}
 
-        <div className="flex gap-2 py-4">
-          <Botao variante="secundario" onClick={aoFechar} className="flex-1">
-            Cancelar
-          </Botao>
+        {/* A restrição aparece no momento em que a decisão é tomada — é o
+            único instante em que o registro em lote pode errar feio (5d). */}
+        {tipo === 'ALIMENTACAO' && restricoes.length > 0 && (
+          <Aviso
+            titulo={`${restricoes.length} das ${quantidade} crianças ${restricoes.length === 1 ? 'tem' : 'têm'} restrição`}
+          >
+            {restricoes.map((r) => (
+              <p key={r.nome}>
+                <strong className="text-[color:var(--color-alerta)]">
+                  {r.nome} · {r.itens.join(', ')}.
+                </strong>{' '}
+                Confira o prato antes de aplicar.
+              </p>
+            ))}
+          </Aviso>
+        )}
+
+        <div className="pb-3">
           <Botao
+            bloco
             onClick={() => void confirmar()}
-            disabled={salvando || !completo}
-            className="flex-[2]"
+            disabled={salvando || !completo || quantidade === 0}
           >
-            {salvando ? 'Salvando…' : `Registrar para ${quantidade}`}
+            {salvando
+              ? 'Salvando…'
+              : `Aplicar a ${quantidade} ${quantidade === 1 ? 'criança' : 'crianças'}`}
           </Botao>
         </div>
-      </div>
-    </div>
-  );
-}
-
-function Escolha({
-  rotulo,
-  opcoes,
-  valor,
-  aoEscolher,
-}: {
-  rotulo: string;
-  opcoes: [string, string][];
-  valor: string;
-  aoEscolher: (valor: string) => void;
-}) {
-  return (
-    <div>
-      <p className="mb-1.5 text-sm font-semibold">{rotulo}</p>
-      <div className="flex flex-wrap gap-2">
-        {opcoes.map(([chave, texto]) => (
-          <button
-            key={chave}
-            onClick={() => aoEscolher(chave)}
-            className={`min-h-10 rounded-(--raio) border px-3 text-sm font-medium ${
-              valor === chave
-                ? 'border-(color:--cor-acao) bg-(color:--cor-acao) text-white'
-                : 'border-[color:var(--color-borda)] bg-white'
-            }`}
-          >
-            {texto}
-          </button>
-        ))}
       </div>
     </div>
   );
@@ -335,11 +371,13 @@ function Alternador({
   return (
     <button
       onClick={aoAlternar}
-      className={`min-h-10 flex-1 rounded-(--raio) border px-3 text-sm font-medium ${
+      aria-pressed={ativo}
+      className={`flex-1 rounded-(--raio) border px-3 text-base font-medium ${
         ativo
-          ? 'border-(color:--cor-acao) bg-(color:--cor-acao) text-white'
-          : 'border-[color:var(--color-borda)] bg-white'
+          ? 'border-(color:--cor-acao) bg-(color:--cor-acao) font-semibold text-white'
+          : 'border-[color:var(--color-borda-forte)] bg-white'
       }`}
+      style={{ minHeight: 'var(--altura-controle)' }}
     >
       {rotulo}
     </button>

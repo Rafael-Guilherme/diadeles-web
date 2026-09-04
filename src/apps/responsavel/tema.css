@@ -27,6 +27,9 @@
 
   --sombra-cartao: 0 1px 2px rgb(23 33 30 / 0.04), 0 8px 24px -16px rgb(122 67 16 / 0.25);
   --sombra-elevada: 0 8px 30px -12px rgb(122 67 16 / 0.28);
+  /* Só a ação principal da família se levanta do papel — no educador nada
+     levanta, porque lá a sombra roubaria a densidade da grade. */
+  --sombra-botao: 0 1px 2px rgb(23 33 30 / 0.12), 0 8px 24px -16px rgb(23 33 30 / 0.5);
 
   /* Mais respiro que o app do educador: aqui ninguém está com pressa. */
   --padding-cartao: 1rem;
@@ -34,4 +37,23 @@
 
   --peso-titulo: 600;
   --tracking-titulo: -0.018em;
+
+  /* Botão e campo mais altos: dedo sem pressa, tela segurada com uma mão. */
+  --altura-controle: 3.25rem;
+  --padding-controle: 1.5rem;
+
+  /* Pílula, não carimbo — aqui a etiqueta também carrega conteúdo
+     ("Sono · 1h20"), então ela precisa ser lida, não só reconhecida. */
+  --raio-etiqueta: 999px;
+  --etiqueta-fonte: var(--text-xs);
+  --etiqueta-padding: 0.375rem 0.75rem;
+  --etiqueta-caixa: none;
+  --etiqueta-tracking: 0;
+
+  /* O rótulo é uma frase, não um versalete de formulário de escritório. */
+  --rotulo-fonte: var(--text-sm);
+  --rotulo-cor: var(--color-tinta-suave);
+  --rotulo-caixa: none;
+  --rotulo-tracking: 0;
+  --rotulo-peso: 500;
 }

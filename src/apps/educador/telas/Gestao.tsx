@@ -1,35 +1,22 @@
-import { useQuery } from '@tanstack/react-query';
-import {
-  AlertTriangle,
-  Baby,
-  CalendarDays,
-  ChevronRight,
-  KeyRound,
-  LayoutGrid,
-  CreditCard,
-  ListChecks,
-  Megaphone,
-  MessageSquare,
-  TrendingUp,
-  Users,
-  UtensilsCrossed,
-} from 'lucide-react';
+import { useQueries, useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import type { ReactNode } from 'react';
+import { ChevronRight } from 'lucide-react';
 import { api } from '@/shared/api/cliente';
-import { Cartao, Carregando, RotuloSecao } from '@/shared/ui/componentes';
-import { Cabecalho } from '../componentes/Cabecalho';
+import { Barra, Botao, Carregando, Metrica, RotuloSecao } from '@/shared/ui/componentes';
+import { LayoutGestao } from '../componentes/LayoutGestao';
+import { PendenciasDaEscola } from '../componentes/PendenciasDaEscola';
 
 /**
  * Painel de quem responde pela escola.
  *
- * A coordenação e a gestão não fazem chamada — elas querem saber, em um olhar,
- * se o dia está sendo registrado. Por isso o primeiro bloco é o de hoje, e
- * dentro dele o número que exige ação: quantas crianças ainda não têm chamada.
- * Os totais da escola vêm depois, porque mudam uma vez por semestre.
+ * A hierarquia inverte o padrão de dashboard de propósito: as pendências que
+ * exigem um telefonema vêm primeiro e ocupam a coluna larga; os números do dia
+ * ficam numa faixa acima, pequenos. Um painel que abre com seis números
+ * grandes e nenhuma ação ensina a gestora a olhar para ele uma vez por semana
+ * (4a).
  */
 export function Gestao() {
-  const { data, isLoading } = useQuery({
+  const resumo = useQuery({
     queryKey: ['escola-resumo'],
     queryFn: async () => {
       const { data, error } = await api.GET('/v1/escola/resumo');
@@ -38,235 +25,323 @@ export function Gestao() {
     },
   });
 
-  if (isLoading || !data) {
+  const turmas = useQuery({
+    queryKey: ['turmas'],
+    queryFn: async () => {
+      const { data, error } = await api.GET('/v1/turmas');
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  /**
+   * A adesão por turma sai da própria grade de cada turma.
+   *
+   * A API não tem um endpoint de adesão por turma — ela devolve adesão por
+   * educadora. Montar aqui custa uma chamada por turma, e uma escola tem
+   * cinco: é barato, e o número sai do mesmo lugar que a educadora vê, sem
+   * risco de as duas telas discordarem.
+   */
+  const grades = useQueries({
+    queries: (turmas.data ?? []).map((turma) => ({
+      queryKey: ['grade', turma.id],
+      queryFn: async () => {
+        const { data, error } = await api.GET('/v1/turmas/{id}/grade', {
+          params: { path: { id: turma.id } },
+        });
+        if (error) throw error;
+        return data;
+      },
+    })),
+  });
+
+  const comunicados = useQuery({
+    queryKey: ['comunicados'],
+    queryFn: async () => {
+      const { data, error } = await api.GET('/v1/comunicados');
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const assinatura = useQuery({
+    queryKey: ['assinatura'],
+    queryFn: async () => {
+      const { data, error } = await api.GET('/v1/assinatura');
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  if (resumo.isLoading || !resumo.data) {
     return (
-      <>
-        <Cabecalho titulo="A escola hoje" voltarPara="/" />
+      <LayoutGestao titulo="Painel do dia">
         <Carregando texto="Levantando os números…" />
-      </>
+      </LayoutGestao>
     );
   }
+
+  const data = resumo.data;
 
   // A API entrega presentes e ausentes; quem não é nem um nem outro ainda não
   // passou pela chamada. É o único número aqui que pede providência.
   const semChamada = Math.max(0, data.criancasAtivas - data.presentesHoje - data.ausentesHoje);
 
+  const linhas = (turmas.data ?? []).map((turma, indice) => {
+    const grade = grades[indice]?.data;
+    const presentes = grade?.criancas.filter((c) => !c.ausente) ?? [];
+    const esperados = presentes.length * (grade?.registrosHabilitados.length ?? 0);
+    const faltando = presentes.reduce((soma, c) => soma + c.pendencias.length, 0);
+
+    return {
+      turma,
+      presentes: presentes.length,
+      total: grade?.criancas.length ?? turma.criancasAtivas,
+      adesao: esperados === 0 ? 1 : (esperados - faltando) / esperados,
+      educadoras: turma.educadores.map((e) => e.nome).join(' · ') || '—',
+    };
+  });
+
+  const turnoRegistrado =
+    linhas.length === 0 ? 1 : linhas.reduce((s, l) => s + l.adesao, 0) / linhas.length;
+
   return (
-    <div className="min-h-full pb-10">
-      <Cabecalho titulo="A escola hoje" subtitulo={data.escola.nome} voltarPara="/" />
-
-      <main className="space-y-5 px-4 py-4">
-        <section className="space-y-2">
-          <RotuloSecao>Hoje</RotuloSecao>
-          <div className="grid grid-cols-3 gap-2">
-            <Indicador valor={data.presentesHoje} rotulo="presentes" />
-            <Indicador valor={data.ausentesHoje} rotulo="ausentes" />
-            <Indicador valor={semChamada} rotulo="sem chamada" atencao={semChamada > 0} />
-          </div>
-          <Cartao interno>
-            <p className="numerico text-sm text-[color:var(--color-tinta-suave)]">
-              <strong className="font-semibold text-[color:var(--color-tinta)]">
-                {data.registrosHoje}
-              </strong>{' '}
-              {data.registrosHoje === 1 ? 'registro lançado' : 'registros lançados'} até agora — é o
-              que as famílias já conseguem ver no app.
-            </p>
-          </Cartao>
-
-          {/* Os dois números que pedem alguém ao telefone, e não mais um
-              relatório: ocorrência que a família não confirmou ter lido e
-              recado que ninguém da escola leu. Só aparecem quando existem —
-              zero pendência não merece cartão. */}
-          {(data.ocorrenciasAbertas > 0 || data.recadosPendentes > 0) && (
-            <div className="space-y-(--gap-lista)">
-              {data.ocorrenciasAbertas > 0 && (
-                <Pendencia
-                  icone={<AlertTriangle size={16} />}
-                  texto={
-                    data.ocorrenciasAbertas === 1
-                      ? '1 ocorrência sem ciência da família nos últimos 7 dias'
-                      : `${data.ocorrenciasAbertas} ocorrências sem ciência da família nos últimos 7 dias`
-                  }
-                  alerta
-                />
-              )}
-              {data.recadosPendentes > 0 && (
-                <Pendencia
-                  icone={<MessageSquare size={16} />}
-                  texto={
-                    data.recadosPendentes === 1
-                      ? '1 recado de família ainda não lido pela escola'
-                      : `${data.recadosPendentes} recados de famílias ainda não lidos pela escola`
-                  }
-                />
-              )}
-            </div>
-          )}
-        </section>
-
-        <section className="space-y-2">
-          <RotuloSecao>A escola</RotuloSecao>
-          <div className="grid grid-cols-3 gap-2">
-            <Indicador valor={data.criancasAtivas} rotulo="crianças" />
-            <Indicador valor={data.turmas} rotulo={data.turmas === 1 ? 'turma' : 'turmas'} />
-            <Indicador valor={data.familiasVinculadas} rotulo="famílias" />
-          </div>
-        </section>
-
-        <section className="space-y-(--gap-lista)">
-          <RotuloSecao>Administração</RotuloSecao>
-          <Atalho
-            para="/gestao/criancas"
-            icone={<Baby size={18} />}
-            titulo="Crianças"
-            descricao={`${data.criancasAtivas} ${
-              data.criancasAtivas === 1 ? 'matrícula ativa' : 'matrículas ativas'
-            } — cadastro, turma e saúde`}
-          />
-          <Atalho
-            para="/gestao/equipe"
-            icone={<Users size={18} />}
-            titulo="Equipe"
-            descricao={`${data.educadores} ${
-              data.educadores === 1 ? 'pessoa registra' : 'pessoas registram'
-            } rotina nas turmas`}
-          />
-          <Atalho
-            para="/gestao/turmas"
-            icone={<LayoutGrid size={18} />}
-            titulo="Turmas"
-            descricao={`${data.turmas} ${
-              data.turmas === 1 ? 'turma' : 'turmas'
-            } — faixa, turno e quem rege cada uma`}
-          />
-          <Atalho
-            para="/gestao/acesso"
-            icone={<KeyRound size={18} />}
-            titulo="Acesso das famílias"
-            descricao="Convites emitidos e quem ainda não entrou no app"
-          />
-          <Atalho
-            para="/gestao/adesao"
-            icone={<TrendingUp size={18} />}
-            titulo="Adesão"
-            descricao="Quem registra e quem abre o app, turma por turma"
-          />
-          <Atalho
-            para="/gestao/assinatura"
-            icone={<CreditCard size={18} />}
-            titulo="Assinatura"
-            descricao="Plano, faturas e o que sai na próxima cobrança"
-          />
-        </section>
-
-        <section className="space-y-(--gap-lista)">
-          <RotuloSecao>O que a escola publica</RotuloSecao>
-          <Atalho
-            para="/gestao/comunicados"
-            icone={<Megaphone size={18} />}
-            titulo="Comunicados"
-            descricao="Escrever, publicar e ver quem leu"
-          />
-          <Atalho
-            para="/gestao/cardapio"
-            icone={<UtensilsCrossed size={18} />}
-            titulo="Cardápio"
-            descricao="A semana que aparece no app da família"
-          />
-          <Atalho
-            para="/gestao/rotina"
-            icone={<ListChecks size={18} />}
-            titulo="Rotina"
-            descricao="Quais registros a escola usa — e quais o turno cobra"
-          />
-          <Atalho
-            para="/gestao/ano-letivo"
-            icone={<CalendarDays size={18} />}
-            titulo="Ano letivo"
-            descricao="Abrir e encerrar o ano — a moldura das turmas"
-          />
-        </section>
-      </main>
-    </div>
-  );
-}
-
-function Indicador({
-  valor,
-  rotulo,
-  atencao = false,
-}: {
-  valor: number;
-  rotulo: string;
-  atencao?: boolean;
-}) {
-  return (
-    <Cartao interno className="text-center">
-      {/* `numerico` trava a largura dos dígitos: os três cartões ficam alinhados
-          mesmo quando um número passa de uma casa para duas. */}
-      <p
-        className={`numerico text-2xl font-semibold leading-none ${
-          atencao ? 'text-[color:var(--color-alerta)]' : ''
-        }`}
-      >
-        {valor}
-      </p>
-      <p className="mt-1 text-2xs leading-tight text-[color:var(--color-tinta-tenue)]">{rotulo}</p>
-    </Cartao>
-  );
-}
-
-function Pendencia({
-  icone,
-  texto,
-  alerta = false,
-}: {
-  icone: ReactNode;
-  texto: string;
-  alerta?: boolean;
-}) {
-  return (
-    <Cartao
-      interno
-      className={`flex items-center gap-3 ${alerta ? 'border-[color:var(--color-alerta)]/30' : ''}`}
+    <LayoutGestao
+      titulo={hojePorExtenso()}
+      descricao={data.escola.nome}
+      acoes={
+        <Link to="/gestao/comunicados">
+          <Botao tamanho="compacto">Novo comunicado</Botao>
+        </Link>
+      }
     >
-      <span
-        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${
-          alerta
-            ? 'bg-[color:var(--color-alerta-suave)] text-[color:var(--color-alerta)]'
-            : 'bg-(color:--cor-acao-suave) text-(color:--cor-acao)'
-        }`}
-      >
-        {icone}
-      </span>
-      <p className="text-sm leading-snug">{texto}</p>
-    </Cartao>
+      {/* A faixa de números é fina e vem antes da lista, não no lugar dela. */}
+      <section className="grid grid-cols-2 gap-x-6 gap-y-4 border-b border-[color:var(--color-borda)] pb-4 sm:grid-cols-3 lg:grid-cols-5">
+        <Metrica rotulo="Presentes" valor={data.presentesHoje} apoio={`de ${data.criancasAtivas}`} />
+        <Metrica rotulo="Turno registrado" valor={`${Math.round(turnoRegistrado * 100)}%`} />
+        <Metrica
+          rotulo="Sem chamada"
+          valor={semChamada}
+          tom={semChamada > 0 ? 'alerta' : 'neutro'}
+        />
+        <Metrica
+          rotulo="Ocorrências abertas"
+          valor={data.ocorrenciasAbertas}
+          tom={data.ocorrenciasAbertas > 0 ? 'alerta' : 'neutro'}
+        />
+        <Metrica rotulo="Registros hoje" valor={data.registrosHoje} />
+      </section>
+
+      <div className="grid gap-6 pt-5 lg:grid-cols-[1.6fr_1fr]">
+        <div className="min-w-0 space-y-6">
+          <section className="space-y-2">
+            <div className="flex items-baseline gap-2.5">
+              <h2 className="text-lg font-semibold">Precisa de alguém ao telefone</h2>
+              <span className="text-xs text-[color:var(--color-tinta-tenue)]">
+                o resto do dia está andando sozinho
+              </span>
+            </div>
+            <PendenciasDaEscola />
+          </section>
+
+          <section className="space-y-2">
+            <div className="flex items-baseline gap-2.5">
+              <h2 className="text-lg font-semibold">Adesão por turma</h2>
+              <span className="text-xs text-[color:var(--color-tinta-tenue)]">
+                registros feitos sobre o esperado até agora
+              </span>
+            </div>
+
+            {turmas.isLoading ? (
+              <Carregando texto="Somando as turmas…" />
+            ) : (
+              <div className="overflow-x-auto rounded-(--raio) border border-[color:var(--color-borda)] bg-white">
+                <table className="w-full border-collapse text-left text-sm">
+                  <thead>
+                    <tr className="border-b border-[color:var(--color-borda)]">
+                      <Th>Turma</Th>
+                      <Th>Presentes</Th>
+                      <Th className="w-[45%]">Adesão do turno</Th>
+                      <Th>Educadora</Th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {linhas.map((linha) => (
+                      <tr
+                        key={linha.turma.id}
+                        className={`border-b border-[color:var(--color-borda)] last:border-b-0 ${
+                          linha.adesao < 0.8 ? 'bg-[color:var(--color-sol-50)]' : ''
+                        }`}
+                      >
+                        <td className="px-3 py-2.5 font-semibold">
+                          <Link to={`/turma/${linha.turma.id}`} className="hover:underline">
+                            {linha.turma.nome}
+                          </Link>
+                        </td>
+                        <td className="numerico px-3 py-2.5 text-[color:var(--color-tinta-suave)]">
+                          {linha.presentes} / {linha.total}
+                        </td>
+                        <td className="px-3 py-2.5">
+                          <div className="flex items-center gap-2.5">
+                            <Barra
+                              valor={linha.adesao}
+                              tom={linha.adesao < 0.8 ? 'sol' : 'marca'}
+                              rotulo={`Adesão de ${linha.turma.nome}`}
+                            />
+                            <span
+                              className={`numerico shrink-0 text-xs font-semibold ${
+                                linha.adesao < 0.8 ? 'text-[color:var(--color-sol-700)]' : ''
+                              }`}
+                            >
+                              {Math.round(linha.adesao * 100)}%
+                            </span>
+                          </div>
+                        </td>
+                        <td className="truncate px-3 py-2.5 text-[color:var(--color-tinta-suave)]">
+                          {linha.educadoras}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </section>
+        </div>
+
+        <div className="min-w-0 space-y-6">
+          <section className="space-y-2">
+            <RotuloSecao>Comunicados · taxa de leitura</RotuloSecao>
+            <div className="space-y-3 rounded-(--raio) border border-[color:var(--color-borda)] bg-white p-(--padding-cartao)">
+              {(comunicados.data ?? []).filter((c) => !c.rascunho).length === 0 ? (
+                <p className="text-sm text-[color:var(--color-tinta-suave)]">
+                  Nenhum comunicado publicado ainda.
+                </p>
+              ) : (
+                (comunicados.data ?? [])
+                  .filter((c) => !c.rascunho)
+                  .slice(0, 3)
+                  .map((comunicado) => {
+                    const taxa =
+                      data.familiasVinculadas === 0
+                        ? 0
+                        : comunicado.totalLeituras / data.familiasVinculadas;
+                    return (
+                      <div key={comunicado.id}>
+                        <div className="flex items-baseline justify-between gap-2">
+                          <p className="min-w-0 truncate text-sm font-semibold">
+                            {comunicado.titulo}
+                          </p>
+                          <span
+                            className={`numerico shrink-0 text-sm font-semibold ${
+                              taxa < 0.5 ? 'text-[color:var(--color-sol-700)]' : ''
+                            }`}
+                          >
+                            {Math.round(taxa * 100)}%
+                          </span>
+                        </div>
+                        <Barra
+                          className="mt-1.5"
+                          valor={taxa}
+                          tom={taxa < 0.5 ? 'sol' : 'marca'}
+                          rotulo={`Leitura de ${comunicado.titulo}`}
+                        />
+                        <p className="numerico mt-1 text-2xs text-[color:var(--color-tinta-tenue)]">
+                          {comunicado.totalLeituras} de {data.familiasVinculadas} famílias
+                        </p>
+                      </div>
+                    );
+                  })
+              )}
+              <Link to="/gestao/comunicados" className="block">
+                <Botao variante="secundario" bloco tamanho="compacto">
+                  Ver todos
+                </Botao>
+              </Link>
+            </div>
+          </section>
+
+          {assinatura.data?.proximaApuracao && (
+            <section className="space-y-2">
+              <RotuloSecao>Assinatura</RotuloSecao>
+              <div className="rounded-(--raio) border border-[color:var(--color-borda)] bg-white p-(--padding-cartao)">
+                <p className="text-base font-semibold first-letter:uppercase">
+                  {assinatura.data.plano} · {assinatura.data.criancasAtivas} crianças
+                </p>
+                <p className="numerico mt-1 text-sm text-[color:var(--color-tinta-suave)]">
+                  Próxima fatura {emReais(assinatura.data.valorEstimado)} em{' '}
+                  {dataCurta(assinatura.data.proximaApuracao)}.
+                </p>
+                <p className="mt-2 rounded-(--raio-sm) bg-[color:var(--color-papel)] p-3 text-xs leading-snug text-[color:var(--color-tinta-suave)]">
+                  A cobrança é pelas crianças ativas no fechamento. Uma matrícula encerrada hoje já
+                  não entra nesta fatura.
+                </p>
+              </div>
+            </section>
+          )}
+
+          {/* No celular a lateral não existe, e estas telas ficariam sem
+              caminho nenhum. São trabalho de mesa — por isso entram como lista
+              discreta no fim do painel, e não como abas. */}
+          <section className="space-y-2 lg:hidden">
+            <RotuloSecao>Mais da escola</RotuloSecao>
+            <nav className="divide-y divide-[color:var(--color-borda)] overflow-hidden rounded-(--raio) border border-[color:var(--color-borda)] bg-white">
+              {[
+                ['/gestao/criancas', 'Crianças e cadastro'],
+                ['/gestao/equipe', 'Equipe'],
+                ['/gestao/acesso', 'Acesso das famílias'],
+                ['/gestao/adesao', 'Adesão'],
+                ['/gestao/cardapio', 'Cardápio da semana'],
+                ['/gestao/rotina', 'Tipos de registro'],
+                ['/gestao/ano-letivo', 'Ano letivo'],
+                ['/gestao/assinatura', 'Assinatura e faturas'],
+              ].map(([para, rotulo]) => (
+                <Link
+                  key={para}
+                  to={para!}
+                  className="flex min-h-11 items-center gap-2 px-3 text-sm transition active:bg-[color:var(--color-papel)]"
+                >
+                  <span className="flex-1">{rotulo}</span>
+                  <ChevronRight size={18} className="text-[color:var(--color-tinta-tenue)]" />
+                </Link>
+              ))}
+            </nav>
+          </section>
+        </div>
+      </div>
+    </LayoutGestao>
   );
 }
 
-function Atalho({
-  para,
-  icone,
-  titulo,
-  descricao,
-}: {
-  para: string;
-  icone: ReactNode;
-  titulo: string;
-  descricao: string;
-}) {
+function Th({ children, className = '' }: { children: React.ReactNode; className?: string }) {
   return (
-    <Link to={para} className="block">
-      <Cartao interno className="flex items-center gap-3 transition active:bg-neutral-50">
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-(color:--cor-acao-suave) text-(color:--cor-acao)">
-          {icone}
-        </span>
-        <div className="min-w-0 flex-1">
-          <p className="font-semibold">{titulo}</p>
-          <p className="text-xs text-[color:var(--color-tinta-suave)]">{descricao}</p>
-        </div>
-        <ChevronRight size={20} className="shrink-0 text-[color:var(--color-tinta-tenue)]" />
-      </Cartao>
-    </Link>
+    <th
+      scope="col"
+      className={`px-3 py-2 text-2xs font-medium uppercase tracking-[0.1em] text-[color:var(--color-tinta-tenue)] ${className}`}
+    >
+      {children}
+    </th>
   );
+}
+
+function hojePorExtenso(): string {
+  const texto = new Date().toLocaleDateString('pt-BR', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+  });
+  return texto.charAt(0).toUpperCase() + texto.slice(1);
+}
+
+function dataCurta(iso: string): string {
+  const [ano, mes, dia] = iso.split('-').map(Number);
+  return new Date(ano ?? 0, (mes ?? 1) - 1, dia ?? 1).toLocaleDateString('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+  });
+}
+
+/** A API devolve "238.00"; no Brasil isso se lê R$ 238,00. */
+function emReais(valor: string): string {
+  return Number(valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }

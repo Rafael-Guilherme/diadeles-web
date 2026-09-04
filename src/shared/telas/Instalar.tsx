@@ -1,4 +1,4 @@
-import { Check, Share, SquarePlus, Smartphone } from 'lucide-react';
+import { Check, Smartphone } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
 import { useInstalacao } from '../pwa/instalacao';
 import { Aviso, Botao, Cartao } from '../ui/componentes';
@@ -15,6 +15,12 @@ export function Instalar({ voltar }: { voltar?: () => void }) {
   const { instalado, podeInstalarDireto, ios } = useInstalacao();
   const instalacao = useInstalacao();
   const [resultado, setResultado] = useState<string | null>(null);
+  /*
+    O sistema é detectado, mas dá para trocar à mão: metade das instalações
+    acontece com a secretaria lendo o passo a passo por telefone para uma mãe
+    que está com outro aparelho na mão.
+  */
+  const [sistema, setSistema] = useState<'iphone' | 'android'>(ios ? 'iphone' : 'android');
 
   async function instalar() {
     const saida = await instalacao.instalar();
@@ -24,10 +30,11 @@ export function Instalar({ voltar }: { voltar?: () => void }) {
 
   return (
     <div className="mx-auto w-full max-w-md space-y-5 px-5 py-8">
-      <header className="space-y-1">
-        <h1 className="text-2xl">Instalar o aplicativo</h1>
-        <p className="text-sm leading-relaxed text-[color:var(--color-tinta-suave)]">
-          Instalando, o app abre direto da tela de início e passa a avisar quando houver novidade.
+      <header className="-mx-5 -mt-8 mb-1 bg-[color:var(--color-sol-50)] px-5 pb-5 pt-8">
+        <h1 className="text-2xl">Deixe o Diadeles na tela inicial</h1>
+        <p className="mt-1.5 text-sm leading-relaxed text-[color:var(--color-sol-700)]">
+          Abre como um aplicativo, sem barra do navegador, e avisa quando houver registro novo. Não
+          precisa de loja de apps.
         </p>
       </header>
 
@@ -56,38 +63,68 @@ export function Instalar({ voltar }: { voltar?: () => void }) {
           </Botao>
           {resultado && <p className="text-xs text-[color:var(--color-tinta-suave)]">{resultado}</p>}
         </Cartao>
-      ) : ios ? (
-        <Cartao interno className="space-y-4">
-          <p className="text-sm font-semibold">No iPhone ou iPad, em 3 passos:</p>
-          <ol className="space-y-3 text-sm">
-            <Passo numero={1}>
-              Toque em <Share size={16} className="inline shrink-0" /> <b>Compartilhar</b>, na barra
-              do Safari.
-            </Passo>
-            <Passo numero={2}>
-              Escolha <SquarePlus size={16} className="inline shrink-0" />{' '}
-              <b>Adicionar à Tela de Início</b>.
-            </Passo>
-            <Passo numero={3}>
-              Confirme em <b>Adicionar</b>. Pronto — abra o app pelo novo ícone.
-            </Passo>
-          </ol>
-          <Aviso>
-            No iPhone, os avisos só funcionam depois de adicionar à tela de início. É uma regra do
-            próprio sistema.
-          </Aviso>
-        </Cartao>
       ) : (
-        <Cartao interno className="space-y-4">
-          <p className="text-sm font-semibold">No Android ou no computador:</p>
-          <ol className="space-y-3 text-sm">
-            <Passo numero={1}>Abra o menu do navegador (⋮).</Passo>
-            <Passo numero={2}>
-              Toque em <b>Instalar aplicativo</b> ou <b>Adicionar à tela inicial</b>.
-            </Passo>
-            <Passo numero={3}>Confirme. O ícone aparece junto dos seus outros apps.</Passo>
-          </ol>
-        </Cartao>
+        <div className="space-y-4">
+          <div className="flex rounded-(--raio) border border-[color:var(--color-borda-forte)] bg-white p-1">
+            {(
+              [
+                ['iphone', 'iPhone'],
+                ['android', 'Android'],
+              ] as const
+            ).map(([valor, rotulo]) => (
+              <button
+                key={valor}
+                onClick={() => setSistema(valor)}
+                aria-pressed={sistema === valor}
+                className={`min-h-11 flex-1 rounded-(--raio-sm) text-sm font-semibold transition ${
+                  sistema === valor
+                    ? 'bg-[color:var(--color-tinta)] text-white'
+                    : 'text-[color:var(--color-tinta-suave)]'
+                }`}
+              >
+                {rotulo}
+              </button>
+            ))}
+          </div>
+
+          {sistema === 'iphone' ? (
+            <ol className="space-y-(--gap-lista)">
+              <Passo numero={1} titulo="Use o Safari">
+                Se abriu pelo Chrome ou pelo Instagram, o iPhone não deixa instalar. Copie o
+                endereço e cole no Safari.
+              </Passo>
+              <Passo numero={2} titulo="Toque em Compartilhar">
+                É o botão do meio, na barra de baixo do Safari — o quadrado com a seta para cima.
+              </Passo>
+              <Passo numero={3} titulo="Escolha “Adicionar à Tela de Início”">
+                Role a lista para baixo e toque em Adicionar.
+              </Passo>
+            </ol>
+          ) : (
+            <ol className="space-y-(--gap-lista)">
+              <Passo numero={1} titulo="Abra o menu do navegador">
+                É o ⋮ no canto da barra de endereços.
+              </Passo>
+              <Passo numero={2} titulo="Toque em “Instalar aplicativo”">
+                Em alguns aparelhos aparece como “Adicionar à tela inicial”.
+              </Passo>
+              <Passo numero={3} titulo="Confirme">
+                O ícone aparece junto dos seus outros aplicativos.
+              </Passo>
+            </ol>
+          )}
+
+          {sistema === 'iphone' && (
+            <Aviso>
+              No iPhone, os avisos só funcionam depois de adicionar à tela de início. É uma regra do
+              próprio sistema.
+            </Aviso>
+          )}
+
+          <p className="rounded-(--raio) border border-[color:var(--color-borda)] bg-white p-(--padding-cartao) text-sm leading-snug text-[color:var(--color-tinta-suave)]">
+            Já instalou e não achou? O ícone entra na última página da tela inicial.
+          </p>
+        </div>
       )}
 
       {voltar && (
@@ -99,13 +136,26 @@ export function Instalar({ voltar }: { voltar?: () => void }) {
   );
 }
 
-function Passo({ numero, children }: { numero: number; children: ReactNode }) {
+function Passo({
+  numero,
+  titulo,
+  children,
+}: {
+  numero: number;
+  titulo: string;
+  children: ReactNode;
+}) {
   return (
-    <li className="flex gap-3">
-      <span className="numerico flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[color:var(--color-papel)] text-xs font-bold ring-1 ring-[color:var(--color-borda)]">
+    <li className="flex gap-3 rounded-(--raio) border border-[color:var(--color-borda)] bg-white p-(--padding-cartao)">
+      <span className="numerico flex h-6 w-6 shrink-0 items-center justify-center rounded-(--raio-sm) bg-[color:var(--color-sol-50)] text-xs font-bold text-[color:var(--color-sol-700)]">
         {numero}
       </span>
-      <span className="flex flex-wrap items-center gap-x-1.5 leading-relaxed">{children}</span>
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-semibold">{titulo}</p>
+        <p className="mt-0.5 text-sm leading-snug text-[color:var(--color-tinta-suave)]">
+          {children}
+        </p>
+      </div>
     </li>
   );
 }

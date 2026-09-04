@@ -13,7 +13,7 @@ import {
   RotuloSecao,
   Vazio,
 } from '@/shared/ui/componentes';
-import { Cabecalho } from '../componentes/Cabecalho';
+import { LayoutGestao } from '../componentes/LayoutGestao';
 
 const VINCULOS: Record<string, string> = {
   MAE: 'Mãe',
@@ -160,10 +160,9 @@ export function AcessoDaCrianca() {
 
   if (vinculos.isLoading || !vinculos.data) {
     return (
-      <>
-        <Cabecalho titulo="Quem tem acesso" voltarPara="/gestao/criancas" />
+      <LayoutGestao titulo="Quem tem acesso">
         <Carregando texto="Buscando os vínculos…" />
-      </>
+      </LayoutGestao>
     );
   }
 
@@ -171,215 +170,209 @@ export function AcessoDaCrianca() {
     permitir.error ?? bloquear.error ?? criarAutorizado.error ?? revogarAutorizado.error;
 
   return (
-    <div className="min-h-full pb-10">
-      <Cabecalho
-        titulo="Quem tem acesso"
-        subtitulo={ficha.data?.nome}
-        voltarPara="/gestao/criancas"
-      />
+    <LayoutGestao titulo="Quem tem acesso" descricao={ficha.data?.nome}>
+      <div className="space-y-5">
+          {erro && <Aviso>{mensagemDeErro(erro)}</Aviso>}
 
-      <main className="space-y-5 px-4 py-4">
-        {erro && <Aviso>{mensagemDeErro(erro)}</Aviso>}
+          <section className="space-y-2">
+            <RotuloSecao>Responsáveis</RotuloSecao>
 
-        <section className="space-y-2">
-          <RotuloSecao>Responsáveis</RotuloSecao>
+            {vinculos.data.length === 0 && (
+              <Vazio
+                titulo="Nenhum responsável vinculado"
+                descricao="Envie um convite para a família ter acesso ao app."
+              />
+            )}
 
-          {vinculos.data.length === 0 && (
-            <Vazio
-              titulo="Nenhum responsável vinculado"
-              descricao="Envie um convite para a família ter acesso ao app."
-            />
-          )}
-
-          {vinculos.data.map((v) => (
-            <Cartao key={v.id} interno className="space-y-2.5">
-              <div className="flex items-start justify-between gap-2">
-                <div className="min-w-0">
-                  <p className="truncate font-semibold">{v.nome}</p>
-                  <p className="text-xs text-[color:var(--color-tinta-suave)]">
-                    {VINCULOS[v.tipo] ?? v.tipo}
-                  </p>
-                </div>
-                {v.bloqueado && (
-                  <Etiqueta tom="alerta">
-                    <ShieldAlert size={11} /> bloqueado
-                  </Etiqueta>
-                )}
-              </div>
-
-              {v.bloqueado ? (
-                <>
-                  {v.motivoBloqueio && (
-                    <p className="rounded-(--raio) bg-[color:var(--color-papel)] p-2 text-xs leading-relaxed">
-                      {v.motivoBloqueio}
+            {vinculos.data.map((v) => (
+              <Cartao key={v.id} interno className="space-y-2.5">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="truncate font-semibold">{v.nome}</p>
+                    <p className="text-xs text-[color:var(--color-tinta-suave)]">
+                      {VINCULOS[v.tipo] ?? v.tipo}
                     </p>
-                  )}
-                  <Botao
-                    variante="secundario"
-                    bloco
-                    disabled={bloquear.isPending}
-                    onClick={() => bloquear.mutate({ id: v.id, bloqueado: false })}
-                  >
-                    <ShieldCheck size={15} /> Remover bloqueio
-                  </Botao>
-                </>
-              ) : (
-                <>
-                  <div className="space-y-1.5">
-                    <Permissao
-                      rotulo="Acompanha o dia"
-                      ativo={v.podeVisualizar}
-                      disabled={permitir.isPending}
-                      onMudar={(valor) =>
-                        permitir.mutate({ id: v.id, campo: 'podeVisualizar', valor })
-                      }
-                    />
-                    <Permissao
-                      rotulo="Pode buscar a criança"
-                      ativo={v.podeRetirar}
-                      disabled={permitir.isPending}
-                      onMudar={(valor) => permitir.mutate({ id: v.id, campo: 'podeRetirar', valor })}
-                    />
-                    <Permissao
-                      rotulo="Autoriza medicação"
-                      ativo={v.podeAutorizar}
-                      disabled={permitir.isPending}
-                      onMudar={(valor) =>
-                        permitir.mutate({ id: v.id, campo: 'podeAutorizar', valor })
-                      }
-                    />
                   </div>
-
-                  {bloqueando === v.id ? (
-                    <div className="space-y-2 border-t border-[color:var(--color-borda)] pt-2.5">
-                      <Campo
-                        rotulo="Motivo do bloqueio"
-                        value={motivo}
-                        placeholder="Medida protetiva 123/2026"
-                        apoio="Fica registrado no vínculo e na trilha de auditoria, com quem aplicou."
-                        onChange={(e) => setMotivo(e.target.value)}
-                      />
-                      <div className="flex gap-2">
-                        <Botao
-                          variante="perigo"
-                          bloco
-                          disabled={bloquear.isPending || motivo.trim().length < 3}
-                          onClick={() =>
-                            bloquear.mutate({ id: v.id, bloqueado: true, motivo: motivo.trim() })
-                          }
-                        >
-                          Bloquear acesso
-                        </Botao>
-                        <Botao
-                          variante="secundario"
-                          onClick={() => {
-                            setBloqueando(null);
-                            setMotivo('');
-                          }}
-                        >
-                          Cancelar
-                        </Botao>
-                      </div>
-                    </div>
-                  ) : (
-                    <Botao variante="fantasma" bloco onClick={() => setBloqueando(v.id)}>
-                      Bloquear por decisão judicial
-                    </Botao>
-                  )}
-                </>
-              )}
-            </Cartao>
-          ))}
-        </section>
-
-        <section className="space-y-2">
-          <RotuloSecao>Autorizados a buscar</RotuloSecao>
-          <p className="px-1 text-xs leading-relaxed text-[color:var(--color-tinta-suave)]">
-            Quem pode retirar a criança sem ser usuário do app — avó, motorista, van. É esta lista
-            que a portaria confere na saída.
-          </p>
-
-          {novo ? (
-            <Cartao interno className="space-y-3">
-              <Campo
-                rotulo="Nome"
-                value={novo.nome}
-                onChange={(e) => setNovo({ ...novo, nome: e.target.value })}
-              />
-              <Campo
-                rotulo="Documento"
-                value={novo.documento}
-                placeholder="123.456.789-00"
-                apoio="Conferido na portaria no momento da saída."
-                onChange={(e) => setNovo({ ...novo, documento: e.target.value })}
-              />
-              <Campo
-                rotulo="Parentesco"
-                value={novo.parentesco}
-                placeholder="Avó"
-                onChange={(e) => setNovo({ ...novo, parentesco: e.target.value })}
-              />
-              <Campo
-                rotulo="Válido até"
-                type="date"
-                value={novo.validoAte}
-                apoio="Opcional. Vencida, a autorização deixa de valer sozinha."
-                onChange={(e) => setNovo({ ...novo, validoAte: e.target.value })}
-              />
-              <div className="flex gap-2">
-                <Botao
-                  bloco
-                  disabled={
-                    criarAutorizado.isPending ||
-                    novo.nome.trim().length < 2 ||
-                    novo.documento.trim().length < 3
-                  }
-                  onClick={() => criarAutorizado.mutate(novo)}
-                >
-                  Salvar
-                </Botao>
-                <Botao variante="secundario" onClick={() => setNovo(null)}>
-                  Cancelar
-                </Botao>
-              </div>
-            </Cartao>
-          ) : (
-            <Botao variante="secundario" bloco onClick={() => setNovo(AUTORIZADO_VAZIO)}>
-              <Plus size={16} /> Adicionar autorizado
-            </Botao>
-          )}
-
-          {(autorizados.data ?? []).map((a) => (
-            <Cartao key={a.id} interno className="space-y-2">
-              <div className="flex items-start justify-between gap-2">
-                <div className="min-w-0">
-                  <p className="truncate font-semibold">{a.nome}</p>
-                  <p className="numerico text-xs text-[color:var(--color-tinta-suave)]">
-                    {a.documento}
-                    {a.parentesco ? ` · ${a.parentesco}` : ''}
-                  </p>
-                  {a.validoAte && (
-                    <p className="numerico text-xs text-[color:var(--color-tinta-tenue)]">
-                      até {formatar(a.validoAte)}
-                    </p>
+                  {v.bloqueado && (
+                    <Etiqueta tom="alerta">
+                      <ShieldAlert size={11} /> bloqueado
+                    </Etiqueta>
                   )}
                 </div>
-                {a.ativo ? <Etiqueta tom="ok">vale hoje</Etiqueta> : <Etiqueta>não vale</Etiqueta>}
-              </div>
 
-              <Botao
-                variante="fantasma"
-                bloco
-                disabled={revogarAutorizado.isPending}
-                onClick={() => revogarAutorizado.mutate({ id: a.id, ativo: !a.ativo })}
-              >
-                {a.ativo ? 'Revogar' : 'Reativar'}
+                {v.bloqueado ? (
+                  <>
+                    {v.motivoBloqueio && (
+                      <p className="rounded-(--raio) bg-[color:var(--color-papel)] p-2 text-xs leading-relaxed">
+                        {v.motivoBloqueio}
+                      </p>
+                    )}
+                    <Botao
+                      variante="secundario"
+                      bloco
+                      disabled={bloquear.isPending}
+                      onClick={() => bloquear.mutate({ id: v.id, bloqueado: false })}
+                    >
+                      <ShieldCheck size={15} /> Remover bloqueio
+                    </Botao>
+                  </>
+                ) : (
+                  <>
+                    <div className="space-y-1.5">
+                      <Permissao
+                        rotulo="Acompanha o dia"
+                        ativo={v.podeVisualizar}
+                        disabled={permitir.isPending}
+                        onMudar={(valor) =>
+                          permitir.mutate({ id: v.id, campo: 'podeVisualizar', valor })
+                        }
+                      />
+                      <Permissao
+                        rotulo="Pode buscar a criança"
+                        ativo={v.podeRetirar}
+                        disabled={permitir.isPending}
+                        onMudar={(valor) => permitir.mutate({ id: v.id, campo: 'podeRetirar', valor })}
+                      />
+                      <Permissao
+                        rotulo="Autoriza medicação"
+                        ativo={v.podeAutorizar}
+                        disabled={permitir.isPending}
+                        onMudar={(valor) =>
+                          permitir.mutate({ id: v.id, campo: 'podeAutorizar', valor })
+                        }
+                      />
+                    </div>
+
+                    {bloqueando === v.id ? (
+                      <div className="space-y-2 border-t border-[color:var(--color-borda)] pt-2.5">
+                        <Campo
+                          rotulo="Motivo do bloqueio"
+                          value={motivo}
+                          placeholder="Medida protetiva 123/2026"
+                          apoio="Fica registrado no vínculo e na trilha de auditoria, com quem aplicou."
+                          onChange={(e) => setMotivo(e.target.value)}
+                        />
+                        <div className="flex gap-2">
+                          <Botao
+                            variante="perigo"
+                            bloco
+                            disabled={bloquear.isPending || motivo.trim().length < 3}
+                            onClick={() =>
+                              bloquear.mutate({ id: v.id, bloqueado: true, motivo: motivo.trim() })
+                            }
+                          >
+                            Bloquear acesso
+                          </Botao>
+                          <Botao
+                            variante="secundario"
+                            onClick={() => {
+                              setBloqueando(null);
+                              setMotivo('');
+                            }}
+                          >
+                            Cancelar
+                          </Botao>
+                        </div>
+                      </div>
+                    ) : (
+                      <Botao variante="fantasma" bloco onClick={() => setBloqueando(v.id)}>
+                        Bloquear por decisão judicial
+                      </Botao>
+                    )}
+                  </>
+                )}
+              </Cartao>
+            ))}
+          </section>
+
+          <section className="space-y-2">
+            <RotuloSecao>Autorizados a buscar</RotuloSecao>
+            <p className="px-1 text-xs leading-relaxed text-[color:var(--color-tinta-suave)]">
+              Quem pode retirar a criança sem ser usuário do app — avó, motorista, van. É esta lista
+              que a portaria confere na saída.
+            </p>
+
+            {novo ? (
+              <Cartao interno className="space-y-3">
+                <Campo
+                  rotulo="Nome"
+                  value={novo.nome}
+                  onChange={(e) => setNovo({ ...novo, nome: e.target.value })}
+                />
+                <Campo
+                  rotulo="Documento"
+                  value={novo.documento}
+                  placeholder="123.456.789-00"
+                  apoio="Conferido na portaria no momento da saída."
+                  onChange={(e) => setNovo({ ...novo, documento: e.target.value })}
+                />
+                <Campo
+                  rotulo="Parentesco"
+                  value={novo.parentesco}
+                  placeholder="Avó"
+                  onChange={(e) => setNovo({ ...novo, parentesco: e.target.value })}
+                />
+                <Campo
+                  rotulo="Válido até"
+                  type="date"
+                  value={novo.validoAte}
+                  apoio="Opcional. Vencida, a autorização deixa de valer sozinha."
+                  onChange={(e) => setNovo({ ...novo, validoAte: e.target.value })}
+                />
+                <div className="flex gap-2">
+                  <Botao
+                    bloco
+                    disabled={
+                      criarAutorizado.isPending ||
+                      novo.nome.trim().length < 2 ||
+                      novo.documento.trim().length < 3
+                    }
+                    onClick={() => criarAutorizado.mutate(novo)}
+                  >
+                    Salvar
+                  </Botao>
+                  <Botao variante="secundario" onClick={() => setNovo(null)}>
+                    Cancelar
+                  </Botao>
+                </div>
+              </Cartao>
+            ) : (
+              <Botao variante="secundario" bloco onClick={() => setNovo(AUTORIZADO_VAZIO)}>
+                <Plus size={16} /> Adicionar autorizado
               </Botao>
-            </Cartao>
-          ))}
-        </section>
-      </main>
-    </div>
+            )}
+
+            {(autorizados.data ?? []).map((a) => (
+              <Cartao key={a.id} interno className="space-y-2">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="truncate font-semibold">{a.nome}</p>
+                    <p className="numerico text-xs text-[color:var(--color-tinta-suave)]">
+                      {a.documento}
+                      {a.parentesco ? ` · ${a.parentesco}` : ''}
+                    </p>
+                    {a.validoAte && (
+                      <p className="numerico text-xs text-[color:var(--color-tinta-tenue)]">
+                        até {formatar(a.validoAte)}
+                      </p>
+                    )}
+                  </div>
+                  {a.ativo ? <Etiqueta tom="ok">vale hoje</Etiqueta> : <Etiqueta>não vale</Etiqueta>}
+                </div>
+
+                <Botao
+                  variante="fantasma"
+                  bloco
+                  disabled={revogarAutorizado.isPending}
+                  onClick={() => revogarAutorizado.mutate({ id: a.id, ativo: !a.ativo })}
+                >
+                  {a.ativo ? 'Revogar' : 'Reativar'}
+                </Botao>
+              </Cartao>
+            ))}
+          </section>
+      </div>
+    </LayoutGestao>
   );
 }
 

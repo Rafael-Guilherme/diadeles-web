@@ -140,7 +140,7 @@ describe('comunicados', () => {
     // Publicado não se republica; rascunho não mostra taxa de leitura que ainda
     // não existe.
     expect(screen.getByRole('button', { name: /Publicar/ })).toBeDefined();
-    expect(screen.getByRole('button', { name: /Ver quem leu/ })).toBeDefined();
+    expect(screen.getByRole('button', { name: /Ver quem falta/ })).toBeDefined();
   });
 
   /**
@@ -194,7 +194,7 @@ describe('comunicados', () => {
     useSessao.getState().definir(GESTORA);
     render(envolver('/gestao/comunicados'));
 
-    fireEvent.click(await screen.findByRole('button', { name: /Ver quem leu/ }));
+    fireEvent.click(await screen.findByRole('button', { name: /Ver quem falta/ }));
 
     expect(await screen.findByText(/1 de 3 leram/)).toBeDefined();
     expect(screen.getByText('(33%)')).toBeDefined();
@@ -313,7 +313,7 @@ describe('equipe', () => {
 
     expect(await screen.findByText('Ana Souza')).toBeDefined();
     expect(screen.getByRole('button', { name: /Nova pessoa/ })).toBeDefined();
-    expect(screen.getByRole('button', { name: /Desativar acesso/ })).toBeDefined();
+    expect(screen.getByRole('button', { name: 'Desativar' })).toBeDefined();
   });
 });
 
@@ -334,6 +334,6 @@ describe('quem não é da gestão', () => {
     useSessao.getState().definir(EDUCADORA);
     render(envolver(rota));
 
-    expect(await screen.findByText('Olá, Ana')).toBeDefined();
+    expect(await screen.findByText(/^(Bom dia|Boa tarde|Boa noite), Ana$/)).toBeDefined();
   });
 });

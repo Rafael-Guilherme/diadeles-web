@@ -171,7 +171,7 @@ describe('saída da criança', () => {
 
     expect(await screen.findByText('Sofia Prado')).toBeDefined();
     // Uma criança na escola, uma ausente: só a primeira pode sair.
-    expect(screen.getAllByRole('button', { name: /Registrar saída/ })).toHaveLength(1);
+    expect(screen.getAllByRole('button', { name: /Registrar a saída/ })).toHaveLength(1);
   });
 
   it('confere quem retira contra a lista, com o recado da família à vista', async () => {
@@ -184,7 +184,7 @@ describe('saída da criança', () => {
     useSessao.getState().definir(EDUCADORA);
     render(envolver(<AppEducador />, '/turma/t1/chamada'));
 
-    fireEvent.click(await screen.findByRole('button', { name: /Registrar saída/ }));
+    fireEvent.click(await screen.findByRole('button', { name: /Registrar a saída/ }));
 
     // O recado da manhã aparece na hora da decisão, às 17h.
     expect(await screen.findByText(/avó Marta/)).toBeDefined();
@@ -209,7 +209,7 @@ describe('saída da criança', () => {
     useSessao.getState().definir(EDUCADORA);
     render(envolver(<AppEducador />, '/turma/t1/chamada'));
 
-    fireEvent.click(await screen.findByRole('button', { name: /Registrar saída/ }));
+    fireEvent.click(await screen.findByRole('button', { name: /Registrar a saída/ }));
     fireEvent.click(await screen.findByRole('button', { name: /Outra pessoa/ }));
 
     expect(screen.getByLabelText(/Quem está levando/)).toBeDefined();
@@ -225,8 +225,10 @@ describe('saída da criança', () => {
     useSessao.getState().definir(EDUCADORA);
     render(envolver(<AppEducador />, '/turma/t1/chamada'));
 
-    expect(await screen.findByText('Quem entregou: Marina Prado')).toBeDefined();
-    expect(screen.getByText('Motivo: Consulta médica')).toBeDefined();
+    // Os dois moram na segunda linha da chamada, sem rótulo: quem entregou
+    // ao lado da hora de chegada, e o motivo no lugar dela para quem faltou.
+    expect(await screen.findByText(/Marina Prado/)).toBeDefined();
+    expect(screen.getByText('Consulta médica')).toBeDefined();
   });
 });
 
@@ -254,7 +256,7 @@ describe('recados', () => {
     useSessao.getState().definir(FAMILIA);
     render(envolver(<AppResponsavel />, '/recado'));
 
-    expect(await screen.findByText('Avisar a escola')).toBeDefined();
+    expect(await screen.findByRole('heading', { name: 'Recado' })).toBeDefined();
     expect(screen.getByRole('button', { name: 'Quem busca' })).toBeDefined();
     expect(await screen.findByText(/Ana Souza leu/)).toBeDefined();
   });
@@ -333,6 +335,6 @@ describe('adesão', () => {
     useSessao.getState().definir(EDUCADORA);
     render(envolver(<AppEducador />, '/gestao/adesao'));
 
-    expect(await screen.findByText('Olá, Ana')).toBeDefined();
+    expect(await screen.findByText(/^(Bom dia|Boa tarde|Boa noite), Ana$/)).toBeDefined();
   });
 });

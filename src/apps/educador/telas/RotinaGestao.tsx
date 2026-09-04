@@ -4,7 +4,7 @@ import { Check } from 'lucide-react';
 import { api, mensagemDeErro } from '@/shared/api/cliente';
 import type { TipoRegistro } from '@/shared/offline/fila';
 import { Aviso, Botao, Cartao, Carregando, RotuloSecao } from '@/shared/ui/componentes';
-import { Cabecalho } from '../componentes/Cabecalho';
+import { LayoutGestao } from '../componentes/LayoutGestao';
 import { ICONES_TIPO, ROTULOS_TIPO } from '../componentes/PainelRegistro';
 
 /**
@@ -82,10 +82,9 @@ export function RotinaGestao() {
 
   if (isLoading || !data) {
     return (
-      <>
-        <Cabecalho titulo="Rotina" voltarPara="/gestao" />
+      <LayoutGestao titulo="Rotina">
         <Carregando />
-      </>
+      </LayoutGestao>
     );
   }
 
@@ -106,89 +105,87 @@ export function RotinaGestao() {
     selecionados.some((t) => !original.includes(t));
 
   return (
-    <div className="min-h-full pb-10">
-      <Cabecalho titulo="Rotina" subtitulo="O que esta escola registra" voltarPara="/gestao" />
+    <LayoutGestao titulo="Rotina" descricao="O que esta escola registra">
+      <div className="space-y-5">
+          <p className="text-sm leading-relaxed text-[color:var(--color-tinta-suave)]">
+            Só o que estiver ligado aqui aparece para o educador registrar — e só isso é cobrado no
+            fechamento do turno.
+          </p>
 
-      <main className="space-y-5 px-4 py-4">
-        <p className="text-sm leading-relaxed text-[color:var(--color-tinta-suave)]">
-          Só o que estiver ligado aqui aparece para o educador registrar — e só isso é cobrado no
-          fechamento do turno.
-        </p>
+          <section className="space-y-2">
+            <RotuloSecao>Tipos de registro</RotuloSecao>
 
-        <section className="space-y-2">
-          <RotuloSecao>Tipos de registro</RotuloSecao>
+            <ul className="space-y-(--gap-lista)">
+              {ORDEM.map((tipo) => {
+                const ligado = selecionados.includes(tipo);
 
-          <ul className="space-y-(--gap-lista)">
-            {ORDEM.map((tipo) => {
-              const ligado = selecionados.includes(tipo);
-
-              return (
-                <li key={tipo}>
-                  <button
-                    onClick={() => alternar(tipo)}
-                    aria-pressed={ligado}
-                    className="w-full text-left"
-                  >
-                    <Cartao
-                      interno
-                      className={`flex items-center gap-3 transition ${
-                        ligado ? 'border-(color:--cor-acao)/40' : 'opacity-60'
-                      }`}
+                return (
+                  <li key={tipo}>
+                    <button
+                      onClick={() => alternar(tipo)}
+                      aria-pressed={ligado}
+                      className="w-full text-left"
                     >
-                      <span
-                        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${
-                          ligado
-                            ? 'bg-(color:--cor-acao-suave) text-(color:--cor-acao)'
-                            : 'bg-[color:var(--color-papel)] text-[color:var(--color-tinta-tenue)]'
+                      <Cartao
+                        interno
+                        className={`flex items-center gap-3 transition ${
+                          ligado ? 'border-(color:--cor-acao)/40' : 'opacity-60'
                         }`}
                       >
-                        {ICONES_TIPO[tipo]}
-                      </span>
-                      <div className="min-w-0 flex-1">
-                        <p className="font-semibold">{ROTULOS_TIPO[tipo]}</p>
-                        <p className="text-xs text-[color:var(--color-tinta-suave)]">
-                          {EXPLICACAO[tipo]}
-                        </p>
-                      </div>
-                      <span
-                        className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md border-2 ${
-                          ligado
-                            ? 'border-(color:--cor-acao) bg-(color:--cor-acao) text-white'
-                            : 'border-neutral-300'
-                        }`}
-                      >
-                        {ligado && <Check size={14} />}
-                      </span>
-                    </Cartao>
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-        </section>
+                        <span
+                          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${
+                            ligado
+                              ? 'bg-(color:--cor-acao-suave) text-(color:--cor-acao)'
+                              : 'bg-[color:var(--color-papel)] text-[color:var(--color-tinta-tenue)]'
+                          }`}
+                        >
+                          {ICONES_TIPO[tipo]}
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <p className="font-semibold">{ROTULOS_TIPO[tipo]}</p>
+                          <p className="text-xs text-[color:var(--color-tinta-suave)]">
+                            {EXPLICACAO[tipo]}
+                          </p>
+                        </div>
+                        <span
+                          className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md border-2 ${
+                            ligado
+                              ? 'border-(color:--cor-acao) bg-(color:--cor-acao) text-white'
+                              : 'border-neutral-300'
+                          }`}
+                        >
+                          {ligado && <Check size={14} />}
+                        </span>
+                      </Cartao>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
 
-        {/* Desligar tudo deixaria o educador sem nada para registrar, e o
-            produto inteiro sem razão de existir naquela escola. */}
-        {selecionados.length === 0 && (
-          <Aviso>Deixe ao menos um tipo ligado — sem nenhum, não há o que registrar.</Aviso>
-        )}
+          {/* Desligar tudo deixaria o educador sem nada para registrar, e o
+              produto inteiro sem razão de existir naquela escola. */}
+          {selecionados.length === 0 && (
+            <Aviso>Deixe ao menos um tipo ligado — sem nenhum, não há o que registrar.</Aviso>
+          )}
 
-        {erro && <Aviso>{erro}</Aviso>}
-        {salvo && <Aviso tom="ok">Salvo. O app do educador já está com os novos botões.</Aviso>}
+          {erro && <Aviso>{erro}</Aviso>}
+          {salvo && <Aviso tom="ok">Salvo. O app do educador já está com os novos botões.</Aviso>}
 
-        <p className="text-xs leading-relaxed text-[color:var(--color-tinta-tenue)]">
-          Desligar um tipo não apaga o que já foi registrado nele — o histórico das crianças
-          continua inteiro.
-        </p>
+          <p className="text-xs leading-relaxed text-[color:var(--color-tinta-tenue)]">
+            Desligar um tipo não apaga o que já foi registrado nele — o histórico das crianças
+            continua inteiro.
+          </p>
 
-        <Botao
-          bloco
-          disabled={!mudou || selecionados.length === 0 || salvar.isPending}
-          onClick={() => salvar.mutate(selecionados)}
-        >
-          {salvar.isPending ? 'Salvando…' : 'Salvar'}
-        </Botao>
-      </main>
-    </div>
+          <Botao
+            bloco
+            disabled={!mudou || selecionados.length === 0 || salvar.isPending}
+            onClick={() => salvar.mutate(selecionados)}
+          >
+            {salvar.isPending ? 'Salvando…' : 'Salvar'}
+          </Botao>
+      </div>
+    </LayoutGestao>
   );
 }

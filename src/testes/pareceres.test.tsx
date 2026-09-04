@@ -142,13 +142,19 @@ describe('lista do semestre', () => {
 });
 
 describe('escrever o parecer', () => {
-  it('abre com os cinco campos da BNCC', async () => {
+  /*
+   * O editor mostra um campo por vez — cinco caixas abertas ao mesmo tempo é o
+   * que fazia a educadora escrever um parágrafo curto em cada e largar o
+   * quinto. Os cinco continuam existindo: a lista da esquerda leva a cada um.
+   */
+  it('dá acesso aos cinco campos da BNCC, um de cada vez', async () => {
     responderCom({ '/v1/relatorios/r1': PARECER });
 
     useSessao.getState().definir(EDUCADORA);
     render(envolver(<AppEducador />, '/turma/t1/parecer/r1'));
 
     for (const [, nome] of CAMPOS) {
+      fireEvent.click(await screen.findByRole('button', { name: new RegExp(nome) }));
       expect(await screen.findByLabelText(nome)).toBeDefined();
     }
   });
@@ -160,9 +166,9 @@ describe('escrever o parecer', () => {
     useSessao.getState().definir(EDUCADORA);
     render(envolver(<AppEducador />, '/turma/t1/parecer/r1'));
 
-    const semAvaliacao = await screen.findAllByRole('button', { name: 'sem avaliação' });
-    expect(semAvaliacao).toHaveLength(5);
-    expect(semAvaliacao.every((b) => b.getAttribute('aria-pressed') === 'true')).toBe(true);
+    // Um campo por vez na tela, então um botão por vez — e ele vem marcado.
+    const semAvaliacao = await screen.findByRole('button', { name: 'sem avaliação' });
+    expect(semAvaliacao.getAttribute('aria-pressed')).toBe('true');
   });
 
   it('salva o texto editado com o campo a que pertence', async () => {
@@ -190,7 +196,7 @@ describe('escrever o parecer', () => {
     useSessao.getState().definir(EDUCADORA);
     render(envolver(<AppEducador />, '/turma/t1/parecer/r1'));
 
-    expect(await screen.findByRole('button', { name: /Mandar para a coordenação/ })).toBeDefined();
+    expect(await screen.findByRole('button', { name: /Enviar para revisão/ })).toBeDefined();
     // Quem escreve não assina sozinho.
     expect(screen.queryByRole('button', { name: /Publicar para a família/ })).toBeNull();
   });
@@ -221,7 +227,7 @@ describe('escrever o parecer', () => {
     const campo = await screen.findByLabelText('O eu, o outro e o nós');
     expect((campo as HTMLTextAreaElement).disabled).toBe(true);
     expect(screen.queryByRole('button', { name: 'Salvar' })).toBeNull();
-    expect(screen.getByText(/A família já recebeu este parecer/)).toBeDefined();
+    expect(screen.getByText('Publicado para a família')).toBeDefined();
   });
 
   it('mostra o erro da API quando faltam campos para a revisão', async () => {
@@ -236,7 +242,7 @@ describe('escrever o parecer', () => {
     useSessao.getState().definir(EDUCADORA);
     render(envolver(<AppEducador />, '/turma/t1/parecer/r1'));
 
-    fireEvent.click(await screen.findByRole('button', { name: /Mandar para a coordenação/ }));
+    fireEvent.click(await screen.findByRole('button', { name: /Enviar para revisão/ }));
 
     expect(await screen.findByText('Faltam 2 campos de experiência para escrever.')).toBeDefined();
   });
@@ -262,11 +268,15 @@ describe('o parecer na mão da família', () => {
     useSessao.getState().definir(FAMILIA);
     render(envolver(<AppResponsavel />, '/pareceres'));
 
-    expect(await screen.findByText('Sofia Prado')).toBeDefined();
-    expect(screen.getByText(/2º semestre de 2026/)).toBeDefined();
+    // O nome e o período aparecem no cabeçalho do documento e no bloco de
+    // identificação — é assim que a folha impressa se identifica em cada página.
+    expect((await screen.findAllByText(/Sofia Prado/)).length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText(/2º semestre de 2026/).length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText('Brincou com os colegas e dividiu os brinquedos.')).toBeDefined();
     // A assinatura dupla é o que separa um parecer de uma anotação.
-    expect(screen.getByText(/Escrito por Ana Souza, revisado por Beatriz Lima/)).toBeDefined();
+    expect(
+      screen.getByText(/Escrito por Ana Souza, revisado e publicado por Beatriz Lima/),
+    ).toBeDefined();
   });
 
   /* Campo em branco não vira seção vazia no documento da família. */
@@ -276,8 +286,9 @@ describe('o parecer na mão da família', () => {
     useSessao.getState().definir(FAMILIA);
     render(envolver(<AppResponsavel />, '/pareceres'));
 
-    expect(await screen.findByText('O eu, o outro e o nós')).toBeDefined();
-    expect(screen.queryByText('Corpo, gestos e movimentos')).toBeNull();
+    // As seções do documento vêm numeradas: "1 · O EU, O OUTRO E O NÓS".
+    expect(await screen.findByText(/O eu, o outro e o nós/)).toBeDefined();
+    expect(screen.queryByText(/Corpo, gestos e movimentos/)).toBeNull();
   });
 
   it('explica a ausência quando ainda não há parecer', async () => {

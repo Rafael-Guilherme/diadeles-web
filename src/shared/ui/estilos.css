@@ -115,6 +115,32 @@
 
   --peso-titulo: 650;
   --tracking-titulo: -0.021em;
+
+  /* ── Controles ────────────────────────────────────────────────────
+     A altura do botão é a mesma do campo: os dois são a mesma linha de
+     base em qualquer formulário. 44px é o alvo de toque mínimo, e a
+     família sobe para 52px porque ali ninguém está com pressa.        */
+  --altura-controle: 2.75rem;
+  --padding-controle: 1.125rem;
+
+  /* ── Etiqueta ─────────────────────────────────────────────────────
+     No educador ela é um carimbo: retangular, versalete, pequena — o
+     olho passa por ela sem parar. Na família é uma pílula legível, que
+     também serve para conteúdo ("Sono · 1h20"), não só para estado.    */
+  --raio-etiqueta: 0.375rem;
+  --etiqueta-fonte: var(--text-2xs);
+  --etiqueta-padding: 0.25rem 0.4375rem;
+  --etiqueta-caixa: uppercase;
+  --etiqueta-tracking: 0.08em;
+
+  /* ── Rótulo de campo ──────────────────────────────────────────────
+     Versalete tênue no educador: o formulário é denso e o rótulo não
+     pode competir com o valor digitado. Na família ele é uma frase.    */
+  --rotulo-fonte: var(--text-2xs);
+  --rotulo-cor: var(--color-tinta-tenue);
+  --rotulo-caixa: uppercase;
+  --rotulo-tracking: 0.1em;
+  --rotulo-peso: 500;
 }
 
 html,
@@ -134,6 +160,14 @@ body {
   /* Registro em lote é toque repetido: seleção acidental atrapalha */
   -webkit-tap-highlight-color: transparent;
   overscroll-behavior-y: none;
+  /*
+    Rolagem lateral da página é sempre defeito num app de celular: a tela some
+    para o lado e o cabeçalho parece quebrado. `clip` e não `hidden` porque
+    `hidden` criaria um contêiner de rolagem e mataria todo `position: sticky`
+    de dentro — inclusive o cabeçalho e a coluna de nomes da grade. Quem rola
+    de lado é a malha, dentro da própria caixa dela.
+  */
+  overflow-x: clip;
 }
 
 h1,

@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { CalendarRange, Pencil, Plus, Trash2, UserPlus, X } from 'lucide-react';
+import { Pencil, Plus, Trash2, UserPlus, X } from 'lucide-react';
 import { useState } from 'react';
 import { api, mensagemDeErro } from '@/shared/api/cliente';
 import {
@@ -13,7 +13,7 @@ import {
   Selecao,
   Vazio,
 } from '@/shared/ui/componentes';
-import { Cabecalho } from '../componentes/Cabecalho';
+import { LayoutGestao } from '../componentes/LayoutGestao';
 
 const GRUPOS = {
   BEBES: 'Bebês (0 a 1a6m)',
@@ -140,10 +140,9 @@ export function TurmasGestao() {
 
   if (turmas.isLoading || !turmas.data) {
     return (
-      <>
-        <Cabecalho titulo="Turmas" voltarPara="/gestao" />
+      <LayoutGestao titulo="Turmas">
         <Carregando texto="Buscando as turmas…" />
-      </>
+      </LayoutGestao>
     );
   }
 
@@ -151,185 +150,178 @@ export function TurmasGestao() {
   const erro = salvar.error ?? excluir.error ?? vincular.error ?? desvincular.error;
 
   return (
-    <div className="min-h-full pb-10">
-      <Cabecalho
-        titulo="Turmas"
-        subtitulo={`${turmas.data.length} ${turmas.data.length === 1 ? 'turma' : 'turmas'}`}
-        voltarPara="/gestao"
-      />
+    <LayoutGestao titulo="Turmas" descricao={`${turmas.data.length} ${turmas.data.length === 1 ? 'turma' : 'turmas'}`}>
+      <div className="space-y-4">
+          {!anoCorrente && (
+            <Aviso>
+              Nenhum ano letivo aberto. Abra o ano em <strong>Ano letivo</strong> antes de criar
+              turmas — sem ele a turma não tem onde existir.
+            </Aviso>
+          )}
 
-      <main className="space-y-4 px-4 py-4">
-        {!anoCorrente && (
-          <Aviso>
-            Nenhum ano letivo aberto. Abra o ano em <strong>Ano letivo</strong> antes de criar
-            turmas — sem ele a turma não tem onde existir.
-          </Aviso>
-        )}
+          {erro && <Aviso>{mensagemDeErro(erro)}</Aviso>}
 
-        {erro && <Aviso>{mensagemDeErro(erro)}</Aviso>}
+          {formulario ? (
+            <Cartao interno className="space-y-3">
+              <RotuloSecao>{editando ? 'Editar turma' : 'Nova turma'}</RotuloSecao>
 
-        {formulario ? (
-          <Cartao interno className="space-y-3">
-            <RotuloSecao>{editando ? 'Editar turma' : 'Nova turma'}</RotuloSecao>
-
-            <Campo
-              rotulo="Nome"
-              value={formulario.nome}
-              placeholder="Berçário II"
-              onChange={(e) => setFormulario({ ...formulario, nome: e.target.value })}
-            />
-
-            <Selecao
-              rotulo="Faixa etária"
-              value={formulario.grupoEtario}
-              onChange={(e) =>
-                setFormulario({ ...formulario, grupoEtario: e.target.value as GrupoEtario })
-              }
-              apoio="Define quais registros a grade cobra no fechamento do turno."
-            >
-              {Object.entries(GRUPOS).map(([valor, texto]) => (
-                <option key={valor} value={valor}>
-                  {texto}
-                </option>
-              ))}
-            </Selecao>
-
-            <Selecao
-              rotulo="Turno"
-              value={formulario.turno}
-              onChange={(e) => setFormulario({ ...formulario, turno: e.target.value as Turno })}
-            >
-              {Object.entries(TURNOS).map(([valor, texto]) => (
-                <option key={valor} value={valor}>
-                  {texto}
-                </option>
-              ))}
-            </Selecao>
-
-            <Campo
-              rotulo="Capacidade"
-              type="number"
-              inputMode="numeric"
-              min={1}
-              value={formulario.capacidade}
-              placeholder="15"
-              apoio="Opcional. Só orienta a secretaria na hora de matricular."
-              onChange={(e) => setFormulario({ ...formulario, capacidade: e.target.value })}
-            />
-
-            <div className="flex gap-2">
-              <Botao
-                bloco
-                disabled={salvar.isPending || formulario.nome.trim().length < 2}
-                onClick={() => salvar.mutate({ ...formulario, id: editando ?? undefined })}
-              >
-                {salvar.isPending ? 'Salvando…' : 'Salvar'}
-              </Botao>
-              <Botao
-                variante="secundario"
-                onClick={() => {
-                  setFormulario(null);
-                  setEditando(null);
-                }}
-              >
-                Cancelar
-              </Botao>
-            </div>
-          </Cartao>
-        ) : (
-          <Botao bloco disabled={!anoCorrente} onClick={() => setFormulario(VAZIO)}>
-            <Plus size={16} /> Nova turma
-          </Botao>
-        )}
-
-        {turmas.data.length === 0 && !formulario && (
-          <Vazio
-            icone={<CalendarRange size={22} />}
-            titulo="Nenhuma turma ainda"
-            descricao="Crie a primeira turma para que a equipe possa fazer chamada e registrar a rotina."
-          />
-        )}
-
-        <div className="space-y-(--gap-lista)">
-          {turmas.data.map((turma) => (
-            <Cartao key={turma.id} interno className="space-y-2.5">
-              <div className="flex items-start justify-between gap-2">
-                <div className="min-w-0">
-                  <p className="truncate font-semibold">{turma.nome}</p>
-                  <p className="text-xs text-[color:var(--color-tinta-suave)]">
-                    {GRUPOS[turma.grupoEtario as GrupoEtario] ?? turma.grupoEtario} ·{' '}
-                    {TURNOS[turma.turno as Turno] ?? turma.turno} · {turma.ano}
-                  </p>
-                </div>
-                <div className="flex shrink-0 gap-1">
-                  <BotaoIcone
-                    rotulo={`Editar ${turma.nome}`}
-                    onClick={() => {
-                      setEditando(turma.id);
-                      setFormulario({
-                        nome: turma.nome,
-                        grupoEtario: turma.grupoEtario as GrupoEtario,
-                        turno: turma.turno as Turno,
-                        capacidade: turma.capacidade ? String(turma.capacidade) : '',
-                      });
-                    }}
-                  >
-                    <Pencil size={15} />
-                  </BotaoIcone>
-                  <BotaoIcone
-                    rotulo={`Excluir ${turma.nome}`}
-                    perigo
-                    disabled={excluir.isPending}
-                    onClick={() => excluir.mutate(turma.id)}
-                  >
-                    <Trash2 size={15} />
-                  </BotaoIcone>
-                </div>
-              </div>
-
-              <p className="numerico text-xs text-[color:var(--color-tinta-suave)]">
-                {turma.criancasAtivas}{' '}
-                {turma.criancasAtivas === 1 ? 'criança matriculada' : 'crianças matriculadas'}
-                {turma.capacidade ? ` de ${turma.capacidade}` : ''}
-              </p>
-
-              <div className="flex flex-wrap gap-1">
-                {turma.educadores.length === 0 && (
-                  <p className="text-xs text-[color:var(--color-alerta)]">
-                    Sem educador — ninguém vê esta turma no app.
-                  </p>
-                )}
-                {turma.educadores.map((e) => (
-                  <span
-                    key={e.usuarioId}
-                    className="inline-flex items-center gap-1 rounded-full bg-[color:var(--color-papel)] py-0.5 pr-1 pl-2 text-xs"
-                  >
-                    {e.nome}
-                    {e.principal && <Etiqueta tom="marca">regente</Etiqueta>}
-                    <button
-                      aria-label={`Tirar ${e.nome} de ${turma.nome}`}
-                      className="rounded-full p-0.5 text-[color:var(--color-tinta-tenue)] transition active:bg-neutral-200"
-                      onClick={() =>
-                        desvincular.mutate({ turmaId: turma.id, usuarioId: e.usuarioId })
-                      }
-                    >
-                      <X size={12} />
-                    </button>
-                  </span>
-                ))}
-              </div>
-
-              <SeletorDeEducador
-                turmaId={turma.id}
-                jaNaTurma={turma.educadores.map((e) => e.usuarioId)}
-                equipe={equipe.data ?? []}
-                onEscolher={(usuarioId) => vincular.mutate({ turmaId: turma.id, usuarioId })}
+              <Campo
+                rotulo="Nome"
+                value={formulario.nome}
+                placeholder="Berçário II"
+                onChange={(e) => setFormulario({ ...formulario, nome: e.target.value })}
               />
+
+              <Selecao
+                rotulo="Faixa etária"
+                value={formulario.grupoEtario}
+                onChange={(e) =>
+                  setFormulario({ ...formulario, grupoEtario: e.target.value as GrupoEtario })
+                }
+                apoio="Define quais registros a grade cobra no fechamento do turno."
+              >
+                {Object.entries(GRUPOS).map(([valor, texto]) => (
+                  <option key={valor} value={valor}>
+                    {texto}
+                  </option>
+                ))}
+              </Selecao>
+
+              <Selecao
+                rotulo="Turno"
+                value={formulario.turno}
+                onChange={(e) => setFormulario({ ...formulario, turno: e.target.value as Turno })}
+              >
+                {Object.entries(TURNOS).map(([valor, texto]) => (
+                  <option key={valor} value={valor}>
+                    {texto}
+                  </option>
+                ))}
+              </Selecao>
+
+              <Campo
+                rotulo="Capacidade"
+                type="number"
+                inputMode="numeric"
+                min={1}
+                value={formulario.capacidade}
+                placeholder="15"
+                apoio="Opcional. Só orienta a secretaria na hora de matricular."
+                onChange={(e) => setFormulario({ ...formulario, capacidade: e.target.value })}
+              />
+
+              <div className="flex gap-2">
+                <Botao
+                  bloco
+                  disabled={salvar.isPending || formulario.nome.trim().length < 2}
+                  onClick={() => salvar.mutate({ ...formulario, id: editando ?? undefined })}
+                >
+                  {salvar.isPending ? 'Salvando…' : 'Salvar'}
+                </Botao>
+                <Botao
+                  variante="secundario"
+                  onClick={() => {
+                    setFormulario(null);
+                    setEditando(null);
+                  }}
+                >
+                  Cancelar
+                </Botao>
+              </div>
             </Cartao>
-          ))}
-        </div>
-      </main>
-    </div>
+          ) : (
+            <Botao bloco disabled={!anoCorrente} onClick={() => setFormulario(VAZIO)}>
+              <Plus size={16} /> Nova turma
+            </Botao>
+          )}
+
+          {turmas.data.length === 0 && !formulario && (
+            <Vazio
+              titulo="Nenhuma turma ainda"
+              descricao="Crie a primeira turma para que a equipe possa fazer chamada e registrar a rotina."
+            />
+          )}
+
+          <div className="space-y-(--gap-lista)">
+            {turmas.data.map((turma) => (
+              <Cartao key={turma.id} interno className="space-y-2.5">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="truncate font-semibold">{turma.nome}</p>
+                    <p className="text-xs text-[color:var(--color-tinta-suave)]">
+                      {GRUPOS[turma.grupoEtario as GrupoEtario] ?? turma.grupoEtario} ·{' '}
+                      {TURNOS[turma.turno as Turno] ?? turma.turno} · {turma.ano}
+                    </p>
+                  </div>
+                  <div className="flex shrink-0 gap-1">
+                    <BotaoIcone
+                      rotulo={`Editar ${turma.nome}`}
+                      onClick={() => {
+                        setEditando(turma.id);
+                        setFormulario({
+                          nome: turma.nome,
+                          grupoEtario: turma.grupoEtario as GrupoEtario,
+                          turno: turma.turno as Turno,
+                          capacidade: turma.capacidade ? String(turma.capacidade) : '',
+                        });
+                      }}
+                    >
+                      <Pencil size={15} />
+                    </BotaoIcone>
+                    <BotaoIcone
+                      rotulo={`Excluir ${turma.nome}`}
+                      perigo
+                      disabled={excluir.isPending}
+                      onClick={() => excluir.mutate(turma.id)}
+                    >
+                      <Trash2 size={15} />
+                    </BotaoIcone>
+                  </div>
+                </div>
+
+                <p className="numerico text-xs text-[color:var(--color-tinta-suave)]">
+                  {turma.criancasAtivas}{' '}
+                  {turma.criancasAtivas === 1 ? 'criança matriculada' : 'crianças matriculadas'}
+                  {turma.capacidade ? ` de ${turma.capacidade}` : ''}
+                </p>
+
+                <div className="flex flex-wrap gap-1">
+                  {turma.educadores.length === 0 && (
+                    <p className="text-xs text-[color:var(--color-alerta)]">
+                      Sem educador — ninguém vê esta turma no app.
+                    </p>
+                  )}
+                  {turma.educadores.map((e) => (
+                    <span
+                      key={e.usuarioId}
+                      className="inline-flex items-center gap-1 rounded-full bg-[color:var(--color-papel)] py-0.5 pr-1 pl-2 text-xs"
+                    >
+                      {e.nome}
+                      {e.principal && <Etiqueta tom="marca">regente</Etiqueta>}
+                      <button
+                        aria-label={`Tirar ${e.nome} de ${turma.nome}`}
+                        className="rounded-full p-0.5 text-[color:var(--color-tinta-tenue)] transition active:bg-neutral-200"
+                        onClick={() =>
+                          desvincular.mutate({ turmaId: turma.id, usuarioId: e.usuarioId })
+                        }
+                      >
+                        <X size={12} />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+
+                <SeletorDeEducador
+                  turmaId={turma.id}
+                  jaNaTurma={turma.educadores.map((e) => e.usuarioId)}
+                  equipe={equipe.data ?? []}
+                  onEscolher={(usuarioId) => vincular.mutate({ turmaId: turma.id, usuarioId })}
+                />
+              </Cartao>
+            ))}
+          </div>
+      </div>
+    </LayoutGestao>
   );
 }
 

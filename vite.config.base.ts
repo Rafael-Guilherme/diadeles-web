@@ -37,6 +37,14 @@ export function configurarApp(opcoes: OpcoesApp): UserConfig {
     root: raiz,
     publicDir: resolve(__dirname, 'public', opcoes.app),
     envDir: __dirname,
+    /*
+      Um cache de dependências por app.
+      O padrão é `node_modules/.vite` para os três, e o README manda subir os
+      três servidores ao mesmo tempo: eles reotimizavam por cima uns dos outros
+      e o último a subir carregava uma segunda cópia do React — "Invalid hook
+      call" e tela branca, sem erro de compilação em lugar nenhum.
+    */
+    cacheDir: resolve(__dirname, 'node_modules/.vite', opcoes.app),
     resolve: {
       alias: { '@': resolve(__dirname, 'src') },
     },
@@ -51,7 +59,19 @@ export function configurarApp(opcoes: OpcoesApp): UserConfig {
     build: {
       outDir: resolve(__dirname, 'dist', opcoes.app),
       emptyOutDir: true,
-      sourcemap: true,
+      /*
+        Desligado por padrão.
+
+        O source map do Vite embute `sourcesContent`: os 139 arquivos `.tsx`
+        originais, comentários inclusive, viajam dentro do `.map` e ficam a um
+        download de distância de quem abrir `/assets/index-*.js.map`. Não é
+        um risco teórico — é publicar o código-fonte junto com o build.
+
+        Para depurar um build de produção localmente: `SOURCEMAP=true pnpm build`.
+        O nginx recusa `.map` de qualquer jeito (nginx.conf), então nem assim o
+        arquivo é servido: é preciso abri-lo no `dist`, na sua máquina.
+      */
+      sourcemap: process.env.SOURCEMAP === 'true',
     },
     plugins: [
       react(),

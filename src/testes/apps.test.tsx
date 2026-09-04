@@ -93,7 +93,7 @@ describe('app do educador', () => {
     render(envolver(<AppEducador />));
 
     expect(await screen.findByText('Berçário II')).toBeDefined();
-    expect(screen.getByText('Olá, Ana')).toBeDefined();
+    expect(screen.getByText(/^(Bom dia|Boa tarde|Boa noite), Ana$/)).toBeDefined();
     expect(screen.getByText(/7 crianças/)).toBeDefined();
   });
 });
@@ -137,7 +137,16 @@ describe('área de gestão', () => {
       presentesHoje: 10,
       ausentesHoje: 1,
       registrosHoje: 32,
+      ocorrenciasAbertas: 0,
+      recadosPendentes: 0,
     },
+    // O painel monta a adesão a partir da grade de cada turma e a lista de
+    // pendências a partir de ocorrências e recados: sem estas rotas o teste
+    // exercitaria uma tela que não é a que existe.
+    '/v1/turmas': [],
+    '/v1/ocorrencias': [],
+    '/v1/recados': [],
+    '/v1/comunicados': [],
   };
 
   const gestora = {
@@ -171,12 +180,17 @@ describe('área de gestão', () => {
     render(envolver(<AppEducador />, '/gestao'));
 
     expect(await screen.findByText('10')).toBeDefined();
-    expect(screen.getByText('presentes')).toBeDefined();
+    // "Presentes" é rótulo da faixa de números e também coluna da tabela de
+    // adesão: as duas leituras do mesmo dado, em escalas diferentes.
+    expect(screen.getAllByText('Presentes').length).toBeGreaterThanOrEqual(1);
 
     // 12 crianças, 10 presentes e 1 ausente deixam uma sem chamada — é o número
     // que a tela calcula, e o único ali que pede providência.
-    expect(screen.getByText('sem chamada')).toBeDefined();
-    expect(screen.getAllByText('1').length).toBeGreaterThanOrEqual(2);
+    const semChamada = screen.getByText('Sem chamada').parentElement;
+    expect(semChamada?.textContent).toContain('1');
+
+    // A lista que exige telefonema vem antes dos números na leitura da tela.
+    expect(screen.getByText('Precisa de alguém ao telefone')).toBeDefined();
   });
 });
 
@@ -238,7 +252,7 @@ describe('app da família', () => {
     await waitFor(() =>
       expect(screen.getByText(/Higienizamos e aplicamos curativo/)).toBeDefined(),
     );
-    expect(screen.getByText(/Alergia registrada: Amendoim/)).toBeDefined();
+    expect(screen.getByText(/Alergia · amendoim/)).toBeDefined();
   });
 
   /**

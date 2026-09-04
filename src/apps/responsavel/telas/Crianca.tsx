@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
+import { Cabecalho, Folha, Tela } from '../componentes/Cabecalho';
 import {
   AlertTriangle,
   Check,
@@ -13,7 +14,7 @@ import {
 } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { api, mensagemDeErro } from '@/shared/api/cliente';
-import { Botao, Cartao, Carregando, Etiqueta, RotuloSecao, Vazio } from '@/shared/ui/componentes';
+import { Aviso, Botao, Cartao, Carregando, Etiqueta, RotuloSecao, Vazio } from '@/shared/ui/componentes';
 import { AutorizarMedicamento } from '../componentes/AutorizarMedicamento';
 
 const VINCULOS: Record<string, string> = {
@@ -88,15 +89,24 @@ export function Crianca() {
   const podemRetirar = dados.responsaveis.filter((r) => r.podeRetirar);
 
   return (
-    <div className="mx-auto w-full max-w-md">
-      <header className="area-segura-topo bg-gradient-to-b from-(color:--cor-acao-suave) to-transparent px-5 pb-6">
-        <h1 className="display text-2xl">{dados.nomeSocial ?? dados.nome}</h1>
-        <p className="text-sm text-[color:var(--color-tinta-suave)]">
-          {dados.matricula?.turmaNome ?? 'sem turma'} · {dados.idade}
-        </p>
-      </header>
+    <Tela>
+      <Cabecalho
+        titulo={dados.nomeSocial ?? dados.nome}
+        descricao={`${dados.matricula?.turmaNome ?? 'sem turma'} · ${dados.idade}`}
+      />
 
-      <main className="space-y-5 px-4 pb-6">
+      <Folha>
+        <div className="space-y-5">
+        {/* A restrição é a primeira coisa da ficha e vem como faixa, não como
+            item de lista: é a mesma regra do app do educador, e é ela que a
+            família confere quando a escola muda o cardápio (5d). */}
+        {dados.alergias.length > 0 && (
+          <Aviso titulo={`Alergia a ${dados.alergias.join(', ').toLowerCase()}`}>
+            {dados.observacoesSaude ??
+              'A escola serve a versão adaptada do cardápio e confere antes de cada refeição.'}
+          </Aviso>
+        )}
+
         <section className="space-y-2">
           <RotuloSecao>Saúde</RotuloSecao>
 
@@ -265,8 +275,9 @@ export function Crianca() {
           )}
         </section>
 
-      </main>
-    </div>
+        </div>
+      </Folha>
+    </Tela>
   );
 }
 

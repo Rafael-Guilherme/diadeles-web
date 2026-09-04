@@ -8,6 +8,14 @@ export interface EstadoFila {
   enviando: boolean;
   online: boolean;
   ultimoEnvio: number | null;
+  /**
+   * O primeiro registro travado, para o cabeçalho poder dizer qual é.
+   *
+   * "1 erro" não é informação acionável: a educadora precisa saber que foi a
+   * dose do Davi e que falta a segunda checagem, senão o indicador vira
+   * enfeite e ela para de olhar para ele.
+   */
+  primeiroErro: { clientId: string; turmaId: string; erro: string } | null;
 }
 
 type Ouvinte = (estado: EstadoFila) => void;
@@ -18,6 +26,7 @@ let estado: EstadoFila = {
   enviando: false,
   online: navigator.onLine,
   ultimoEnvio: null,
+  primeiroErro: null,
 };
 
 const ouvintes = new Set<Ouvinte>();
@@ -29,7 +38,18 @@ function publicar(mudanca: Partial<EstadoFila>): void {
 
 async function atualizarContagem(): Promise<void> {
   const [pendentes, erros] = await Promise.all([fila.contar(), fila.comErro()]);
-  publicar({ pendentes: pendentes - erros.length, comErro: erros.length });
+  const primeiro = erros[0];
+  publicar({
+    pendentes: pendentes - erros.length,
+    comErro: erros.length,
+    primeiroErro: primeiro
+      ? {
+          clientId: primeiro.clientId,
+          turmaId: primeiro.turmaId,
+          erro: primeiro.erro ?? 'Não foi possível registrar.',
+        }
+      : null,
+  });
 }
 
 /**

@@ -1,8 +1,9 @@
 import { useEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Link, useNavigate } from 'react-router-dom';
-import { AlertTriangle, ArrowLeft, Bell, ScrollText, Sun } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { AlertTriangle, Bell, ScrollText, Sun } from 'lucide-react';
 import { api } from '@/shared/api/cliente';
+import { Cabecalho, Folha, Tela } from '../componentes/Cabecalho';
 import { Cartao, Carregando, Vazio } from '@/shared/ui/componentes';
 import { ControleAvisos } from '../componentes/ConviteAvisos';
 
@@ -21,7 +22,6 @@ const ICONES: Record<string, typeof Bell> = {
  * (docs/arquitetura.md §7).
  */
 export function Avisos() {
-  const navegar = useNavigate();
   const clienteQuery = useQueryClient();
 
   const { data, isLoading } = useQuery({
@@ -49,27 +49,22 @@ export function Avisos() {
   }, [naoLidas]);
 
   return (
-    <div className="mx-auto w-full max-w-md px-4 pb-6">
-      <header className="area-segura-topo flex items-center gap-2 py-4">
-        <button
-          onClick={() => navegar(-1)}
-          aria-label="Voltar"
-          className="-ml-2 flex h-11 w-11 items-center justify-center rounded-full text-[color:var(--color-tinta-suave)]"
-        >
-          <ArrowLeft size={20} />
-        </button>
-        <h1 className="display text-xl">Avisos</h1>
-      </header>
+    <Tela>
+      <Cabecalho
+        voltar
+        titulo="Avisos"
+        descricao="O que aconteceu com a criança, e o que a escola pede que você confirme."
+      />
 
-      <div className="pb-4">
-        <ControleAvisos />
-      </div>
+      <Folha>
+        <div className="pb-4">
+          <ControleAvisos />
+        </div>
 
       {isLoading ? (
         <Carregando />
       ) : !data?.itens.length ? (
         <Vazio
-          icone={<Bell size={22} />}
           titulo="Nenhum aviso ainda"
           descricao="Quando a escola fechar o turno, o resumo do dia aparece aqui."
         />
@@ -122,7 +117,8 @@ export function Avisos() {
           })}
         </ul>
       )}
-    </div>
+      </Folha>
+    </Tela>
   );
 }
 

@@ -6,8 +6,6 @@ import {
   Baby,
   Check,
   Droplets,
-  HeartPulse,
-  IdCard,
   LogIn,
   LogOut,
   Moon,
@@ -15,24 +13,32 @@ import {
   Pill,
   Smile,
   Sparkles,
-  UserRound,
   Utensils,
 } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { api } from '@/shared/api/cliente';
-import { Botao, Cartao, Carregando, Etiqueta, RotuloSecao, Vazio } from '@/shared/ui/componentes';
+import {
+  Avatar,
+  Aviso,
+  Botao,
+  Cartao,
+  Carregando,
+  Etiqueta,
+  RotuloSecao,
+  Vazio,
+} from '@/shared/ui/componentes';
 import { Cabecalho } from '../componentes/Cabecalho';
 import { RegistrarDose } from '../componentes/RegistrarDose';
 import { Recados } from '../componentes/Recados';
 
 const VINCULOS: Record<string, string> = {
-  MAE: 'Mãe',
-  PAI: 'Pai',
-  AVO: 'Avó ou avô',
-  TIO: 'Tio ou tia',
-  PADRASTO_MADRASTA: 'Padrasto ou madrasta',
-  RESPONSAVEL_LEGAL: 'Responsável legal',
-  OUTRO: 'Responsável',
+  MAE: 'mãe',
+  PAI: 'pai',
+  AVO: 'avó ou avô',
+  TIO: 'tio ou tia',
+  PADRASTO_MADRASTA: 'padrasto ou madrasta',
+  RESPONSAVEL_LEGAL: 'responsável legal',
+  OUTRO: 'responsável',
 };
 
 const ICONES: Record<string, ReactNode> = {
@@ -49,9 +55,9 @@ const ICONES: Record<string, ReactNode> = {
  * A ficha que o educador abre na exceção — quando uma criança precisa de
  * atenção individual, não do registro em lote da turma.
  *
- * A ordem da tela é a ordem da urgência: alergia e restrição primeiro, porque
- * é o que não pode passar batido antes de uma refeição; medicação em seguida,
- * com o que já foi dado hoje; e só então a linha do tempo, que é consulta.
+ * A restrição vem **antes do nome**, não depois: quem abre a ficha correndo,
+ * três minutos antes do almoço, precisa ler a alergia primeiro e o nome
+ * depois — ele já sabe de quem é a ficha, foi ele quem a abriu (5d).
  */
 export function FichaCrianca() {
   const { turmaId = '', criancaId = '' } = useParams();
@@ -82,7 +88,7 @@ export function FichaCrianca() {
   if (dia.isLoading || ficha.isLoading) {
     return (
       <>
-        <Cabecalho titulo="Ficha" voltarPara={`/turma/${turmaId}`} />
+        <Cabecalho titulo="Ficha da criança" voltarPara={`/turma/${turmaId}`} />
         <Carregando />
       </>
     );
@@ -91,89 +97,100 @@ export function FichaCrianca() {
   if (!dia.data || !ficha.data) {
     return (
       <>
-        <Cabecalho titulo="Ficha" voltarPara={`/turma/${turmaId}`} />
-        <Vazio titulo="Não consegui carregar esta criança" />
+        <Cabecalho titulo="Ficha da criança" voltarPara={`/turma/${turmaId}`} />
+        <div className="px-4 py-6">
+          <Vazio
+            titulo="Não consegui carregar esta criança"
+            descricao="Verifique a conexão e tente de novo. Se persistir, a matrícula pode ter sido encerrada."
+          />
+        </div>
       </>
     );
   }
 
   const dados = ficha.data;
-  const temAlerta =
-    dados.alergias.length > 0 ||
-    dados.restricoesAlimentares.length > 0 ||
-    dados.condicoesSaude.length > 0 ||
-    Boolean(dados.observacoesSaude);
+  const nome = dados.nomeSocial ?? dados.nome;
+  const restricoes = [...dados.alergias, ...dados.restricoesAlimentares];
 
   const podemRetirar = dados.responsaveis.filter((r) => r.podeRetirar);
   const autorizados = dados.autorizados.filter((a) => a.ativo);
+  const bloqueados = dados.responsaveis.filter((r) => r.bloqueado);
 
   return (
     <div className="min-h-full pb-10">
       <Cabecalho
-        titulo={dados.nomeSocial ?? dados.nome}
-        subtitulo={`${dados.idade} · ${dados.matricula?.turmaNome ?? 'sem turma'}`}
+        titulo="Ficha da criança"
+        subtitulo={dados.matricula?.turmaNome ?? 'sem turma'}
         voltarPara={`/turma/${turmaId}`}
       />
 
-      <main className="space-y-5 px-4 py-4">
-        <div className="flex flex-wrap gap-2">
-          {dia.data.ausente ? (
-            <Etiqueta tom="alerta">ausente hoje</Etiqueta>
-          ) : dia.data.entradaEm ? (
-            <Etiqueta tom="ok">
-              entrou às{' '}
-              {new Date(dia.data.entradaEm).toLocaleTimeString('pt-BR', {
-                hour: '2-digit',
-                minute: '2-digit',
-              })}
-            </Etiqueta>
-          ) : (
-            <Etiqueta tom="alerta">sem chamada</Etiqueta>
-          )}
-          {dia.data.saidaEm && (
-            <Etiqueta>
-              saiu às{' '}
-              {new Date(dia.data.saidaEm).toLocaleTimeString('pt-BR', {
-                hour: '2-digit',
-                minute: '2-digit',
-              })}
-            </Etiqueta>
-          )}
+      {/* A faixa é a primeira coisa da tela, de ponta a ponta, e é sempre a
+          palavra do alimento — nunca só uma cor ou só um ícone. */}
+      {dados.alergias.length > 0 && (
+        <div className="border-b border-[color:var(--color-alerta)] bg-[color:var(--color-alerta-suave)] px-3 py-2.5">
+          <div className="flex gap-2.5">
+            <span
+              aria-hidden
+              className="flex h-5 w-5 shrink-0 items-center justify-center rounded-(--raio-sm) bg-[color:var(--color-alerta)] text-xs font-bold text-white"
+            >
+              !
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-semibold text-[color:var(--color-alerta)]">
+                Alergia a {dados.alergias.join(', ').toLowerCase()}
+              </p>
+              {(dados.observacoesSaude || dados.restricoesAlimentares.length > 0) && (
+                <p className="mt-0.5 text-sm leading-snug text-[color:var(--color-tinta-suave)]">
+                  {dados.restricoesAlimentares.length > 0 &&
+                    `Também não pode: ${dados.restricoesAlimentares.join(', ').toLowerCase()}. `}
+                  {dados.observacoesSaude}
+                </p>
+              )}
+            </div>
+          </div>
         </div>
+      )}
 
-        {/* Alergia em vermelho e no topo: o educador consulta esta tela com uma
-            criança no colo e três minutos até o almoço. */}
-        {temAlerta && (
-          <Cartao
-            interno
-            className="space-y-3 border-[color:var(--color-alerta)]/30 bg-[color:var(--color-alerta-suave)]/40"
-          >
-            {dados.alergias.length > 0 && (
-              <Alerta icone={<AlertTriangle size={16} />} titulo="Alergias" forte>
-                {dados.alergias.join(', ')}
-              </Alerta>
-            )}
-            {dados.restricoesAlimentares.length > 0 && (
-              <Alerta icone={<Utensils size={16} />} titulo="Restrições alimentares">
-                {dados.restricoesAlimentares.join(', ')}
-              </Alerta>
-            )}
-            {dados.condicoesSaude.length > 0 && (
-              <Alerta icone={<HeartPulse size={16} />} titulo="Condições de saúde">
-                {dados.condicoesSaude.join(', ')}
-              </Alerta>
-            )}
-            {dados.observacoesSaude && (
-              <Alerta icone={<NotebookPen size={16} />} titulo="Observações">
-                {dados.observacoesSaude}
-              </Alerta>
-            )}
-          </Cartao>
+      {dados.alergias.length === 0 && restricoes.length > 0 && (
+        <div className="border-b border-[color:var(--color-sol-200)] bg-[color:var(--color-sol-50)] px-3 py-2.5">
+          <p className="text-sm font-semibold text-[color:var(--color-sol-700)]">
+            Restrição alimentar: {dados.restricoesAlimentares.join(', ').toLowerCase()}
+          </p>
+        </div>
+      )}
+
+      <div className="flex items-center gap-3 border-b border-[color:var(--color-borda)] bg-white px-3 py-3">
+        <Avatar nome={nome} />
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-lg font-semibold">{dados.nome}</p>
+          <p className="text-xs text-[color:var(--color-tinta-suave)]">
+            {dados.matricula?.turmaNome ?? 'sem turma'} · {dados.idade} ·{' '}
+            {dia.data.ausente ? 'ausente hoje' : dia.data.entradaEm ? 'presente' : 'sem chamada'}
+          </p>
+        </div>
+        {dia.data.entradaEm && !dia.data.saidaEm && <Etiqueta tom="ok">na escola</Etiqueta>}
+        {dia.data.saidaEm && <Etiqueta>saiu {hora(dia.data.saidaEm)}</Etiqueta>}
+      </div>
+
+      <main className="space-y-5 px-3 py-4">
+        {dados.condicoesSaude.length > 0 && (
+          <Aviso tom="neutro" titulo="Condições de saúde">
+            {dados.condicoesSaude.join(', ')}
+          </Aviso>
         )}
 
-        {dia.data.medicacoes.length > 0 && (
-          <section className="space-y-2">
-            <RotuloSecao>Medicação de hoje</RotuloSecao>
+        <section className="space-y-2">
+          <RotuloSecao>Medicação de hoje</RotuloSecao>
+
+          {dia.data.medicacoes.length === 0 ? (
+            <Cartao interno>
+              <p className="text-sm font-semibold">Nenhuma dose hoje</p>
+              <p className="text-xs text-[color:var(--color-tinta-suave)]">
+                Sem autorização vigente da família. Sem ela, a escola não pode dar nenhum
+                medicamento.
+              </p>
+            </Cartao>
+          ) : (
             <ul className="space-y-(--gap-lista)">
               {dia.data.medicacoes.map((m) => {
                 const dado = m.administradoHoje.length > 0;
@@ -181,64 +198,57 @@ export function FichaCrianca() {
                   <li key={m.id}>
                     <Cartao
                       interno
-                      className={`flex gap-3 ${dado ? '' : 'border-(color:--cor-acao)/40'}`}
+                      className={dado ? '' : 'border-[color:var(--color-alerta)]'}
                     >
-                      <span
-                        className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-(--raio) ${
-                          dado
-                            ? 'bg-[color:var(--color-ok-suave)] text-[color:var(--color-ok)]'
-                            : 'bg-(color:--cor-acao-suave) text-(color:--cor-acao)'
-                        }`}
-                      >
-                        {dado ? <Check size={16} /> : <Pill size={16} />}
-                      </span>
-                      <div className="min-w-0 flex-1">
-                        <p className="font-semibold">{m.medicamento}</p>
-                        <p className="text-sm text-[color:var(--color-tinta-suave)]">
-                          {m.dosagem} · via {m.via} · {descreverHorarios(m.horarios)}
-                        </p>
-                        <p
-                          className={`mt-1 text-xs font-semibold ${
-                            dado ? 'text-[color:var(--color-ok)]' : 'text-(color:--cor-acao)'
+                      <div className="flex gap-3">
+                        <span
+                          aria-hidden
+                          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-(--raio-sm) ${
+                            dado
+                              ? 'bg-[color:var(--color-ok-suave)] text-[color:var(--color-ok)]'
+                              : 'bg-[color:var(--color-alerta-suave)] text-[color:var(--color-alerta)]'
                           }`}
                         >
-                          {dado
-                            ? `Dado hoje às ${m.administradoHoje
-                                .map((iso) =>
-                                  new Date(iso).toLocaleTimeString('pt-BR', {
-                                    hour: '2-digit',
-                                    minute: '2-digit',
-                                  }),
-                                )
-                                .join(', ')}`
-                            : 'Ainda não foi dado hoje'}
-                        </p>
-                        {m.observacoes && (
-                          <p className="mt-1 text-xs text-[color:var(--color-tinta-suave)]">
-                            {m.observacoes}
+                          {dado ? <Check size={16} /> : <Pill size={16} />}
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <p className="font-semibold">{m.medicamento}</p>
+                          <p className="text-sm text-[color:var(--color-tinta-suave)]">
+                            {m.dosagem} · via {m.via} · {descreverHorarios(m.horarios)}
                           </p>
-                        )}
-
-                        {doseAberta === m.id ? null : (
-                          <button
-                            onClick={() => setDoseAberta(m.id)}
-                            className="mt-2 min-h-11 w-full rounded-(--raio) bg-(color:--cor-acao-suave) text-sm font-semibold text-(color:--cor-acao) transition active:scale-[0.99]"
+                          <p
+                            className={`mt-1 text-xs font-semibold ${
+                              dado ? 'text-[color:var(--color-ok)]' : 'text-[color:var(--color-alerta)]'
+                            }`}
                           >
-                            {dado ? 'Registrar outra dose' : 'Registrar dose'}
-                          </button>
-                        )}
+                            {dado
+                              ? `Dado hoje às ${m.administradoHoje.map(hora).join(', ')}`
+                              : 'Ainda não foi dado hoje'}
+                          </p>
+                          {m.observacoes && (
+                            <p className="mt-1 text-xs text-[color:var(--color-tinta-suave)]">
+                              {m.observacoes}
+                            </p>
+                          )}
+                        </div>
                       </div>
+
+                      {doseAberta !== m.id && (
+                        <Botao
+                          variante="secundario"
+                          bloco
+                          className="mt-2.5"
+                          onClick={() => setDoseAberta(m.id)}
+                        >
+                          {dado ? 'Registrar outra dose' : 'Registrar dose'}
+                        </Botao>
+                      )}
                     </Cartao>
 
                     {doseAberta === m.id && (
                       <div className="pt-2">
                         <RegistrarDose
-                          medicacao={{
-                            id: m.id,
-                            medicamento: m.medicamento,
-                            dosagem: m.dosagem,
-                            via: m.via,
-                          }}
+                          medicacao={m}
                           criancaId={criancaId}
                           aoFechar={() => setDoseAberta(null)}
                         />
@@ -248,19 +258,44 @@ export function FichaCrianca() {
                 );
               })}
             </ul>
-          </section>
-        )}
+          )}
+        </section>
+
+        <section className="space-y-2">
+          <RotuloSecao apoio={<span className="text-2xs">{autorizados.length + podemRetirar.length}</span>}>
+            Autorizados a retirar
+          </RotuloSecao>
+
+          {podemRetirar.length + autorizados.length === 0 ? (
+            <Aviso titulo="Ninguém autorizado a retirar">
+              Não entregue a criança sem falar com a coordenação.
+            </Aviso>
+          ) : (
+            <Cartao className="divide-y divide-[color:var(--color-borda)]">
+              {podemRetirar.map((r) => (
+                <Pessoa key={r.id} nome={r.nome} detalhe={VINCULOS[r.tipo] ?? r.tipo} />
+              ))}
+              {autorizados.map((a) => (
+                <Pessoa
+                  key={a.id}
+                  nome={a.nome}
+                  detalhe={`${a.parentesco ?? 'autorizado'} · ${a.documento}`}
+                  nota={a.validoAte ? `até ${dataCurta(a.validoAte)}` : undefined}
+                />
+              ))}
+            </Cartao>
+          )}
+
+          {/* Bloqueio judicial não é exceção rara: é a informação que impede a
+              escola de entregar uma criança a quem não podia buscá-la. */}
+          {bloqueados.length > 0 && (
+            <Aviso titulo={`Não pode retirar: ${bloqueados.map((r) => r.nome).join(', ')}`}>
+              Se essa pessoa aparecer na portaria, chame a coordenação antes de qualquer coisa.
+            </Aviso>
+          )}
+        </section>
 
         <Recados criancaId={criancaId} incluirLidos titulo="Recados da família" />
-
-        {/* Fora de qualquer seção e sempre visível: quando o educador abre esta
-            tela porque algo aconteceu, procurar onde registrar é tempo que a
-            criança está esperando. */}
-        <Link to={`/turma/${turmaId}/crianca/${criancaId}/ocorrencia`} className="block">
-          <Botao variante="secundario" bloco>
-            <AlertTriangle size={16} /> Registrar ocorrência
-          </Botao>
-        </Link>
 
         <section className="space-y-2">
           <RotuloSecao apoio={<span className="text-2xs">{dia.data.resumo}</span>}>
@@ -278,6 +313,7 @@ export function FichaCrianca() {
               {dia.data.timeline.map((item) => (
                 <div key={item.id} className="flex gap-2.5">
                   <span
+                    aria-hidden
                     className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-(--raio-sm) ${
                       item.categoria === 'OCORRENCIA'
                         ? 'bg-[color:var(--color-alerta-suave)] text-[color:var(--color-alerta)]'
@@ -300,10 +336,7 @@ export function FichaCrianca() {
                     <div className="flex items-baseline justify-between gap-2">
                       <p className="text-sm font-semibold leading-snug">{item.titulo}</p>
                       <time className="numerico shrink-0 text-2xs text-[color:var(--color-tinta-tenue)]">
-                        {new Date(item.ocorridoEm).toLocaleTimeString('pt-BR', {
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })}
+                        {hora(item.ocorridoEm)}
                       </time>
                     </div>
                     {item.detalhe && (
@@ -317,103 +350,58 @@ export function FichaCrianca() {
             </Cartao>
           )}
         </section>
-
-        <section className="space-y-2">
-          <RotuloSecao>Quem pode retirar</RotuloSecao>
-
-          {podemRetirar.length + autorizados.length === 0 ? (
-            <Cartao interno>
-              <p className="text-sm text-[color:var(--color-alerta)]">
-                Ninguém autorizado a retirar. Não entregue a criança sem falar com a coordenação.
-              </p>
-            </Cartao>
-          ) : (
-            <Cartao interno className="space-y-2.5">
-              {podemRetirar.map((r) => (
-                <Pessoa
-                  key={r.id}
-                  icone={<UserRound size={14} />}
-                  nome={r.nome}
-                  detalhe={VINCULOS[r.tipo] ?? r.tipo}
-                />
-              ))}
-              {autorizados.map((a) => (
-                <Pessoa
-                  key={a.id}
-                  icone={<IdCard size={14} />}
-                  nome={a.nome}
-                  detalhe={`${a.parentesco ?? 'Autorizado'} · ${a.documento}`}
-                />
-              ))}
-            </Cartao>
-          )}
-
-          {/* Bloqueio judicial não é exceção rara: é a informação que impede a
-              escola de entregar uma criança a quem não podia buscá-la. */}
-          {dados.responsaveis.some((r) => r.bloqueado) && (
-            <Cartao interno className="border-[color:var(--color-alerta)]/40">
-              <p className="text-sm font-semibold text-[color:var(--color-alerta)]">
-                Não pode retirar:{' '}
-                {dados.responsaveis
-                  .filter((r) => r.bloqueado)
-                  .map((r) => r.nome)
-                  .join(', ')}
-              </p>
-              <p className="mt-1 text-xs text-[color:var(--color-tinta-suave)]">
-                Se essa pessoa aparecer na portaria, chame a coordenação antes de qualquer coisa.
-              </p>
-            </Cartao>
-          )}
-        </section>
       </main>
-    </div>
-  );
-}
 
-function Alerta({
-  icone,
-  titulo,
-  children,
-  forte = false,
-}: {
-  icone: ReactNode;
-  titulo: string;
-  children: ReactNode;
-  forte?: boolean;
-}) {
-  return (
-    <div className="flex gap-2.5">
-      <span className="mt-0.5 shrink-0 text-[color:var(--color-alerta)]">{icone}</span>
-      <div className="min-w-0 flex-1">
-        <p className="text-2xs font-bold uppercase tracking-wider text-[color:var(--color-alerta)]">
-          {titulo}
-        </p>
-        <p className={`text-sm leading-relaxed ${forte ? 'font-semibold' : ''}`}>{children}</p>
+      {/* As três saídas da ficha ficam juntas no rodapé, e a ocorrência é a
+          única em vermelho: quando o educador abre esta tela porque algo
+          aconteceu, procurar onde registrar é tempo que a criança espera. */}
+      <div
+        className="area-segura-base sticky bottom-0 flex gap-2 border-t border-[color:var(--color-borda-forte)] bg-[color:var(--color-papel)] px-3 pt-2.5"
+        style={{ boxShadow: 'var(--sombra-elevada)' }}
+      >
+        <Link to={`/turma/${turmaId}`} className="flex-1">
+          <Botao variante="secundario" bloco>
+            Ver o dia
+          </Botao>
+        </Link>
+        <Link to={`/turma/${turmaId}/pareceres`} className="flex-1">
+          <Botao variante="secundario" bloco>
+            Pareceres
+          </Botao>
+        </Link>
+        <Link to={`/turma/${turmaId}/crianca/${criancaId}/ocorrencia`} className="flex-1">
+          <Botao
+            variante="secundario"
+            bloco
+            className="border-[color:var(--color-alerta)] text-[color:var(--color-alerta)]"
+          >
+            Ocorrência
+          </Botao>
+        </Link>
       </div>
     </div>
   );
 }
 
-function Pessoa({
-  icone,
-  nome,
-  detalhe,
-}: {
-  icone: ReactNode;
-  nome: string;
-  detalhe: string;
-}) {
+function Pessoa({ nome, detalhe, nota }: { nome: string; detalhe: string; nota?: string }) {
   return (
-    <div className="flex items-center gap-2.5">
-      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[color:var(--color-papel)] text-[color:var(--color-tinta-suave)]">
-        {icone}
-      </span>
+    <div className="flex items-center gap-2.5 p-(--padding-cartao)">
+      <Avatar nome={nome} tamanho="sm" />
       <p className="min-w-0 flex-1 truncate text-sm">
         <span className="font-semibold">{nome}</span>{' '}
         <span className="text-[color:var(--color-tinta-tenue)]">· {detalhe}</span>
       </p>
+      {nota && <Etiqueta>{nota}</Etiqueta>}
     </div>
   );
+}
+
+function hora(iso: string): string {
+  return new Date(iso).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+}
+
+function dataCurta(iso: string): string {
+  return new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
 }
 
 /** `horarios` é Json na API: pode ser uma lista de horas ou "se necessário". */

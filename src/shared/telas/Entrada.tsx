@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { API_URL } from '../api/cliente';
 import { useSessao, type Sessao } from '../auth/sessao';
-import { Aviso, Botao, Cartao, Carregando } from '../ui/componentes';
+import { Avatar, Aviso, Botao, Cartao, Carregando } from '../ui/componentes';
 import { FormularioEntrada } from './FormularioEntrada';
 
 interface PerfilDemo {
@@ -94,84 +94,107 @@ export function Entrada({
   const mostrarFormulario = formularioAberto || estado === 'indisponivel';
 
   return (
-    <div className="mx-auto flex min-h-full w-full max-w-md flex-col justify-center gap-6 px-5 py-10">
-      <header className="space-y-2">
-        <div className="flex items-center gap-3">
-          <img src="/pwa-192.png" alt="" className="h-12 w-12 rounded-(--raio)" />
-          <div>
-            <h1 className="text-2xl">{titulo}</h1>
-            <p className="text-sm text-[color:var(--color-tinta-suave)]">
-              {estado === 'indisponivel'
-                ? app === 'educador'
-                  ? 'Entre com o e-mail e a senha da sua escola.'
-                  : 'Entre com o convite que a escola enviou.'
-                : subtitulo}
-            </p>
-          </div>
-        </div>
-      </header>
-
-      {erro && <Aviso>{erro}</Aviso>}
-
-      {estado === 'apiFora' && (
-        <Aviso>Não consegui falar com a API. Confira se ela está rodando em {API_URL}</Aviso>
-      )}
-
-      {estado === 'carregando' && <Carregando texto="Abrindo…" />}
-
+    <div className="mx-auto flex min-h-full w-full max-w-md flex-col">
+      {/* A faixa de ambiente fica no topo e sempre visível, não como nota de
+          rodapé: é ela que impede alguém de confundir esta escola inventada
+          com a escola de verdade (5c). */}
       {temDemo && (
-        <div className="space-y-(--gap-lista)">
-          {perfis.map((perfil) => (
-            <Cartao key={perfil.chave} interno>
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="font-semibold">{perfil.nome}</p>
-                  <p className="text-xs font-medium text-(color:--cor-acao)">{perfil.cargo}</p>
-                  <p className="mt-1 text-sm leading-relaxed text-[color:var(--color-tinta-suave)]">
-                    {perfil.descricao}
-                  </p>
-                </div>
-                <Botao
-                  onClick={() => void entrar(perfil.chave)}
-                  disabled={entrando !== null}
-                  // Três cartões com um botão "Entrar" cada, mais o do
-                  // formulário abaixo: sem o nome, quem usa leitor de tela ouve
-                  // "Entrar" quatro vezes e não sabe em qual está.
-                  aria-label={`Entrar como ${perfil.nome}`}
-                  className="shrink-0"
-                >
-                  {entrando === perfil.chave ? 'Entrando…' : 'Entrar'}
-                </Botao>
-              </div>
-            </Cartao>
-          ))}
-        </div>
-      )}
-
-      {temDemo && !formularioAberto && (
-        <>
-          <Separador />
-          <button
-            onClick={() => setFormularioAberto(true)}
-            className="min-h-11 text-sm font-semibold text-(color:--cor-acao)"
-          >
-            {app === 'educador' ? 'Entrar com minha conta' : 'Tenho um convite da escola'}
-          </button>
-        </>
-      )}
-
-      {mostrarFormulario && (
-        <>
-          {temDemo && <Separador />}
-          <FormularioEntrada app={app} />
-        </>
-      )}
-
-      {temDemo && (
-        <p className="text-center text-xs leading-relaxed text-[color:var(--color-tinta-tenue)]">
-          Ambiente de demonstração. Os dados são fictícios e podem ser recriados a qualquer momento.
+        <p className="flex items-start gap-2 border-b border-[color:var(--color-sol-200)] bg-[color:var(--color-sol-50)] px-5 py-2.5 text-xs leading-snug text-[color:var(--color-sol-700)]">
+          <span aria-hidden className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-[color:var(--color-sol-600)]" />
+          Ambiente de demonstração. Dados fictícios, recriados a qualquer momento.
         </p>
       )}
+
+      <div className="flex flex-1 flex-col justify-center gap-6 px-5 py-10">
+        <header className="space-y-2">
+          <div className="flex items-center gap-3">
+            <img src="/pwa-192.png" alt="" className="h-12 w-12 rounded-(--raio)" />
+            <div>
+              <h1 className="text-2xl">{titulo}</h1>
+              <p className="text-sm leading-snug text-[color:var(--color-tinta-suave)]">
+                {estado === 'indisponivel'
+                  ? app === 'educador'
+                    ? 'Entre com o e-mail que a escola cadastrou. O mesmo acesso serve para equipe e coordenação — o app se ajusta ao seu papel.'
+                    : 'Entre com o convite que a escola enviou. Ele chega por e-mail e vale sete dias.'
+                  : subtitulo}
+              </p>
+            </div>
+          </div>
+        </header>
+
+        {erro && <Aviso>{erro}</Aviso>}
+
+        {estado === 'apiFora' && (
+          <Aviso>Não consegui falar com a API. Confira se ela está rodando em {API_URL}</Aviso>
+        )}
+
+        {estado === 'carregando' && <Carregando texto="Abrindo…" />}
+
+        {temDemo && (
+          <div className="space-y-(--gap-lista)">
+            {perfis.map((perfil) => (
+              <Cartao key={perfil.chave} interno>
+                <div className="flex items-start justify-between gap-3">
+                  <Avatar nome={perfil.nome} className="mt-0.5" />
+                  <div className="min-w-0 flex-1">
+                    <p className="font-semibold">{perfil.nome}</p>
+                    <p className="text-xs font-medium text-(color:--cor-acao)">{perfil.cargo}</p>
+                    <p className="mt-1 text-sm leading-relaxed text-[color:var(--color-tinta-suave)]">
+                      {perfil.descricao}
+                    </p>
+                  </div>
+                  <Botao
+                    onClick={() => void entrar(perfil.chave)}
+                    disabled={entrando !== null}
+                    // Três cartões com um botão "Entrar" cada, mais o do
+                    // formulário abaixo: sem o nome, quem usa leitor de tela ouve
+                    // "Entrar" quatro vezes e não sabe em qual está.
+                    aria-label={`Entrar como ${perfil.nome}`}
+                    className="shrink-0"
+                  >
+                    {entrando === perfil.chave ? 'Entrando…' : 'Entrar'}
+                  </Botao>
+                </div>
+              </Cartao>
+            ))}
+          </div>
+        )}
+
+        {temDemo && !formularioAberto && (
+          <>
+            <Separador />
+            <button
+              onClick={() => setFormularioAberto(true)}
+              className="min-h-11 text-sm font-semibold text-(color:--cor-acao)"
+            >
+              {app === 'educador' ? 'Entrar com minha conta' : 'Tenho um convite da escola'}
+            </button>
+          </>
+        )}
+
+        {mostrarFormulario && (
+          <>
+            {temDemo && <Separador />}
+            <FormularioEntrada app={app} />
+          </>
+        )}
+
+        {/* Quem chega sem acesso não erra a senha — ele nunca teve uma. A saída
+            é a secretaria, e dizer isso aqui poupa a tentativa de "esqueci". */}
+        {mostrarFormulario && (
+          <Cartao interno className="mt-2">
+            <p className="text-sm font-semibold">Ainda não tem acesso?</p>
+            <p className="mt-1 text-sm leading-snug text-[color:var(--color-tinta-suave)]">
+              Quem cria conta é a escola. Pergunte à secretaria — o convite chega por e-mail e vale
+              sete dias.
+            </p>
+          </Cartao>
+        )}
+
+        <p className="text-xs leading-relaxed text-[color:var(--color-tinta-tenue)]">
+          Ao entrar você concorda com os termos de uso e a política de privacidade.
+        </p>
+      </div>
     </div>
   );
 }

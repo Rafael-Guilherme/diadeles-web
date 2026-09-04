@@ -1,9 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
-import { Check, CircleSlash, Copy } from 'lucide-react';
+import { Check, Copy } from 'lucide-react';
 import { useState } from 'react';
 import { api } from '@/shared/api/cliente';
-import { Cartao, Carregando, Etiqueta, RotuloSecao, Vazio } from '@/shared/ui/componentes';
-import { Cabecalho } from '../componentes/Cabecalho';
+import { Carregando, Cartao, Etiqueta, Metrica, RotuloSecao, Vazio } from '@/shared/ui/componentes';
+import { LayoutGestao, Tabela, Td, Th, Tr } from '../componentes/LayoutGestao';
 
 const VINCULOS: Record<string, string> = {
   MAE: 'Mãe',
@@ -53,10 +53,9 @@ export function Acesso() {
 
   if (convites.isLoading || semAcesso.isLoading) {
     return (
-      <>
-        <Cabecalho titulo="Acesso das famílias" voltarPara="/gestao" />
-        <Carregando />
-      </>
+      <LayoutGestao titulo="Acesso das famílias">
+        <Carregando texto="Buscando os convites…" />
+      </LayoutGestao>
     );
   }
 
@@ -65,10 +64,19 @@ export function Acesso() {
   const faltantes = semAcesso.data ?? [];
 
   return (
-    <div className="min-h-full pb-10">
-      <Cabecalho titulo="Acesso das famílias" voltarPara="/gestao" />
+    <LayoutGestao
+      titulo="Acesso das famílias"
+      descricao={`${faltantes.length} ${faltantes.length === 1 ? 'criança' : 'crianças'} sem nenhum responsável ativo`}
+    >
+      <div className="space-y-5">
+        {/* Os três números vêm antes da lista porque são a pergunta que a
+            gestora faz: quantas famílias estão de fato vendo o app. */}
+        <section className="grid grid-cols-3 gap-x-6 border-b border-[color:var(--color-borda)] pb-4">
+          <Metrica rotulo="Convites usados" valor={usados.length} />
+          <Metrica rotulo="Convite não aceito" valor={pendentes.length} tom={pendentes.length > 0 ? 'alerta' : 'neutro'} />
+          <Metrica rotulo="Sem responsável" valor={faltantes.length} tom={faltantes.length > 0 ? 'alerta' : 'neutro'} />
+        </section>
 
-      <main className="space-y-5 px-4 py-4">
         <section className="space-y-2">
           <RotuloSecao>Ainda não entraram</RotuloSecao>
 
@@ -81,14 +89,23 @@ export function Acesso() {
             </Cartao>
           ) : (
             <>
-              <Cartao interno className="space-y-1">
-                {faltantes.map((crianca) => (
-                  <p key={crianca.id} className="text-sm">
-                    · Família de {crianca.nome}
-                  </p>
-                ))}
-              </Cartao>
-              <p className="px-1 text-xs leading-relaxed text-[color:var(--color-tinta-tenue)]">
+              <Tabela>
+                <thead>
+                  <tr>
+                    <Th>Criança</Th>
+                    <Th className="text-right">Situação</Th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {faltantes.map((crianca) => (
+                    <Tr key={crianca.id} atencao>
+                      <Td className="font-semibold">{crianca.nome}</Td>
+                      <Td className="text-right text-[color:var(--color-sol-700)]">sem acesso</Td>
+                    </Tr>
+                  ))}
+                </tbody>
+              </Tabela>
+              <p className="text-xs leading-relaxed text-[color:var(--color-tinta-tenue)]">
                 {faltantes.length === 1
                   ? 'Esta família não vê nada do que é registrado.'
                   : `Estas ${faltantes.length} famílias não veem nada do que é registrado.`}{' '}
@@ -103,29 +120,38 @@ export function Acesso() {
 
           {pendentes.length === 0 && usados.length === 0 ? (
             <Vazio
-              icone={<CircleSlash size={22} />}
               titulo="Nenhum convite emitido"
               descricao="O convite vira QR no mural ou link no grupo — é assim que a família entra."
             />
           ) : (
-            <div className="space-y-(--gap-lista)">
-              {[...pendentes, ...usados].map((convite) => (
-                <LinhaConvite
-                  key={convite.id}
-                  codigo={convite.codigo}
-                  crianca={convite.criancaNome}
-                  vinculo={VINCULOS[convite.tipoVinculo] ?? convite.tipoVinculo}
-                  usado={Boolean(convite.usadoEm)}
-                  expirado={convite.expirado}
-                />
-              ))}
-            </div>
+            <Tabela>
+              <thead>
+                <tr>
+                  <Th>Criança</Th>
+                  <Th>Responsável</Th>
+                  <Th className="text-right">Código</Th>
+                </tr>
+              </thead>
+              <tbody>
+                {[...pendentes, ...usados].map((convite) => (
+                  <LinhaConvite
+                    key={convite.id}
+                    codigo={convite.codigo}
+                    crianca={convite.criancaNome}
+                    vinculo={VINCULOS[convite.tipoVinculo] ?? convite.tipoVinculo}
+                    usado={Boolean(convite.usadoEm)}
+                    expirado={convite.expirado}
+                  />
+                ))}
+              </tbody>
+            </Tabela>
           )}
         </section>
-      </main>
-    </div>
+      </div>
+    </LayoutGestao>
   );
 }
+
 
 function LinhaConvite({
   codigo,
@@ -154,28 +180,29 @@ function LinhaConvite({
   }
 
   return (
-    <Cartao interno className="flex items-center gap-3">
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-semibold">{crianca}</p>
-        <p className="truncate text-xs text-[color:var(--color-tinta-tenue)]">{vinculo}</p>
-      </div>
-
-      {usado ? (
-        <Etiqueta tom="ok">
-          <Check size={12} /> usado
-        </Etiqueta>
-      ) : expirado ? (
-        <Etiqueta tom="alerta">expirado</Etiqueta>
-      ) : (
-        <button
-          onClick={() => void copiar()}
-          aria-label={`Copiar código ${codigo}`}
-          className="numerico -my-2 flex min-h-11 shrink-0 items-center gap-1.5 rounded-(--raio) px-2 text-sm font-semibold tracking-wide text-(color:--cor-acao) transition active:bg-(color:--cor-acao-suave)"
-        >
-          {codigo}
-          {copiado ? <Check size={14} /> : <Copy size={14} />}
-        </button>
-      )}
-    </Cartao>
+    <Tr atencao={!usado && !expirado}>
+      <Td className="font-semibold">{crianca}</Td>
+      <Td className="text-[color:var(--color-tinta-suave)]">{vinculo}</Td>
+      <Td className="text-right">
+        {usado ? (
+          <Etiqueta tom="ok">
+            <Check size={12} /> usado
+          </Etiqueta>
+        ) : expirado ? (
+          <Etiqueta tom="alerta">expirado</Etiqueta>
+        ) : (
+          /* O código fica clicável e legível ao mesmo tempo: a secretaria
+             tanto copia para o grupo quanto lê em voz alta na porta. */
+          <button
+            onClick={() => void copiar()}
+            aria-label={`Copiar código ${codigo}`}
+            className="numerico -my-1 inline-flex min-h-9 items-center gap-1.5 rounded-(--raio-sm) px-2 text-sm font-semibold tracking-wide text-(color:--cor-acao) transition active:bg-(color:--cor-acao-suave)"
+          >
+            {codigo}
+            {copiado ? <Check size={14} /> : <Copy size={14} />}
+          </button>
+        )}
+      </Td>
+    </Tr>
   );
 }

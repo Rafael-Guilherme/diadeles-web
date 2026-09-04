@@ -146,7 +146,10 @@ describe('rotina da escola', () => {
     useSessao.getState().definir(EDUCADORA);
     render(envolver('/turma/t2'));
 
+    // Selecionar a criança e abrir a folha de lote: é lá dentro que o tipo
+    // de registro é escolhido, desde que a barra de baixo virou só "Registrar".
     fireEvent.click(await screen.findByText('Arthur Vieira'));
+    fireEvent.click(screen.getByRole('button', { name: 'Registrar' }));
 
     for (const tipo of ['Refeição', 'Humor', 'Atividade']) {
       expect(screen.getByRole('button', { name: tipo })).toBeDefined();
@@ -203,7 +206,7 @@ describe('rotina da escola', () => {
     useSessao.getState().definir(EDUCADORA);
     render(envolver('/gestao/rotina'));
 
-    expect(await screen.findByText('Olá, Ana')).toBeDefined();
+    expect(await screen.findByText(/^(Bom dia|Boa tarde|Boa noite), Ana$/)).toBeDefined();
   });
 });
 

@@ -6,6 +6,7 @@ import { App as AppEducador } from '@/apps/educador/App';
 import { App as AppResponsavel } from '@/apps/responsavel/App';
 import { useSessao, type Sessao } from '@/shared/auth/sessao';
 import { chamadas, comStatus, responderCom } from './preparo';
+import { api } from '@/shared/api/cliente';
 
 /**
  * Entrar e sair fora da demonstração.
@@ -208,5 +209,57 @@ describe('sair', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Sair' }));
 
     await waitFor(() => expect(useSessao.getState().accessToken).toBeNull());
+  });
+});
+
+/**
+ * A renovação de sessão diante de erro transitório.
+ *
+ * O `renovarSessao` apagava a sessão em qualquer resposta que não fosse 2xx.
+ * Com limite de requisição por IP isso ganhou um gatilho novo e provável: a
+ * escola inteira sai por um IP só, e um 429 no refresh deslogava quem não fez
+ * nada. Para a família o estrago não é uma senha redigitada — ela entrou por
+ * um convite de uso único, e voltar exige a secretaria emitir outro.
+ */
+describe('renovação de sessão', () => {
+  const SESSAO: Sessao = {
+    accessToken: 'token-velho',
+    refreshToken: 'refresh-velho',
+    expiraEm: 900,
+    usuario: {
+      id: 'u1',
+      nome: 'Marina Prado',
+      papeis: ['RESPONSAVEL'],
+      escolaId: 'e1',
+      escolaNome: 'Escola Modelo',
+      app: 'responsavel',
+    },
+  };
+
+  it('mantém a sessão quando a renovação esbarra no limite de requisições', async () => {
+    responderCom({
+      '/v1/auth/refresh': comStatus(429, {
+        codigo: 'MUITAS_TENTATIVAS',
+        mensagem: 'Muitas tentativas seguidas.',
+      }),
+      '/v1/criancas/minhas': comStatus(401, { codigo: 'SESSAO_EXPIRADA', mensagem: 'expirou' }),
+    });
+
+    useSessao.getState().definir(SESSAO);
+    await api.GET('/v1/criancas/minhas');
+
+    expect(useSessao.getState().refreshToken).toBe('refresh-velho');
+  });
+
+  it('encerra a sessão quando o refresh é recusado de verdade', async () => {
+    responderCom({
+      '/v1/auth/refresh': comStatus(401, { codigo: 'SESSAO_EXPIRADA', mensagem: 'expirou' }),
+      '/v1/criancas/minhas': comStatus(401, { codigo: 'SESSAO_EXPIRADA', mensagem: 'expirou' }),
+    });
+
+    useSessao.getState().definir(SESSAO);
+    await api.GET('/v1/criancas/minhas');
+
+    expect(useSessao.getState().refreshToken).toBeNull();
   });
 });

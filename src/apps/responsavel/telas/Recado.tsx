@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Check, Clock, Send } from 'lucide-react';
+import { Check, Clock, Send } from 'lucide-react';
 import { api, mensagemDeErro } from '@/shared/api/cliente';
+import { Cabecalho, Folha, Tela } from '../componentes/Cabecalho';
 import { Area, Aviso, Botao, Cartao, Carregando, Etiqueta, RotuloSecao, Vazio } from '@/shared/ui/componentes';
 
 const CATEGORIAS = [
@@ -26,7 +26,6 @@ type Categoria = (typeof CATEGORIAS)[number]['valor'];
  * nunca deu.
  */
 export function Recado() {
-  const navegar = useNavigate();
   const clienteQuery = useQueryClient();
 
   const [categoria, setCategoria] = useState<Categoria>('retirada');
@@ -92,23 +91,15 @@ export function Recado() {
   const podeEnviar = corpo.trim().length >= 3;
 
   return (
-    <div className="mx-auto w-full max-w-md">
-      <header className="area-segura-topo bg-gradient-to-b from-(color:--cor-acao-suave) to-transparent px-5 pb-6">
-        <button
-          onClick={() => navegar('/')}
-          aria-label="Voltar"
-          className="-ml-3 mb-1 flex h-11 w-11 items-center justify-center rounded-full text-[color:var(--color-tinta-suave)] transition active:bg-white/60"
-        >
-          <ArrowLeft size={20} />
-        </button>
-        <h1 className="display text-2xl">Avisar a escola</h1>
-        <p className="text-sm leading-relaxed text-[color:var(--color-tinta-suave)]">
-          A equipe lê quando puder e confirma a leitura aqui. Para algo urgente, ligue para a
-          secretaria.
-        </p>
-      </header>
+    <Tela>
+      <Cabecalho
+        voltar
+        titulo="Recado"
+        descricao="A escola confirma a leitura com nome e hora. Não há resposta escrita — para algo urgente, ligue para a secretaria."
+      />
 
-      <main className="space-y-5 px-4 pb-6">
+      <Folha>
+        <div className="space-y-5">
         <form
           className="space-y-4"
           onSubmit={(evento) => {
@@ -223,8 +214,9 @@ export function Recado() {
             ))}
           </ul>
         </section>
-      </main>
-    </div>
+        </div>
+      </Folha>
+    </Tela>
   );
 }
 

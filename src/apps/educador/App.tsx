@@ -11,6 +11,7 @@ import { Pendencias } from './telas/Pendencias';
 import { FichaCrianca } from './telas/FichaCrianca';
 import { RegistrarOcorrencia } from './telas/RegistrarOcorrencia';
 import { Gestao } from './telas/Gestao';
+import { PendenciasEscola } from './telas/PendenciasEscola';
 import { Equipe } from './telas/Equipe';
 import { Acesso } from './telas/Acesso';
 import { Criancas } from './telas/Criancas';
@@ -67,6 +68,7 @@ export function App() {
         {ehDaGestao(usuario.papeis) && (
           <Route path="/gestao">
             <Route index element={<Gestao />} />
+            <Route path="pendencias" element={<PendenciasEscola />} />
             <Route path="equipe" element={<Equipe />} />
             <Route path="acesso" element={<Acesso />} />
             <Route path="criancas" element={<Criancas />} />

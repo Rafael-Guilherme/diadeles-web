@@ -11,7 +11,7 @@ describe('site institucional', () => {
   it('apresenta a proposta e os planos', () => {
     render(<Site />);
 
-    expect(screen.getByText('O dia deles, para quem não pode estar lá.')).toBeDefined();
+    expect(screen.getByText('A turma inteira registrada antes do café.')).toBeDefined();
 
     for (const plano of PLANOS) {
       expect(screen.getByText(plano.nome)).toBeDefined();

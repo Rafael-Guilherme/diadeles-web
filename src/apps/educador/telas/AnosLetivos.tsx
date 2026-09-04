@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { CalendarDays, Plus } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { useState } from 'react';
 import { api, mensagemDeErro } from '@/shared/api/cliente';
 import {
@@ -12,7 +12,7 @@ import {
   RotuloSecao,
   Vazio,
 } from '@/shared/ui/componentes';
-import { Cabecalho } from '../componentes/Cabecalho';
+import { LayoutGestao } from '../componentes/LayoutGestao';
 
 /**
  * O ano letivo é a moldura de tudo: turma pertence a um ano, e matrícula
@@ -58,10 +58,9 @@ export function AnosLetivos() {
 
   if (isLoading || !data) {
     return (
-      <>
-        <Cabecalho titulo="Ano letivo" voltarPara="/gestao" />
+      <LayoutGestao titulo="Ano letivo">
         <Carregando texto="Buscando os anos…" />
-      </>
+      </LayoutGestao>
     );
   }
 
@@ -69,76 +68,73 @@ export function AnosLetivos() {
   const sugestao = String(new Date().getFullYear() + 1);
 
   return (
-    <div className="min-h-full pb-10">
-      <Cabecalho titulo="Ano letivo" voltarPara="/gestao" />
+    <LayoutGestao titulo="Ano letivo">
+      <div className="space-y-4">
+          {erro && <Aviso>{mensagemDeErro(erro)}</Aviso>}
 
-      <main className="space-y-4 px-4 py-4">
-        {erro && <Aviso>{mensagemDeErro(erro)}</Aviso>}
+          <Cartao interno className="space-y-3">
+            <RotuloSecao>Abrir um ano</RotuloSecao>
+            <Campo
+              rotulo="Ano"
+              type="number"
+              inputMode="numeric"
+              value={novoAno}
+              placeholder={sugestao}
+              apoio="As datas de início e fim seguem o calendário letivo e podem ser ajustadas depois."
+              onChange={(e) => setNovoAno(e.target.value)}
+            />
+            <Botao
+              bloco
+              disabled={abrir.isPending || novoAno.length !== 4}
+              onClick={() => abrir.mutate(Number(novoAno))}
+            >
+              <Plus size={16} /> {abrir.isPending ? 'Abrindo…' : 'Abrir ano letivo'}
+            </Botao>
+          </Cartao>
 
-        <Cartao interno className="space-y-3">
-          <RotuloSecao>Abrir um ano</RotuloSecao>
-          <Campo
-            rotulo="Ano"
-            type="number"
-            inputMode="numeric"
-            value={novoAno}
-            placeholder={sugestao}
-            apoio="As datas de início e fim seguem o calendário letivo e podem ser ajustadas depois."
-            onChange={(e) => setNovoAno(e.target.value)}
-          />
-          <Botao
-            bloco
-            disabled={abrir.isPending || novoAno.length !== 4}
-            onClick={() => abrir.mutate(Number(novoAno))}
-          >
-            <Plus size={16} /> {abrir.isPending ? 'Abrindo…' : 'Abrir ano letivo'}
-          </Botao>
-        </Cartao>
+          {data.length === 0 && (
+            <Vazio
+              titulo="Nenhum ano aberto"
+              descricao="Abra o ano letivo para poder criar turmas e matricular crianças."
+            />
+          )}
 
-        {data.length === 0 && (
-          <Vazio
-            icone={<CalendarDays size={22} />}
-            titulo="Nenhum ano aberto"
-            descricao="Abra o ano letivo para poder criar turmas e matricular crianças."
-          />
-        )}
-
-        <div className="space-y-(--gap-lista)">
-          {data.map((ano) => (
-            <Cartao key={ano.id} interno className="space-y-2">
-              <div className="flex items-start justify-between gap-2">
-                <div>
-                  <p className="numerico font-semibold">{ano.ano}</p>
-                  <p className="numerico text-xs text-[color:var(--color-tinta-suave)]">
-                    {formatar(ano.inicio)} a {formatar(ano.fim)}
-                  </p>
+          <div className="space-y-(--gap-lista)">
+            {data.map((ano) => (
+              <Cartao key={ano.id} interno className="space-y-2">
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <p className="numerico font-semibold">{ano.ano}</p>
+                    <p className="numerico text-xs text-[color:var(--color-tinta-suave)]">
+                      {formatar(ano.inicio)} a {formatar(ano.fim)}
+                    </p>
+                  </div>
+                  {ano.corrente ? (
+                    <Etiqueta tom="ok">em curso</Etiqueta>
+                  ) : ano.encerrado ? (
+                    <Etiqueta tom="alerta">encerrado</Etiqueta>
+                  ) : (
+                    <Etiqueta>aberto</Etiqueta>
+                  )}
                 </div>
-                {ano.corrente ? (
-                  <Etiqueta tom="ok">em curso</Etiqueta>
-                ) : ano.encerrado ? (
-                  <Etiqueta tom="alerta">encerrado</Etiqueta>
-                ) : (
-                  <Etiqueta>aberto</Etiqueta>
-                )}
-              </div>
 
-              <p className="numerico text-xs text-[color:var(--color-tinta-suave)]">
-                {ano.turmas} {ano.turmas === 1 ? 'turma' : 'turmas'}
-              </p>
+                <p className="numerico text-xs text-[color:var(--color-tinta-suave)]">
+                  {ano.turmas} {ano.turmas === 1 ? 'turma' : 'turmas'}
+                </p>
 
-              <Botao
-                variante="secundario"
-                bloco
-                disabled={encerrar.isPending}
-                onClick={() => encerrar.mutate({ id: ano.id, encerrado: !ano.encerrado })}
-              >
-                {ano.encerrado ? 'Reabrir' : 'Encerrar'}
-              </Botao>
-            </Cartao>
-          ))}
-        </div>
-      </main>
-    </div>
+                <Botao
+                  variante="secundario"
+                  bloco
+                  disabled={encerrar.isPending}
+                  onClick={() => encerrar.mutate({ id: ano.id, encerrado: !ano.encerrado })}
+                >
+                  {ano.encerrado ? 'Reabrir' : 'Encerrar'}
+                </Botao>
+              </Cartao>
+            ))}
+          </div>
+      </div>
+    </LayoutGestao>
   );
 }
 

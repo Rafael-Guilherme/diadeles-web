@@ -167,7 +167,7 @@ describe('assinatura', () => {
     useSessao.getState().definir(EDUCADORA);
     render(envolver('/gestao/assinatura'));
 
-    expect(await screen.findByText('Olá, Ana')).toBeDefined();
+    expect(await screen.findByText(/^(Bom dia|Boa tarde|Boa noite), Ana$/)).toBeDefined();
   });
 });
 
@@ -197,7 +197,7 @@ describe('faixa de inadimplência', () => {
     useSessao.getState().definir(EDUCADORA);
     render(envolver('/'));
 
-    await screen.findByText('Olá, Ana');
+    await screen.findByText(/^(Bom dia|Boa tarde|Boa noite), Ana$/);
     expect(screen.queryByRole('status')).toBeNull();
   });
 
@@ -220,8 +220,11 @@ describe('faixa de inadimplência', () => {
     useSessao.getState().definir(GESTORA);
     render(envolver('/'));
 
-    const faixa = await screen.findByRole('status');
-    expect(faixa.getAttribute('href')).toBe('/gestao/assinatura');
+    // A faixa deixou de ser um link inteiro: o texto explica, e o caminho para
+    // pagar é um botão dentro dela — só para quem pode pagar.
+    await screen.findByRole('status');
+    const paraAFatura = screen.getByRole('link', { name: /Ver a fatura/ });
+    expect(paraAFatura.getAttribute('href')).toBe('/gestao/assinatura');
   });
 
   it('diz que os registros pararam quando a escrita está cortada', async () => {

@@ -1,0 +1,12 @@
+# node_modules é o item que importa: sem esta linha o Docker copia a árvore da
+# máquina de quem builda, com binários compilados para outro sistema.
+node_modules
+dist
+dev-dist
+.git
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store
+tsconfig.tsbuildinfo

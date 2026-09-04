@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Check, Megaphone } from 'lucide-react';
+import { Check } from 'lucide-react';
 import { api } from '@/shared/api/cliente';
+import { Cabecalho, Folha, Tela } from '../componentes/Cabecalho';
 import { Botao, Cartao, Carregando, Etiqueta, Vazio } from '@/shared/ui/componentes';
 
 export function Comunicados() {
@@ -40,18 +41,19 @@ export function Comunicados() {
   if (isLoading) return <Carregando />;
 
   return (
-    <div className="mx-auto w-full max-w-md">
-      <header className="area-segura-topo px-5 pb-4">
-        {/* "Comunicados", não "Avisos": desde que o sino existe, "aviso" é o
-            que aconteceu com a criança hoje. Circular da escola é outra coisa,
-            e chamar as duas do mesmo jeito faria a mãe procurar no lugar errado. */}
-        <h1 className="display text-2xl">Comunicados</h1>
-      </header>
+    <Tela>
+      {/* "Comunicados", não "Avisos": desde que o sino existe, "aviso" é o
+          que aconteceu com a criança hoje. Circular da escola é outra coisa,
+          e chamar as duas do mesmo jeito faria a mãe procurar no lugar errado. */}
+      <Cabecalho
+        titulo="Comunicados"
+        descricao="Mão única: a família confirma a leitura, não responde."
+      />
 
-      <main className="space-y-(--gap-lista) px-4 pb-6">
+      <Folha>
+        <div className="space-y-(--gap-lista)">
         {data?.length === 0 && (
           <Vazio
-            icone={<Megaphone size={22} />}
             titulo="Nenhum comunicado por enquanto"
             descricao="Quando a escola publicar algo, aparece aqui e você recebe um aviso."
           />
@@ -92,7 +94,8 @@ export function Comunicados() {
             )}
           </Cartao>
         ))}
-      </main>
-    </div>
+        </div>
+      </Folha>
+    </Tela>
   );
 }

@@ -40,7 +40,21 @@ async function renovarSessao(): Promise<boolean> {
       });
 
       if (!resposta.ok) {
-        sessaoStore.getState().encerrar();
+        /*
+          Só encerra a sessão quando o servidor diz que a credencial não vale.
+
+          429, 5xx e um 502 do proxy são transitórios, e apagar a sessão neles
+          desloga quem não fez nada de errado. Para a equipe isso custa uma nova
+          digitação de senha; para a família custa a escola inteira: ela entrou
+          por um convite de uso único, e voltar exige a secretaria emitir outro
+          (auth.service.ts recusa convite já usado com 409).
+
+          Devolver `false` sem limpar mantém a sessão de pé — a próxima
+          requisição tenta renovar de novo.
+        */
+        if (resposta.status === 401 || resposta.status === 403) {
+          sessaoStore.getState().encerrar();
+        }
         return false;
       }
 

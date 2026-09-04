@@ -22,7 +22,7 @@ import {
   RotuloSecao,
   Selecao,
 } from '@/shared/ui/componentes';
-import { Cabecalho } from '../componentes/Cabecalho';
+import { LayoutGestao } from '../componentes/LayoutGestao';
 import { Matricula } from '../componentes/Matricula';
 
 type Ficha = NonNullable<
@@ -100,10 +100,9 @@ export function CriancaCadastro() {
 
   if (!nova && !ficha.data) {
     return (
-      <>
-        <Cabecalho titulo="Criança" voltarPara="/gestao/criancas" />
+      <LayoutGestao titulo="Criança">
         {ficha.isLoading ? <Carregando /> : <Aviso>Não consegui carregar esta criança.</Aviso>}
-      </>
+      </LayoutGestao>
     );
   }
 
@@ -220,225 +219,219 @@ function Edicao({
   const podeSalvar = form.nome.trim().length >= 2 && /^\d{4}-\d{2}-\d{2}$/.test(form.dataNascimento);
 
   return (
-    <div className="min-h-full pb-10">
-      <Cabecalho
-        titulo={nova ? 'Nova criança' : (ficha.nomeSocial ?? ficha.nome)}
-        subtitulo={nova ? undefined : ficha.idade}
-        voltarPara="/gestao/criancas"
-      />
-
-      <main className="space-y-5 px-4 py-4">
-        {ficha?.arquivada && (
-          <Aviso>
-            Esta criança está arquivada. Ela não aparece nas grades nem nas listagens do dia.
-          </Aviso>
-        )}
-
-        <form
-          className="space-y-4"
-          onSubmit={(e) => {
-            e.preventDefault();
-            salvar.mutate();
-          }}
-        >
-          <section className="space-y-4">
-            <RotuloSecao>Dados</RotuloSecao>
-
-            <Campo
-              rotulo="Nome completo"
-              value={form.nome}
-              required
-              onChange={(e) => setForm({ ...form, nome: e.target.value })}
-            />
-
-            <Campo
-              rotulo="Como é chamada"
-              apoio="Preencha só se for diferente do nome de registro — é o que aparece para o educador."
-              value={form.nomeSocial}
-              onChange={(e) => setForm({ ...form, nomeSocial: e.target.value })}
-            />
-
-            <Campo
-              rotulo="Data de nascimento"
-              type="date"
-              value={form.dataNascimento}
-              required
-              onChange={(e) => setForm({ ...form, dataNascimento: e.target.value })}
-            />
-
-            <Selecao
-              rotulo="Turma"
-              apoio={
-                ficha?.matricula && form.turmaId !== ficha.matricula.turmaId
-                  ? `Ao salvar, a matrícula em ${ficha.matricula.turmaNome} é encerrada e uma nova é aberta.`
-                  : 'Sem turma, a criança não aparece na grade de nenhum educador.'
-              }
-              value={form.turmaId}
-              onChange={(e) => setForm({ ...form, turmaId: e.target.value })}
-            >
-              <option value="">Sem turma</option>
-              {turmas.map((turma) => (
-                <option key={turma.id} value={turma.id}>
-                  {turma.nome}
-                </option>
-              ))}
-            </Selecao>
-          </section>
-
-          <section className="space-y-4">
-            <RotuloSecao>Saúde</RotuloSecao>
-
-            <ListaDeItens
-              rotulo="Alergias"
-              apoio="Aparece em destaque na grade e na ficha, antes de qualquer refeição."
-              placeholder="Amendoim"
-              itens={form.alergias}
-              onMudar={(alergias) => setForm({ ...form, alergias })}
-            />
-
-            <ListaDeItens
-              rotulo="Restrições alimentares"
-              placeholder="Sem lactose"
-              itens={form.restricoesAlimentares}
-              onMudar={(restricoesAlimentares) => setForm({ ...form, restricoesAlimentares })}
-            />
-
-            <ListaDeItens
-              rotulo="Condições de saúde"
-              placeholder="Asma"
-              itens={form.condicoesSaude}
-              onMudar={(condicoesSaude) => setForm({ ...form, condicoesSaude })}
-            />
-
-            <Area
-              rotulo="Observações"
-              apoio="O que a equipe precisa saber e não cabe nas listas acima."
-              value={form.observacoesSaude}
-              onChange={(e) => setForm({ ...form, observacoesSaude: e.target.value })}
-            />
-          </section>
-
-          {erro && <Aviso>{erro}</Aviso>}
-
-          {salvo && (
-            <Aviso tom="ok">
-              <Check size={14} className="mr-1 inline" /> Cadastro salvo.
+    <LayoutGestao titulo={nova ? 'Nova criança' : (ficha.nomeSocial ?? ficha.nome)} descricao={nova ? undefined : ficha.idade}>
+      <div className="space-y-5">
+          {ficha?.arquivada && (
+            <Aviso>
+              Esta criança está arquivada. Ela não aparece nas grades nem nas listagens do dia.
             </Aviso>
           )}
 
-          <Botao type="submit" bloco disabled={!podeSalvar || salvar.isPending}>
-            {salvar.isPending ? 'Salvando…' : nova ? 'Cadastrar criança' : 'Salvar alterações'}
-          </Botao>
-        </form>
+          <form
+            className="space-y-4"
+            onSubmit={(e) => {
+              e.preventDefault();
+              salvar.mutate();
+            }}
+          >
+            <section className="space-y-4">
+              <RotuloSecao>Dados</RotuloSecao>
 
-        {ficha && (
-          <>
-            <Matricula
-              criancaId={criancaId}
-              arquivada={ficha.arquivada}
-              aoMudar={invalidar}
-            />
+              <Campo
+                rotulo="Nome completo"
+                value={form.nome}
+                required
+                onChange={(e) => setForm({ ...form, nome: e.target.value })}
+              />
 
-            <section className="space-y-2">
-              <RotuloSecao>Responsáveis</RotuloSecao>
+              <Campo
+                rotulo="Como é chamada"
+                apoio="Preencha só se for diferente do nome de registro — é o que aparece para o educador."
+                value={form.nomeSocial}
+                onChange={(e) => setForm({ ...form, nomeSocial: e.target.value })}
+              />
 
-              {ficha.responsaveis.length === 0 ? (
-                <Cartao interno className="space-y-2">
-                  <p className="text-sm text-[color:var(--color-tinta-suave)]">
-                    Nenhum responsável vinculado. Sem isso a família não vê nada do que é
-                    registrado.
+              <Campo
+                rotulo="Data de nascimento"
+                type="date"
+                value={form.dataNascimento}
+                required
+                onChange={(e) => setForm({ ...form, dataNascimento: e.target.value })}
+              />
+
+              <Selecao
+                rotulo="Turma"
+                apoio={
+                  ficha?.matricula && form.turmaId !== ficha.matricula.turmaId
+                    ? `Ao salvar, a matrícula em ${ficha.matricula.turmaNome} é encerrada e uma nova é aberta.`
+                    : 'Sem turma, a criança não aparece na grade de nenhum educador.'
+                }
+                value={form.turmaId}
+                onChange={(e) => setForm({ ...form, turmaId: e.target.value })}
+              >
+                <option value="">Sem turma</option>
+                {turmas.map((turma) => (
+                  <option key={turma.id} value={turma.id}>
+                    {turma.nome}
+                  </option>
+                ))}
+              </Selecao>
+            </section>
+
+            <section className="space-y-4">
+              <RotuloSecao>Saúde</RotuloSecao>
+
+              <ListaDeItens
+                rotulo="Alergias"
+                apoio="Aparece em destaque na grade e na ficha, antes de qualquer refeição."
+                placeholder="Amendoim"
+                itens={form.alergias}
+                onMudar={(alergias) => setForm({ ...form, alergias })}
+              />
+
+              <ListaDeItens
+                rotulo="Restrições alimentares"
+                placeholder="Sem lactose"
+                itens={form.restricoesAlimentares}
+                onMudar={(restricoesAlimentares) => setForm({ ...form, restricoesAlimentares })}
+              />
+
+              <ListaDeItens
+                rotulo="Condições de saúde"
+                placeholder="Asma"
+                itens={form.condicoesSaude}
+                onMudar={(condicoesSaude) => setForm({ ...form, condicoesSaude })}
+              />
+
+              <Area
+                rotulo="Observações"
+                apoio="O que a equipe precisa saber e não cabe nas listas acima."
+                value={form.observacoesSaude}
+                onChange={(e) => setForm({ ...form, observacoesSaude: e.target.value })}
+              />
+            </section>
+
+            {erro && <Aviso>{erro}</Aviso>}
+
+            {salvo && (
+              <Aviso tom="ok">
+                <Check size={14} className="mr-1 inline" /> Cadastro salvo.
+              </Aviso>
+            )}
+
+            <Botao type="submit" bloco disabled={!podeSalvar || salvar.isPending}>
+              {salvar.isPending ? 'Salvando…' : nova ? 'Cadastrar criança' : 'Salvar alterações'}
+            </Botao>
+          </form>
+
+          {ficha && (
+            <>
+              <Matricula
+                criancaId={criancaId}
+                arquivada={ficha.arquivada}
+                aoMudar={invalidar}
+              />
+
+              <section className="space-y-2">
+                <RotuloSecao>Responsáveis</RotuloSecao>
+
+                {ficha.responsaveis.length === 0 ? (
+                  <Cartao interno className="space-y-2">
+                    <p className="text-sm text-[color:var(--color-tinta-suave)]">
+                      Nenhum responsável vinculado. Sem isso a família não vê nada do que é
+                      registrado.
+                    </p>
+                    <Botao variante="secundario" bloco onClick={() => navegar('/gestao/acesso')}>
+                      Emitir convite de acesso
+                    </Botao>
+                  </Cartao>
+                ) : (
+                  <ul className="space-y-(--gap-lista)">
+                    {ficha.responsaveis.map((r) => (
+                      <li key={r.id}>
+                        <Cartao interno className="flex items-center gap-3">
+                          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-(color:--cor-acao-suave) text-(color:--cor-acao)">
+                            <UserRound size={16} />
+                          </span>
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate font-semibold">{r.nome}</p>
+                            <p className="truncate text-xs text-[color:var(--color-tinta-suave)]">
+                              {VINCULOS[r.tipo] ?? r.tipo}
+                              {r.celular ? ` · ${r.celular}` : ''}
+                            </p>
+                          </div>
+                          {r.bloqueado ? (
+                            <Etiqueta
+                              tom="alerta"
+                              titulo="Bloqueado por decisão judicial ou medida protetiva"
+                            >
+                              bloqueado
+                            </Etiqueta>
+                          ) : r.ativou ? (
+                            <Etiqueta tom="ok">no app</Etiqueta>
+                          ) : (
+                            <Etiqueta>sem acesso</Etiqueta>
+                          )}
+                        </Cartao>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+
+                {/* Permissão e bloqueio ficam numa tela própria: são a decisão de
+                    maior consequência do cadastro, e enfiá-las entre alergia e
+                    data de nascimento convidaria ao clique distraído. */}
+                <Link to={`/gestao/criancas/${criancaId}/acesso`} className="block">
+                  <Cartao interno className="flex items-center gap-3 transition active:bg-neutral-50">
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-(color:--cor-acao-suave) text-(color:--cor-acao)">
+                      <ShieldCheck size={18} />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-semibold">Quem vê e quem busca</p>
+                      <p className="text-xs text-[color:var(--color-tinta-suave)]">
+                        Permissões, bloqueio judicial e autorizados a retirar
+                      </p>
+                    </div>
+                    <ChevronRight size={20} className="shrink-0 text-[color:var(--color-tinta-tenue)]" />
+                  </Cartao>
+                </Link>
+              </section>
+
+              <section className="space-y-2">
+                <RotuloSecao>Encerramento</RotuloSecao>
+                <Cartao interno className="space-y-3">
+                  <p className="text-sm leading-relaxed text-[color:var(--color-tinta-suave)]">
+                    Arquivar tira a criança das grades e das listagens e encerra a matrícula,
+                    liberando a vaga na turma. Tudo o que já foi registrado continua guardado — a lei
+                    exige manter o registro pedagógico por cinco anos.
                   </p>
-                  <Botao variante="secundario" bloco onClick={() => navegar('/gestao/acesso')}>
-                    Emitir convite de acesso
+                  {!ficha.arquivada && (
+                    <p className="text-xs leading-relaxed text-[color:var(--color-tinta-tenue)]">
+                      Se a criança vai voltar, use <b className="font-semibold">Trancar matrícula</b>{' '}
+                      acima: a vaga fica reservada.
+                    </p>
+                  )}
+                  <Botao
+                    variante="secundario"
+                    bloco
+                    disabled={arquivar.isPending}
+                    onClick={() => arquivar.mutate(!ficha.arquivada)}
+                  >
+                    {ficha.arquivada ? (
+                      <>
+                        <ArchiveRestore size={16} /> Trazer de volta (sem turma)
+                      </>
+                    ) : (
+                      <>
+                        <Archive size={16} /> Arquivar criança
+                      </>
+                    )}
                   </Botao>
                 </Cartao>
-              ) : (
-                <ul className="space-y-(--gap-lista)">
-                  {ficha.responsaveis.map((r) => (
-                    <li key={r.id}>
-                      <Cartao interno className="flex items-center gap-3">
-                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-(color:--cor-acao-suave) text-(color:--cor-acao)">
-                          <UserRound size={16} />
-                        </span>
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate font-semibold">{r.nome}</p>
-                          <p className="truncate text-xs text-[color:var(--color-tinta-suave)]">
-                            {VINCULOS[r.tipo] ?? r.tipo}
-                            {r.celular ? ` · ${r.celular}` : ''}
-                          </p>
-                        </div>
-                        {r.bloqueado ? (
-                          <Etiqueta
-                            tom="alerta"
-                            titulo="Bloqueado por decisão judicial ou medida protetiva"
-                          >
-                            bloqueado
-                          </Etiqueta>
-                        ) : r.ativou ? (
-                          <Etiqueta tom="ok">no app</Etiqueta>
-                        ) : (
-                          <Etiqueta>sem acesso</Etiqueta>
-                        )}
-                      </Cartao>
-                    </li>
-                  ))}
-                </ul>
-              )}
-
-              {/* Permissão e bloqueio ficam numa tela própria: são a decisão de
-                  maior consequência do cadastro, e enfiá-las entre alergia e
-                  data de nascimento convidaria ao clique distraído. */}
-              <Link to={`/gestao/criancas/${criancaId}/acesso`} className="block">
-                <Cartao interno className="flex items-center gap-3 transition active:bg-neutral-50">
-                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-(color:--cor-acao-suave) text-(color:--cor-acao)">
-                    <ShieldCheck size={18} />
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <p className="font-semibold">Quem vê e quem busca</p>
-                    <p className="text-xs text-[color:var(--color-tinta-suave)]">
-                      Permissões, bloqueio judicial e autorizados a retirar
-                    </p>
-                  </div>
-                  <ChevronRight size={20} className="shrink-0 text-[color:var(--color-tinta-tenue)]" />
-                </Cartao>
-              </Link>
-            </section>
-
-            <section className="space-y-2">
-              <RotuloSecao>Encerramento</RotuloSecao>
-              <Cartao interno className="space-y-3">
-                <p className="text-sm leading-relaxed text-[color:var(--color-tinta-suave)]">
-                  Arquivar tira a criança das grades e das listagens e encerra a matrícula,
-                  liberando a vaga na turma. Tudo o que já foi registrado continua guardado — a lei
-                  exige manter o registro pedagógico por cinco anos.
-                </p>
-                {!ficha.arquivada && (
-                  <p className="text-xs leading-relaxed text-[color:var(--color-tinta-tenue)]">
-                    Se a criança vai voltar, use <b className="font-semibold">Trancar matrícula</b>{' '}
-                    acima: a vaga fica reservada.
-                  </p>
-                )}
-                <Botao
-                  variante="secundario"
-                  bloco
-                  disabled={arquivar.isPending}
-                  onClick={() => arquivar.mutate(!ficha.arquivada)}
-                >
-                  {ficha.arquivada ? (
-                    <>
-                      <ArchiveRestore size={16} /> Trazer de volta (sem turma)
-                    </>
-                  ) : (
-                    <>
-                      <Archive size={16} /> Arquivar criança
-                    </>
-                  )}
-                </Botao>
-              </Cartao>
-            </section>
-          </>
-        )}
-      </main>
-    </div>
+              </section>
+            </>
+          )}
+      </div>
+    </LayoutGestao>
   );
 }

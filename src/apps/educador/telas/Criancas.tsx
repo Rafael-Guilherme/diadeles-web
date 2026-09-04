@@ -1,10 +1,10 @@
 import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import { AlertTriangle, Archive, ChevronRight, Plus, Search, UserPlus } from 'lucide-react';
+import { AlertTriangle, Archive, Plus, Search } from 'lucide-react';
 import { api } from '@/shared/api/cliente';
-import { Botao, Cartao, Carregando, Etiqueta, Vazio } from '@/shared/ui/componentes';
-import { Cabecalho } from '../componentes/Cabecalho';
+import { Botao, Cartao, Carregando, Vazio } from '@/shared/ui/componentes';
+import { LayoutGestao, Tabela, Td, Th, Tr } from '../componentes/LayoutGestao';
 
 /**
  * Cadastro de crianças — a porta de entrada de uma escola real no produto.
@@ -56,112 +56,136 @@ export function Criancas() {
   const semTurma = filtradas.filter((c) => !c.matricula && !c.arquivada).length;
 
   return (
-    <div className="min-h-full pb-10">
-      <Cabecalho titulo="Crianças" voltarPara="/gestao" />
-
-      <main className="space-y-4 px-4 py-4">
-        <div className="flex gap-2">
-          <div className="relative flex-1">
-            <Search
-              size={16}
-              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[color:var(--color-tinta-tenue)]"
-            />
-            <input
-              value={busca}
-              onChange={(e) => setBusca(e.target.value)}
-              placeholder="Buscar por nome"
-              aria-label="Buscar criança por nome"
-              className="min-h-11 w-full rounded-(--raio) border border-[color:var(--color-borda-forte)] bg-white pl-9 pr-3 text-[16px] outline-none transition placeholder:text-[color:var(--color-tinta-tenue)] focus:border-(color:--cor-acao) focus:ring-2 focus:ring-(color:--cor-acao-suave)"
+    <LayoutGestao
+      titulo="Crianças"
+      descricao={`${filtradas.length} ${filtradas.length === 1 ? 'criança' : 'crianças'} na lista`}
+      acoes={
+        <Link to="/gestao/criancas/nova">
+          <Botao tamanho="compacto" aria-label="Cadastrar criança">
+            <Plus size={15} /> Nova matrícula
+          </Botao>
+        </Link>
+      }
+    >
+      <div className="space-y-4">
+          <div className="relative">
+              <Search
+                size={16}
+                className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[color:var(--color-tinta-tenue)]"
+              />
+              <input
+                value={busca}
+                onChange={(e) => setBusca(e.target.value)}
+                placeholder="Buscar por nome"
+                aria-label="Buscar criança por nome"
+                className="min-h-11 w-full rounded-(--raio) border border-[color:var(--color-borda-forte)] bg-white pl-9 pr-3 text-[16px] outline-none transition placeholder:text-[color:var(--color-tinta-tenue)] focus:border-(color:--cor-acao) focus:ring-2 focus:ring-(color:--cor-acao-suave)"
             />
           </div>
-          <Link to="/gestao/criancas/nova">
-            <Botao aria-label="Cadastrar criança">
-              <Plus size={16} /> Nova
-            </Botao>
-          </Link>
-        </div>
 
-        <div className="-mx-4 flex gap-1.5 overflow-x-auto px-4 pb-1">
-          <Filtro ativo={turmaId === null} onClick={() => setTurmaId(null)}>
-            Todas
-          </Filtro>
-          {turmas.data?.map((turma) => (
-            <Filtro key={turma.id} ativo={turmaId === turma.id} onClick={() => setTurmaId(turma.id)}>
-              {turma.nome}
+          <div className="-mx-3 flex gap-1.5 overflow-x-auto px-3 pb-1">
+            <Filtro ativo={turmaId === null} onClick={() => setTurmaId(null)}>
+              Todas
             </Filtro>
-          ))}
-        </div>
+            {turmas.data?.map((turma) => (
+              <Filtro key={turma.id} ativo={turmaId === turma.id} onClick={() => setTurmaId(turma.id)}>
+                {turma.nome}
+              </Filtro>
+            ))}
+          </div>
 
-        {semTurma > 0 && (
-          <Cartao interno className="flex items-start gap-2.5 border-[color:var(--color-alerta)]/30">
-            <AlertTriangle size={16} className="mt-0.5 shrink-0 text-[color:var(--color-alerta)]" />
-            <p className="text-sm leading-relaxed text-[color:var(--color-tinta-suave)]">
-              {semTurma === 1 ? 'Uma criança está' : `${semTurma} crianças estão`} sem turma. Sem
-              matrícula ativa {semTurma === 1 ? 'ela não aparece' : 'elas não aparecem'} na grade de
-              nenhum educador.
-            </p>
-          </Cartao>
-        )}
+          {semTurma > 0 && (
+            <Cartao interno className="flex items-start gap-2.5 border-[color:var(--color-alerta)]/30">
+              <AlertTriangle size={16} className="mt-0.5 shrink-0 text-[color:var(--color-alerta)]" />
+              <p className="text-sm leading-relaxed text-[color:var(--color-tinta-suave)]">
+                {semTurma === 1 ? 'Uma criança está' : `${semTurma} crianças estão`} sem turma. Sem
+                matrícula ativa {semTurma === 1 ? 'ela não aparece' : 'elas não aparecem'} na grade de
+                nenhum educador.
+              </p>
+            </Cartao>
+          )}
 
-        {criancas.isLoading ? (
-          <Carregando />
-        ) : filtradas.length === 0 ? (
-          <Vazio
-            icone={<UserPlus size={22} />}
-            titulo={busca ? 'Ninguém com esse nome' : 'Nenhuma criança cadastrada'}
-            descricao={
-              busca
-                ? 'Confira a grafia ou limpe a busca.'
-                : 'Cadastre a primeira criança para a escola começar a registrar o dia.'
-            }
-          />
-        ) : (
-          <ul className="space-y-(--gap-lista)">
-            {filtradas.map((crianca) => (
-              <li key={crianca.id}>
-                <Link to={`/gestao/criancas/${crianca.id}`} className="block">
-                  <Cartao interno className="flex items-center gap-3 transition active:bg-neutral-50">
-                    <div className="min-w-0 flex-1">
-                      <p className="flex items-center gap-1.5 truncate font-semibold">
+          {criancas.isLoading ? (
+            <Carregando />
+          ) : filtradas.length === 0 ? (
+            <Vazio
+              titulo={busca ? 'Ninguém com esse nome' : 'Nenhuma criança cadastrada'}
+              descricao={
+                busca
+                  ? 'Confira a grafia ou limpe a busca.'
+                  : 'Cadastre a primeira criança para a escola começar a registrar o dia.'
+              }
+            />
+          ) : (
+            <Tabela>
+              <thead>
+                <tr>
+                  <Th>Criança</Th>
+                  <Th>Idade</Th>
+                  <Th>Restrição</Th>
+                  <Th>Turma</Th>
+                  <Th className="text-right">Responsáveis</Th>
+                </tr>
+              </thead>
+              <tbody>
+                {filtradas.map((crianca) => (
+                  <Tr key={crianca.id} atencao={!crianca.matricula && !crianca.arquivada}>
+                    <Td>
+                      <Link
+                        to={`/gestao/criancas/${crianca.id}`}
+                        className="flex items-center gap-1.5 font-semibold hover:underline"
+                      >
                         {crianca.nomeSocial ?? crianca.nome}
                         {crianca.arquivada && (
                           <Archive size={13} className="shrink-0 text-[color:var(--color-tinta-tenue)]" />
                         )}
-                      </p>
-                      <p className="truncate text-xs text-[color:var(--color-tinta-suave)]">
-                        {crianca.idade} ·{' '}
-                        {crianca.matricula ? crianca.matricula.turmaNome : 'sem turma'} ·{' '}
-                        {crianca.responsaveis === 0
-                          ? 'sem responsável'
-                          : `${crianca.responsaveis} ${
-                              crianca.responsaveis === 1 ? 'responsável' : 'responsáveis'
-                            }`}
-                      </p>
-                    </div>
+                      </Link>
+                    </Td>
+                    <Td className="numerico text-[color:var(--color-tinta-suave)]">{crianca.idade}</Td>
+                    {/* A restrição é a palavra do alimento, não um ícone: numa
+                        lista de oitenta crianças é ela que a cozinha lê. */}
+                    <Td
+                      className={
+                        crianca.alergias.length > 0
+                          ? 'font-semibold text-[color:var(--color-alerta)]'
+                          : 'text-[color:var(--color-tinta-tenue)]'
+                      }
+                    >
+                      {crianca.alergias.length > 0
+                        ? crianca.alergias.join(', ').toLowerCase()
+                        : 'nenhuma'}
+                    </Td>
+                    <Td
+                      className={
+                        crianca.matricula
+                          ? 'text-[color:var(--color-tinta-suave)]'
+                          : 'font-semibold text-[color:var(--color-sol-700)]'
+                      }
+                    >
+                      {crianca.matricula ? crianca.matricula.turmaNome : 'sem turma'}
+                    </Td>
+                    <Td
+                      className={`numerico text-right ${
+                        crianca.responsaveis === 0
+                          ? 'font-semibold text-[color:var(--color-sol-700)]'
+                          : 'text-[color:var(--color-tinta-suave)]'
+                      }`}
+                    >
+                      {crianca.responsaveis === 0 ? 'nenhum' : crianca.responsaveis}
+                    </Td>
+                  </Tr>
+                ))}
+              </tbody>
+            </Tabela>
+          )}
 
-                    {/* Alergia é o dado que não pode passar batido nem numa lista. */}
-                    {crianca.alergias.length > 0 && (
-                      <Etiqueta tom="alerta" titulo={crianca.alergias.join(', ')}>
-                        <AlertTriangle size={11} /> alergia
-                      </Etiqueta>
-                    )}
-
-                    <ChevronRight size={18} className="shrink-0 text-[color:var(--color-tinta-tenue)]" />
-                  </Cartao>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        )}
-
-        <button
-          onClick={() => setVerArquivadas((v) => !v)}
-          className="w-full pt-2 text-center text-xs text-[color:var(--color-tinta-suave)] underline"
-        >
-          {verArquivadas ? 'Ocultar arquivadas' : 'Mostrar também as arquivadas'}
-        </button>
-      </main>
-    </div>
+          <button
+            onClick={() => setVerArquivadas((v) => !v)}
+            className="w-full pt-2 text-center text-xs text-[color:var(--color-tinta-suave)] underline"
+          >
+            {verArquivadas ? 'Ocultar arquivadas' : 'Mostrar também as arquivadas'}
+          </button>
+      </div>
+    </LayoutGestao>
   );
 }
 

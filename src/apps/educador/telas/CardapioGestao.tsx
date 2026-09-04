@@ -3,7 +3,7 @@ import { ChevronLeft, ChevronRight, Save } from 'lucide-react';
 import { useState } from 'react';
 import { api, mensagemDeErro } from '@/shared/api/cliente';
 import { Aviso, Botao, Campo, Cartao, Carregando, RotuloSecao } from '@/shared/ui/componentes';
-import { Cabecalho } from '../componentes/Cabecalho';
+import { LayoutGestao } from '../componentes/LayoutGestao';
 
 const REFEICOES = [
   ['lancheManha', 'Lanche da manhã'],
@@ -86,62 +86,60 @@ export function CardapioGestao() {
   const datas = DIAS.map((_, i) => somarDias(referencia, i));
 
   return (
-    <div className="min-h-full pb-10">
-      <Cabecalho titulo="Cardápio" voltarPara="/gestao" />
-
-      <main className="space-y-4 px-4 py-4">
-        <div className="flex items-center justify-between gap-2">
-          <Botao
-            variante="secundario"
-            aria-label="Semana anterior"
-            onClick={() => setReferencia(somarDias(referencia, -7))}
-          >
-            <ChevronLeft size={16} />
-          </Botao>
-          <p className="numerico text-sm font-semibold">
-            {formatar(referencia)} a {formatar(somarDias(referencia, 4))}
-          </p>
-          <Botao
-            variante="secundario"
-            aria-label="Próxima semana"
-            onClick={() => setReferencia(somarDias(referencia, 7))}
-          >
-            <ChevronRight size={16} />
-          </Botao>
-        </div>
-
-        {salvar.error && <Aviso>{mensagemDeErro(salvar.error)}</Aviso>}
-        {salvar.isSuccess && !salvar.isPending && <Aviso tom="ok">Cardápio salvo.</Aviso>}
-
-        {isLoading ? (
-          <Carregando texto="Buscando o cardápio…" />
-        ) : (
-          <>
-            {datas.map((dia, i) => (
-              <Cartao key={dia} interno className="space-y-2.5">
-                <RotuloSecao apoio={<span className="numerico">{formatar(dia)}</span>}>
-                  {DIAS[i]}
-                </RotuloSecao>
-
-                {REFEICOES.map(([chave, rotulo]) => (
-                  <Campo
-                    key={chave}
-                    rotulo={rotulo}
-                    value={valorDe(dia, chave)}
-                    placeholder="—"
-                    onChange={(e) => definir(dia, chave, e.target.value)}
-                  />
-                ))}
-              </Cartao>
-            ))}
-
-            <Botao bloco disabled={salvar.isPending} onClick={() => salvar.mutate(datas)}>
-              <Save size={16} /> {salvar.isPending ? 'Salvando…' : 'Salvar a semana'}
+    <LayoutGestao titulo="Cardápio">
+      <div className="space-y-4">
+          <div className="flex items-center justify-between gap-2">
+            <Botao
+              variante="secundario"
+              aria-label="Semana anterior"
+              onClick={() => setReferencia(somarDias(referencia, -7))}
+            >
+              <ChevronLeft size={16} />
             </Botao>
-          </>
-        )}
-      </main>
-    </div>
+            <p className="numerico text-sm font-semibold">
+              {formatar(referencia)} a {formatar(somarDias(referencia, 4))}
+            </p>
+            <Botao
+              variante="secundario"
+              aria-label="Próxima semana"
+              onClick={() => setReferencia(somarDias(referencia, 7))}
+            >
+              <ChevronRight size={16} />
+            </Botao>
+          </div>
+
+          {salvar.error && <Aviso>{mensagemDeErro(salvar.error)}</Aviso>}
+          {salvar.isSuccess && !salvar.isPending && <Aviso tom="ok">Cardápio salvo.</Aviso>}
+
+          {isLoading ? (
+            <Carregando texto="Buscando o cardápio…" />
+          ) : (
+            <>
+              {datas.map((dia, i) => (
+                <Cartao key={dia} interno className="space-y-2.5">
+                  <RotuloSecao apoio={<span className="numerico">{formatar(dia)}</span>}>
+                    {DIAS[i]}
+                  </RotuloSecao>
+
+                  {REFEICOES.map(([chave, rotulo]) => (
+                    <Campo
+                      key={chave}
+                      rotulo={rotulo}
+                      value={valorDe(dia, chave)}
+                      placeholder="—"
+                      onChange={(e) => definir(dia, chave, e.target.value)}
+                    />
+                  ))}
+                </Cartao>
+              ))}
+
+              <Botao bloco disabled={salvar.isPending} onClick={() => salvar.mutate(datas)}>
+                <Save size={16} /> {salvar.isPending ? 'Salvando…' : 'Salvar a semana'}
+              </Botao>
+            </>
+          )}
+      </div>
+    </LayoutGestao>
   );
 }
 

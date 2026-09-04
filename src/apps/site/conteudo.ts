@@ -26,9 +26,15 @@ export const PASSOS = [
   },
   {
     numero: '03',
-    titulo: 'O relatório do semestre já vem pronto',
+    titulo: 'A gestão enxerga o dia',
     texto:
-      'O parecer descritivo por campo de experiência da BNCC nasce dos registros do período, para o coordenador revisar em vez de escrever do zero.',
+      'Os números do turno e a lista curta do que exige uma ligação: ocorrência sem ciência da família, recado não lido, turma com adesão baixa. Sem relatório que ninguém abre.',
+  },
+  {
+    numero: '04',
+    titulo: 'O parecer sai pronto',
+    texto:
+      'Os cinco campos de experiência da BNCC preenchidos a partir dos registros do semestre inteiro. A educadora revisa, a coordenação publica, a família imprime.',
   },
 ];
 

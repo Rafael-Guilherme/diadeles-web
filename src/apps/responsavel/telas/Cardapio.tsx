@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
-import { UtensilsCrossed } from 'lucide-react';
+
 import { api } from '@/shared/api/cliente';
+import { Cabecalho, Folha, Tela } from '../componentes/Cabecalho';
 import { Cartao, Carregando, Etiqueta, Vazio } from '@/shared/ui/componentes';
 
 const ROTULOS: Record<string, string> = {
@@ -25,15 +26,13 @@ export function Cardapio() {
   if (isLoading) return <Carregando />;
 
   return (
-    <div className="mx-auto w-full max-w-md">
-      <header className="area-segura-topo px-5 pb-4">
-        <h1 className="display text-2xl">Cardápio da semana</h1>
-      </header>
+    <Tela>
+      <Cabecalho titulo="Cardápio" descricao="A semana da escola, adaptada à restrição da criança." />
 
-      <main className="space-y-(--gap-lista) px-4 pb-6">
+      <Folha>
+        <div className="space-y-(--gap-lista)">
         {data?.length === 0 && (
           <Vazio
-            icone={<UtensilsCrossed size={22} />}
             titulo="A escola ainda não publicou o cardápio"
             descricao="Assim que a semana for publicada, ela aparece aqui."
           />
@@ -73,7 +72,8 @@ export function Cardapio() {
             </Cartao>
           );
         })}
-      </main>
-    </div>
+        </div>
+      </Folha>
+    </Tela>
   );
 }

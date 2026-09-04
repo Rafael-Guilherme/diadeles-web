@@ -1,23 +1,28 @@
+import { useEffect, useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { useParams } from 'react-router-dom';
-import { CheckCircle2, Send } from 'lucide-react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { api } from '@/shared/api/cliente';
 import type { TipoRegistro } from '@/shared/offline/fila';
 import { useFila } from '@/shared/offline/sincronizador';
 import { fila } from '@/shared/offline/fila';
-import { Aviso, Botao, Cartao, Carregando, Vazio } from '@/shared/ui/componentes';
+import { Aviso, Botao, Carregando, RotuloSecao, Vazio } from '@/shared/ui/componentes';
 import { Cabecalho } from '../componentes/Cabecalho';
 import { ROTULOS_TIPO } from '../componentes/PainelRegistro';
-import { useEffect, useState } from 'react';
 
 /**
- * Fechamento do turno: o que ainda falta registrar, criança a criança.
+ * Fechamento do turno: o que ainda falta registrar, agrupado por tipo.
+ *
+ * Por tipo e não por criança porque é assim que a educadora resolve — ela não
+ * abre a Cecília, depois o Davi, depois a Isadora; ela seleciona as quatro que
+ * faltam fralda e registra as quatro de uma vez. A lista por criança pedia
+ * vinte toques para o que a grade faz em três.
  *
  * Criança ausente não aparece — cobrar registro de quem não veio é ruído, e
  * ruído faz o educador ignorar o indicador inteiro.
  */
 export function Pendencias() {
   const { turmaId = '' } = useParams();
+  const navegar = useNavigate();
   const estadoFila = useFila();
   const [errosNaFila, setErrosNaFila] = useState<{ clientId: string; erro?: string }[]>([]);
 
@@ -49,98 +54,163 @@ export function Pendencias() {
   if (isLoading || !data) {
     return (
       <>
-        <Cabecalho titulo="Fechar turno" voltarPara={`/turma/${turmaId}`} />
-        <Carregando />
+        <Cabecalho titulo="Fechar o turno" voltarPara={`/turma/${turmaId}`} />
+        <Carregando texto="Conferindo o que falta…" />
       </>
     );
   }
 
-  const comPendencia = data.criancas.filter((c) => !c.ausente && c.pendencias.length > 0);
-  const semChamada = data.criancas.filter((c) => c.semPresenca && !c.ausente);
+  const presentes = data.criancas.filter((c) => !c.ausente);
+  const completas = presentes.filter((c) => c.pendencias.length === 0).length;
+  const semChamada = presentes.filter((c) => c.semPresenca);
+  const comDose = presentes.filter((c) => c.temMedicacaoHoje);
+
+  /** Uma linha por tipo, com quem falta — é a unidade de resolução. */
+  const porTipo = (data.registrosHabilitados as TipoRegistro[])
+    .map((tipo) => ({
+      tipo,
+      criancas: presentes.filter((c) => (c.pendencias as TipoRegistro[]).includes(tipo)),
+    }))
+    .filter((linha) => linha.criancas.length > 0)
+    .sort((a, b) => b.criancas.length - a.criancas.length);
+
+  const totalPendencias = porTipo.length + (semChamada.length > 0 ? 1 : 0);
+
+  const resolvidos = [
+    presentes.length - semChamada.length > 0 &&
+      `Chamada de ${presentes.length - semChamada.length} ${presentes.length - semChamada.length === 1 ? 'criança' : 'crianças'}`,
+    ...(data.registrosHabilitados as TipoRegistro[])
+      .filter((tipo) => !porTipo.some((l) => l.tipo === tipo))
+      .map((tipo) => `${ROTULOS_TIPO[tipo]} de ${presentes.length} ${presentes.length === 1 ? 'presente' : 'presentes'}`),
+  ].filter(Boolean) as string[];
 
   return (
-    <div className="min-h-full space-y-4 px-4 pb-10">
+    <div className="flex min-h-full flex-col pb-28">
       <Cabecalho
-        titulo="Fechar turno"
-        subtitulo={data.turma.nome}
+        titulo="Fechar o turno"
+        subtitulo={`${data.turma.nome} · ${data.turma.turno}`}
         voltarPara={`/turma/${turmaId}`}
       />
 
-      {estadoFila.pendentes > 0 && (
-        <Aviso>
-          {estadoFila.pendentes} {estadoFila.pendentes === 1 ? 'registro' : 'registros'} ainda
-          aguardando envio. Pode fechar o app — eles sobem sozinhos quando a rede voltar.
-        </Aviso>
-      )}
-
-      {errosNaFila.length > 0 && (
-        <Cartao interno className="space-y-2 border-[color:var(--color-alerta)]/30">
-          <p className="font-semibold text-[color:var(--color-alerta)]">
-            {errosNaFila.length}{' '}
-            {errosNaFila.length === 1 ? 'registro não pôde' : 'registros não puderam'} ser gravado
+      <section className="border-b border-[color:var(--color-borda)] bg-white px-3 py-2.5">
+        <div className="flex items-baseline justify-between gap-3">
+          <p className="text-sm">
+            <strong className="numerico font-semibold">
+              {completas} de {presentes.length}
+            </strong>{' '}
+            com o dia completo
           </p>
-          {errosNaFila.map((item) => (
-            <div key={item.clientId} className="flex items-center justify-between gap-2 text-sm">
-              <span className="text-[color:var(--color-tinta-suave)]">{item.erro}</span>
-              <Botao
-                variante="fantasma"
-                onClick={() => void fila.descartar(item.clientId).then(() => setErrosNaFila([]))}
+          <p className="numerico text-xs font-semibold text-[color:var(--color-sol-700)]">
+            {totalPendencias === 0
+              ? 'sem pendências'
+              : `${totalPendencias} ${totalPendencias === 1 ? 'pendência' : 'pendências'}`}
+          </p>
+        </div>
+        <div className="mt-2 flex h-1.5 overflow-hidden rounded-full bg-[color:var(--color-sol-50)]">
+          <span
+            className="block h-full bg-[color:var(--color-marca-500)]"
+            style={{ width: `${presentes.length ? (completas / presentes.length) * 100 : 100}%` }}
+          />
+        </div>
+      </section>
+
+      <main className="space-y-4 px-3 py-4">
+        {errosNaFila.length > 0 && (
+          <div className="space-y-2">
+            <RotuloSecao>Não subiu e precisa de você</RotuloSecao>
+            {errosNaFila.map((item) => (
+              <Aviso
+                key={item.clientId}
+                titulo="Registro recusado pela escola"
+                acao={
+                  <Botao
+                    variante="secundario"
+                    tamanho="compacto"
+                    onClick={() => void fila.descartar(item.clientId).then(() => setErrosNaFila([]))}
+                  >
+                    Descartar
+                  </Botao>
+                }
               >
-                Descartar
-              </Botao>
-            </div>
-          ))}
-        </Cartao>
-      )}
-
-      {semChamada.length > 0 && (
-        <Cartao interno>
-          <p className="font-semibold">Sem chamada</p>
-          <p className="mb-2 text-sm text-[color:var(--color-tinta-suave)]">
-            Ninguém marcou entrada ou falta para estas crianças.
-          </p>
-          <ul className="space-y-0.5 text-sm text-[color:var(--color-tinta-suave)]">
-            {semChamada.map((c) => (
-              <li key={c.id}>· {c.nomeSocial ?? c.nome}</li>
+                {item.erro}
+              </Aviso>
             ))}
-          </ul>
-        </Cartao>
-      )}
+          </div>
+        )}
 
-      {comPendencia.length === 0 && semChamada.length === 0 ? (
-        <Vazio
-          icone={<CheckCircle2 size={24} className="text-[color:var(--color-ok)]" />}
-          titulo="Turno completo"
-          descricao="Todas as crianças presentes têm a rotina registrada. As famílias já podem acompanhar."
-        />
-      ) : (
-        <ul className="space-y-(--gap-lista)">
-          {comPendencia.map((crianca) => (
-            <Cartao key={crianca.id} interno>
-              <p className="font-semibold">{crianca.nomeSocial ?? crianca.nome}</p>
-              <p className="text-sm text-[color:var(--color-tinta-suave)]">
-                Falta registrar:{' '}
-                {crianca.pendencias
-                  .map((tipo) => ROTULOS_TIPO[tipo as TipoRegistro] ?? tipo)
-                  .join(', ')}
-              </p>
-            </Cartao>
-          ))}
-        </ul>
-      )}
+        {totalPendencias === 0 && comDose.length === 0 ? (
+          <Vazio
+            titulo="Nada esperando você"
+            descricao="Todas as crianças presentes têm a rotina registrada. Pode fechar o turno — as famílias recebem o resumo do dia."
+          />
+        ) : (
+          <div className="space-y-2">
+            <RotuloSecao>Resolva antes de fechar</RotuloSecao>
 
-      {/* Disponível mesmo com pendências: uma criança sem registro de sono não
-          pode impedir que as outras dezenove famílias saibam do dia. Um botão
-          que só libera com tudo preenchido ensina o educador a preencher
-          qualquer coisa para liberá-lo. */}
-      <div className="space-y-3 pt-2">
-        {fechar.data ? (
-          <Aviso tom="ok">
+            {/* A dose vem primeiro e com marca de alerta: é a única pendência
+                em que o erro tem consequência clínica, não pedagógica. */}
+            {comDose.map((crianca) => (
+              <Aviso
+                key={crianca.id}
+                titulo="Medicação prevista para hoje"
+                acao={
+                  <Link to={`/turma/${turmaId}/crianca/${crianca.id}`}>
+                    <Botao variante="secundario" tamanho="compacto">Ver</Botao>
+                  </Link>
+                }
+              >
+                {crianca.nomeSocial ?? crianca.nome} · confira na ficha se a dose foi dada e
+                registrada com a dupla checagem.
+              </Aviso>
+            ))}
+
+            {semChamada.length > 0 && (
+              <LinhaDePendencia
+                titulo={`Sem chamada · ${semChamada.length} ${semChamada.length === 1 ? 'criança' : 'crianças'}`}
+                nomes={semChamada.map((c) => c.nomeSocial ?? c.nome)}
+                acao="Chamar"
+                aoAgir={() => navegar(`/turma/${turmaId}/chamada`)}
+              />
+            )}
+
+            {porTipo.map(({ tipo, criancas }) => (
+              <LinhaDePendencia
+                key={tipo}
+                titulo={`${ROTULOS_TIPO[tipo]} sem registro · ${criancas.length} ${criancas.length === 1 ? 'criança' : 'crianças'}`}
+                nomes={criancas.map((c) => c.nomeSocial ?? c.nome)}
+                acao="Registrar"
+                aoAgir={() => navegar(`/turma/${turmaId}`)}
+              />
+            ))}
+          </div>
+        )}
+
+        {resolvidos.length > 0 && (
+          <div className="space-y-2">
+            <RotuloSecao>Já resolvido</RotuloSecao>
+            <ul className="space-y-1">
+              {resolvidos.map((texto) => (
+                <li key={texto} className="flex items-center gap-2 text-sm">
+                  <span
+                    aria-hidden
+                    className="flex h-4 w-4 shrink-0 items-center justify-center rounded-[4px] bg-[color:var(--color-ok)] text-[10px] text-white"
+                  >
+                    ✓
+                  </span>
+                  {texto}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {fechar.data && (
+          <Aviso tom="ok" titulo="Turno fechado">
             {fechar.data.familiasAvisadas > 0
-              ? `Turno fechado. ${fechar.data.familiasAvisadas} ${
+              ? `${fechar.data.familiasAvisadas} ${
                   fechar.data.familiasAvisadas === 1 ? 'família recebeu' : 'famílias receberam'
                 } o resumo do dia.`
-              : 'Turno fechado. As famílias já tinham recebido o resumo de hoje.'}
+              : 'As famílias já tinham recebido o resumo de hoje.'}
             {fechar.data.semResponsavel > 0 && (
               <>
                 {' '}
@@ -152,29 +222,88 @@ export function Pendencias() {
               </>
             )}
           </Aviso>
-        ) : (
-          <Botao bloco disabled={fechar.isPending} onClick={() => fechar.mutate()}>
-            {fechar.isPending ? (
-              'Enviando…'
-            ) : (
-              <>
-                <Send size={16} /> Fechar turno e avisar as famílias
-              </>
-            )}
-          </Botao>
         )}
 
         {fechar.isError && (
-          <Aviso>Não consegui fechar o turno agora. Verifique a conexão e tente de novo.</Aviso>
+          <Aviso titulo="Não consegui fechar o turno">
+            Verifique a conexão e tente de novo. Nada do que você registrou se perdeu.
+          </Aviso>
         )}
 
         {estadoFila.pendentes > 0 && !fechar.data && (
-          <p className="text-center text-xs leading-relaxed text-[color:var(--color-tinta-suave)]">
-            O que ainda está na fila sobe sozinho e entra no dia da criança — mas não entra neste
-            resumo. Se der, espere a fila zerar antes de fechar.
+          <p className="text-xs leading-relaxed text-[color:var(--color-tinta-suave)]">
+            {estadoFila.pendentes}{' '}
+            {estadoFila.pendentes === 1 ? 'registro ainda está' : 'registros ainda estão'} na fila.
+            Sobem sozinhos e entram no dia da criança — mas não entram neste resumo. Se der, espere
+            a fila zerar antes de fechar.
           </p>
         )}
+      </main>
+
+      {/* Fechar com pendência é permitido de propósito: uma criança sem sono
+          registrado não pode impedir que as outras dezenove famílias saibam do
+          dia. Um botão que só libera com tudo preenchido ensina a equipe a
+          preencher qualquer coisa para liberá-lo. */}
+      <div
+        className="area-segura-base fixed inset-x-0 bottom-0 z-20 border-t border-[color:var(--color-borda-forte)] bg-[color:var(--color-papel)] px-3 pt-2.5"
+        style={{ boxShadow: 'var(--sombra-elevada)' }}
+      >
+        <p className="pb-2 text-2xs leading-snug text-[color:var(--color-tinta-suave)]">
+          Fechar com pendência é permitido — elas passam para o próximo turno com o seu nome.
+        </p>
+        <div className="flex gap-2">
+          <Botao variante="secundario" onClick={() => navegar(`/turma/${turmaId}`)} className="flex-1">
+            Voltar
+          </Botao>
+          <Botao
+            className="flex-[2]"
+            disabled={fechar.isPending || Boolean(fechar.data)}
+            onClick={() => fechar.mutate()}
+          >
+            {fechar.isPending
+              ? 'Enviando…'
+              : fechar.data
+                ? 'Turno fechado'
+                : totalPendencias > 0
+                  ? `Fechar turno · ${totalPendencias} ${totalPendencias === 1 ? 'pendência' : 'pendências'}`
+                  : 'Fechar turno e avisar as famílias'}
+          </Botao>
+        </div>
       </div>
+    </div>
+  );
+}
+
+/**
+ * Uma pendência de tipo, com quem falta e o botão que resolve.
+ *
+ * Os nomes ficam à vista, não atrás de um "ver quem": são três ou quatro, e
+ * lê-los é o que faz a educadora lembrar que a Isadora chegou depois do lanche.
+ */
+function LinhaDePendencia({
+  titulo,
+  nomes,
+  acao,
+  aoAgir,
+}: {
+  titulo: string;
+  nomes: string[];
+  acao: string;
+  aoAgir: () => void;
+}) {
+  return (
+    <div className="flex items-center gap-2.5 rounded-(--raio) border border-[color:var(--color-borda)] bg-white p-(--padding-cartao)">
+      <span
+        aria-hidden
+        className="h-4 w-4 shrink-0 rounded-[4px] border border-[color:var(--color-sol-300)] bg-[color:var(--color-sol-50)]"
+      />
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-semibold">{titulo}</p>
+        <p className="truncate text-xs text-[color:var(--color-tinta-suave)]">{nomes.join(', ')}</p>
+      </div>
+      <Botao variante="secundario" tamanho="compacto" onClick={aoAgir}>
+        {acao}
+      </Botao>
     </div>
   );
 }

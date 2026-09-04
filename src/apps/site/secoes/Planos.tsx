@@ -1,9 +1,20 @@
+import { useState } from 'react';
 import { Check } from 'lucide-react';
 import { Etiqueta } from '@/shared/ui/componentes';
 import { PLANOS } from '../conteudo';
 import { AberturaSecao } from '../componentes';
 
+/**
+ * Dois meses grátis no anual — e nada mais muda.
+ *
+ * O alternador existe porque a gestora compara com o que já paga por ano, e
+ * não porque o produto tenha duas ofertas: o preço mensal é o mesmo, com dez
+ * meses cobrados em vez de doze. Fingir um "plano anual" com outra lista de
+ * recursos seria vender duas coisas para não baixar o preço de uma.
+ */
 export function Planos() {
+  const [anual, setAnual] = useState(false);
+
   return (
     <section id="planos" className="border-y border-[color:var(--color-borda)] bg-(color:--color-papel)">
       <div className="mx-auto max-w-6xl px-5 py-20">
@@ -12,7 +23,29 @@ export function Planos() {
           sem custo adicional. A conta acompanha o tamanho da escola, inclusive quando ela diminui.
         </AberturaSecao>
 
-        <div className="mt-12 grid items-start gap-(--gap-lista) lg:grid-cols-3">
+        <div className="mt-8 inline-flex rounded-(--raio) border border-[color:var(--color-borda-forte)] bg-white p-1">
+          {(
+            [
+              [false, 'Mensal'],
+              [true, 'Anual · 2 meses grátis'],
+            ] as const
+          ).map(([valor, rotulo]) => (
+            <button
+              key={rotulo}
+              onClick={() => setAnual(valor)}
+              aria-pressed={anual === valor}
+              className={`rounded-(--raio-sm) px-3.5 py-2 text-sm font-semibold transition ${
+                anual === valor
+                  ? 'bg-(color:--cor-acao) text-white'
+                  : 'text-[color:var(--color-tinta-suave)]'
+              }`}
+            >
+              {rotulo}
+            </button>
+          ))}
+        </div>
+
+        <div className="mt-8 grid items-start gap-(--gap-lista) lg:grid-cols-3">
           {PLANOS.map((plano) => (
             <div
               key={plano.nome}
@@ -32,12 +65,17 @@ export function Planos() {
 
               <p className="numerico mt-5 flex items-baseline gap-1">
                 {plano.unidade && <span className="text-lg font-semibold">R$</span>}
-                <span className="text-4xl font-bold tracking-tight">{plano.preco}</span>
+                <span className="text-4xl font-bold tracking-tight">
+                  {anual ? anualDe(plano.preco) : plano.preco}
+                </span>
                 <span className="text-sm text-[color:var(--color-tinta-suave)]">
                   {plano.unidade}
                 </span>
               </p>
-              <p className="mt-1 text-xs text-[color:var(--color-tinta-tenue)]">{plano.minimo}</p>
+              <p className="mt-1 text-xs text-[color:var(--color-tinta-tenue)]">
+                {plano.minimo}
+                {anual && plano.unidade ? ' · cobrado uma vez por ano' : ''}
+              </p>
 
               <ul className="mt-6 flex-1 space-y-2.5">
                 {plano.itens.map((item) => (
@@ -70,4 +108,17 @@ export function Planos() {
       </div>
     </section>
   );
+}
+
+/**
+ * Dez meses no lugar de doze, mostrados como preço mensal equivalente.
+ *
+ * Mostrar o total do ano ("R$ 1.656") ao lado de "R$ 6,90" faria a escola
+ * comparar um número com o outro; o que ela quer saber é quanto sai por
+ * criança por mês se pagar adiantado.
+ */
+function anualDe(preco: string): string {
+  const mensal = Number(preco.replace('.', '').replace(',', '.'));
+  if (!Number.isFinite(mensal)) return preco;
+  return ((mensal * 10) / 12).toFixed(2).replace('.', ',');
 }

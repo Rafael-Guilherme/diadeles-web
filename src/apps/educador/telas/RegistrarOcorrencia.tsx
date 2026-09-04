@@ -3,7 +3,16 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useParams } from 'react-router-dom';
 import { AlertTriangle, Check, Send } from 'lucide-react';
 import { api, mensagemDeErro } from '@/shared/api/cliente';
-import { Area, Aviso, Botao, Campo, Cartao, Carregando, RotuloSecao } from '@/shared/ui/componentes';
+import {
+  Area,
+  Aviso,
+  Botao,
+  Campo,
+  Cartao,
+  Carregando,
+  RotuloCampo,
+  RotuloSecao,
+} from '@/shared/ui/componentes';
 import { Cabecalho } from '../componentes/Cabecalho';
 
 type Tipo =
@@ -57,6 +66,9 @@ export function RegistrarOcorrencia() {
   const [descricao, setDescricao] = useState('');
   const [conduta, setConduta] = useState('');
   const [temperatura, setTemperatura] = useState('');
+  // A queda foi às 15:20 e o educador só conseguiu registrar às 15:31 — com o
+  // relógio travado no "agora", a linha do tempo da família mentiria a hora.
+  const [hora, setHora] = useState(() => horaDeAgora());
   const [erro, setErro] = useState<string | null>(null);
 
   const crianca = useQuery({
@@ -81,7 +93,7 @@ export function RegistrarOcorrencia() {
           criancaId,
           tipo,
           gravidade,
-          ocorridoEm: new Date().toISOString(),
+          ocorridoEm: comHora(hora),
           local: local.trim() || undefined,
           descricao: descricao.trim(),
           conduta: conduta.trim(),
@@ -162,8 +174,10 @@ export function RegistrarOcorrencia() {
             registrar.mutate();
           }}
         >
-          <section className="space-y-2">
-            <RotuloSecao>O que aconteceu</RotuloSecao>
+          {/* O tipo escolhido fica em vermelho, não em verde: aqui o verde de
+              ação diria "tudo certo" no exato momento em que não está. */}
+          <section className="space-y-1.5">
+            <RotuloCampo>Tipo</RotuloCampo>
             <div className="grid grid-cols-3 gap-2">
               {TIPOS.map((t) => (
                 <button
@@ -171,10 +185,10 @@ export function RegistrarOcorrencia() {
                   type="button"
                   onClick={() => setTipo(t.valor)}
                   aria-pressed={tipo === t.valor}
-                  className={`min-h-11 rounded-(--raio) px-2 text-xs font-semibold transition ${
+                  className={`min-h-11 rounded-(--raio) border px-2 text-sm transition ${
                     tipo === t.valor
-                      ? 'bg-(color:--cor-acao) text-white'
-                      : 'bg-white text-[color:var(--color-tinta-suave)] ring-1 ring-inset ring-[color:var(--color-borda-forte)]'
+                      ? 'border-[color:var(--color-alerta)] bg-[color:var(--color-alerta)] font-semibold text-white'
+                      : 'border-[color:var(--color-borda-forte)] bg-white'
                   }`}
                 >
                   {t.rotulo}
@@ -182,6 +196,25 @@ export function RegistrarOcorrencia() {
               ))}
             </div>
           </section>
+
+          <div className="flex gap-2">
+            <div className="w-[130px] shrink-0">
+              <Campo
+                rotulo="Hora"
+                type="time"
+                value={hora}
+                onChange={(e) => setHora(e.target.value)}
+              />
+            </div>
+            <div className="min-w-0 flex-1">
+              <Campo
+                rotulo="Onde"
+                placeholder="Pátio · escorregador"
+                value={local}
+                onChange={(e) => setLocal(e.target.value)}
+              />
+            </div>
+          </div>
 
           <section className="space-y-2">
             <RotuloSecao>Gravidade</RotuloSecao>
@@ -244,16 +277,8 @@ export function RegistrarOcorrencia() {
             />
           )}
 
-          <Campo
-            rotulo="Onde"
-            placeholder="Parque, sala, refeitório…"
-            value={local}
-            onChange={(e) => setLocal(e.target.value)}
-          />
-
           <Area
-            rotulo="Descrição"
-            apoio="O que aconteceu, em uma ou duas frases."
+            rotulo="O que aconteceu · a família lê exatamente isto"
             value={descricao}
             required
             onChange={(e) => setDescricao(e.target.value)}
@@ -267,17 +292,36 @@ export function RegistrarOcorrencia() {
             onChange={(e) => setConduta(e.target.value)}
           />
 
+          <p className="rounded-(--raio) border border-[color:var(--color-sol-200)] bg-[color:var(--color-sol-50)] p-(--padding-cartao) text-sm leading-snug text-[color:var(--color-sol-700)]">
+            A família recebe o aviso na hora, e a coordenação vê a ocorrência como pendência até a
+            ciência ser confirmada.
+          </p>
+
           {erro && <Aviso>{erro}</Aviso>}
 
-          <Botao type="submit" bloco disabled={!podeEnviar || registrar.isPending}>
-            {registrar.isPending ? (
-              'Registrando…'
-            ) : (
-              <>
-                <Send size={16} /> Registrar e avisar a família
-              </>
-            )}
-          </Botao>
+          <div className="flex gap-2">
+            <Botao
+              type="button"
+              variante="secundario"
+              className="flex-1"
+              onClick={() => navegar(`/turma/${turmaId}/crianca/${criancaId}`)}
+            >
+              Cancelar
+            </Botao>
+            <Botao
+              type="submit"
+              className="flex-[2] bg-[color:var(--color-alerta)]"
+              disabled={!podeEnviar || registrar.isPending}
+            >
+              {registrar.isPending ? (
+                'Registrando…'
+              ) : (
+                <>
+                  <Send size={16} /> Registrar e avisar a família
+                </>
+              )}
+            </Botao>
+          </div>
 
           {/* A ocorrência não entra na fila offline: um aviso grave que só sai
               quando a rede volta seria pior do que a recusa honesta agora. */}
@@ -288,4 +332,18 @@ export function RegistrarOcorrencia() {
       </main>
     </div>
   );
+}
+
+/** "15:20" a partir de agora — o valor que o campo `time` entende. */
+function horaDeAgora(): string {
+  const agora = new Date();
+  return `${String(agora.getHours()).padStart(2, '0')}:${String(agora.getMinutes()).padStart(2, '0')}`;
+}
+
+/** Junta a hora digitada com a data de hoje: ocorrência de ontem não existe. */
+function comHora(hora: string): string {
+  const [h, m] = hora.split(':').map(Number);
+  const quando = new Date();
+  quando.setHours(h ?? quando.getHours(), m ?? quando.getMinutes(), 0, 0);
+  return quando.toISOString();
 }

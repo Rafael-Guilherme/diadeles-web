@@ -1,19 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Megaphone, Plus, Send } from 'lucide-react';
+import { Plus, Send } from 'lucide-react';
 import { useState } from 'react';
 import { api, mensagemDeErro } from '@/shared/api/cliente';
-import {
-  Area,
-  Aviso,
-  Botao,
-  Campo,
-  Cartao,
-  Carregando,
-  Etiqueta,
-  RotuloSecao,
-  Vazio,
-} from '@/shared/ui/componentes';
-import { Cabecalho } from '../componentes/Cabecalho';
+import { Area, Aviso, Barra, Botao, Campo, Carregando, Cartao, Etiqueta, RotuloSecao, Vazio } from '@/shared/ui/componentes';
+import { LayoutGestao } from '../componentes/LayoutGestao';
 
 interface Rascunho {
   titulo: string;
@@ -35,6 +25,17 @@ export function ComunicadosGestao() {
   const cliente = useQueryClient();
   const [rascunho, setRascunho] = useState<Rascunho | null>(null);
   const [abertas, setAbertas] = useState<string | null>(null);
+
+  // O denominador da taxa é o número de famílias com acesso, e ele só existe
+  // no resumo da escola — sem ele "12 leituras" não diz se é muito ou pouco.
+  const resumo = useQuery({
+    queryKey: ['escola-resumo'],
+    queryFn: async () => {
+      const { data, error } = await api.GET('/v1/escola/resumo');
+      if (error) throw error;
+      return data;
+    },
+  });
 
   const comunicados = useQuery({
     queryKey: ['comunicados'],
@@ -87,167 +88,211 @@ export function ComunicadosGestao() {
 
   if (comunicados.isLoading || !comunicados.data) {
     return (
-      <>
-        <Cabecalho titulo="Comunicados" voltarPara="/gestao" />
+      <LayoutGestao
+      titulo="Comunicados"
+      descricao="Mão única · a família confirma a leitura, não responde"
+      acoes={
+        !rascunho && (
+          <Botao tamanho="compacto" onClick={() => setRascunho(VAZIO)}>
+            <Plus size={15} /> Novo
+          </Botao>
+        )
+      }
+    >
         <Carregando texto="Buscando os comunicados…" />
-      </>
+      </LayoutGestao>
     );
   }
 
+  const destinatarios = resumo.data?.familiasVinculadas ?? 0;
   const erro = publicar.error ?? publicarRascunho.error;
   const podeEnviar = rascunho && rascunho.titulo.trim().length >= 3 && rascunho.corpo.trim().length >= 3;
 
   return (
-    <div className="min-h-full pb-10">
-      <Cabecalho titulo="Comunicados" voltarPara="/gestao" />
-
-      <main className="space-y-4 px-4 py-4">
-        {erro && <Aviso>{mensagemDeErro(erro)}</Aviso>}
-
-        {rascunho ? (
-          <Cartao interno className="space-y-3">
-            <RotuloSecao>Novo comunicado</RotuloSecao>
-
-            <Campo
-              rotulo="Título"
-              value={rascunho.titulo}
-              placeholder="Reunião de pais — 22/08"
-              onChange={(e) => setRascunho({ ...rascunho, titulo: e.target.value })}
-            />
-
-            <Area
-              rotulo="Mensagem"
-              rows={5}
-              value={rascunho.corpo}
-              onChange={(e) => setRascunho({ ...rascunho, corpo: e.target.value })}
-            />
-
-            <div className="space-y-1.5">
-              <p className="text-sm font-semibold">Para quem</p>
-              <p className="text-xs text-[color:var(--color-tinta-tenue)]">
-                Sem nenhuma turma marcada, vai para a escola inteira.
-              </p>
-              <div className="flex flex-wrap gap-1.5 pt-1">
-                {(turmas.data ?? []).map((turma) => {
-                  const marcada = rascunho.turmas.includes(turma.id);
-                  return (
-                    <button
-                      key={turma.id}
-                      aria-pressed={marcada}
-                      onClick={() =>
-                        setRascunho({
-                          ...rascunho,
-                          turmas: marcada
-                            ? rascunho.turmas.filter((t) => t !== turma.id)
-                            : [...rascunho.turmas, turma.id],
-                        })
-                      }
-                      className={`min-h-9 rounded-full px-3 text-xs font-semibold transition ${
-                        marcada
-                          ? 'bg-(color:--cor-acao) text-white'
-                          : 'bg-white text-[color:var(--color-tinta-suave)] ring-1 ring-inset ring-[color:var(--color-borda-forte)]'
-                      }`}
-                    >
-                      {turma.nome}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            <label className="flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                className="h-4 w-4"
-                checked={rascunho.exigeCiencia}
-                onChange={(e) => setRascunho({ ...rascunho, exigeCiencia: e.target.checked })}
-              />
-              Pedir confirmação de leitura
-            </label>
-
-            <div className="flex gap-2">
-              <Botao
-                bloco
-                disabled={publicar.isPending || !podeEnviar}
-                onClick={() => publicar.mutate({ dados: rascunho, agora: true })}
-              >
-                <Send size={15} /> {publicar.isPending ? 'Enviando…' : 'Publicar'}
-              </Botao>
-              <Botao
-                variante="secundario"
-                disabled={publicar.isPending || !podeEnviar}
-                onClick={() => publicar.mutate({ dados: rascunho, agora: false })}
-              >
-                Salvar rascunho
-              </Botao>
-            </div>
-
-            <Botao variante="fantasma" bloco onClick={() => setRascunho(null)}>
-              Cancelar
-            </Botao>
-          </Cartao>
-        ) : (
-          <Botao bloco onClick={() => setRascunho(VAZIO)}>
-            <Plus size={16} /> Novo comunicado
+    <LayoutGestao
+      titulo="Comunicados"
+      descricao="Mão única · a família confirma a leitura, não responde"
+      acoes={
+        !rascunho && (
+          <Botao tamanho="compacto" onClick={() => setRascunho(VAZIO)}>
+            <Plus size={15} /> Novo
           </Botao>
-        )}
+        )
+      }
+    >
+      <div className="space-y-4">
+          {erro && <Aviso>{mensagemDeErro(erro)}</Aviso>}
 
-        {comunicados.data.length === 0 && !rascunho && (
-          <Vazio
-            icone={<Megaphone size={22} />}
-            titulo="Nenhum comunicado ainda"
-            descricao="O que você publicar aqui aparece na caixa de avisos de cada família."
-          />
-        )}
+          {rascunho ? (
+            <Cartao interno className="space-y-3">
+              <RotuloSecao>Novo comunicado</RotuloSecao>
 
-        <div className="space-y-(--gap-lista)">
-          {comunicados.data.map((c) => (
-            <Cartao key={c.id} interno className="space-y-2">
-              <div className="flex items-start justify-between gap-2">
-                <p className="min-w-0 flex-1 font-semibold">{c.titulo}</p>
-                {c.rascunho ? (
-                  <Etiqueta>rascunho</Etiqueta>
-                ) : (
-                  c.exigeCiencia && <Etiqueta tom="marca">pede ciência</Etiqueta>
-                )}
+              <Campo
+                rotulo="Título"
+                value={rascunho.titulo}
+                placeholder="Reunião de pais — 22/08"
+                onChange={(e) => setRascunho({ ...rascunho, titulo: e.target.value })}
+              />
+
+              <Area
+                rotulo="Mensagem"
+                rows={5}
+                value={rascunho.corpo}
+                onChange={(e) => setRascunho({ ...rascunho, corpo: e.target.value })}
+              />
+
+              <div className="space-y-1.5">
+                <p className="text-sm font-semibold">Para quem</p>
+                <p className="text-xs text-[color:var(--color-tinta-tenue)]">
+                  Sem nenhuma turma marcada, vai para a escola inteira.
+                </p>
+                <div className="flex flex-wrap gap-1.5 pt-1">
+                  {(turmas.data ?? []).map((turma) => {
+                    const marcada = rascunho.turmas.includes(turma.id);
+                    return (
+                      <button
+                        key={turma.id}
+                        aria-pressed={marcada}
+                        onClick={() =>
+                          setRascunho({
+                            ...rascunho,
+                            turmas: marcada
+                              ? rascunho.turmas.filter((t) => t !== turma.id)
+                              : [...rascunho.turmas, turma.id],
+                          })
+                        }
+                        className={`min-h-9 rounded-full px-3 text-xs font-semibold transition ${
+                          marcada
+                            ? 'bg-(color:--cor-acao) text-white'
+                            : 'bg-white text-[color:var(--color-tinta-suave)] ring-1 ring-inset ring-[color:var(--color-borda-forte)]'
+                        }`}
+                      >
+                        {turma.nome}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
 
-              <p className="line-clamp-3 text-sm leading-relaxed text-[color:var(--color-tinta-suave)]">
-                {c.corpo}
-              </p>
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  className="h-4 w-4"
+                  checked={rascunho.exigeCiencia}
+                  onChange={(e) => setRascunho({ ...rascunho, exigeCiencia: e.target.checked })}
+                />
+                Pedir confirmação de leitura
+              </label>
 
-              {c.alvoTurmas.length > 0 && (
-                <p className="text-xs text-[color:var(--color-tinta-tenue)]">
-                  Dirigido a {c.alvoTurmas.length}{' '}
-                  {c.alvoTurmas.length === 1 ? 'turma' : 'turmas'}
-                </p>
-              )}
-
-              {c.rascunho ? (
+              <div className="flex gap-2">
                 <Botao
                   bloco
-                  disabled={publicarRascunho.isPending}
-                  onClick={() => publicarRascunho.mutate(c.id)}
+                  disabled={publicar.isPending || !podeEnviar}
+                  onClick={() => publicar.mutate({ dados: rascunho, agora: true })}
                 >
-                  <Send size={15} /> Publicar
+                  <Send size={15} /> {publicar.isPending ? 'Enviando…' : 'Publicar'}
                 </Botao>
-              ) : (
-                <>
-                  <Botao
-                    variante="secundario"
-                    bloco
-                    onClick={() => setAbertas(abertas === c.id ? null : c.id)}
-                  >
-                    {abertas === c.id ? 'Fechar leituras' : 'Ver quem leu'}
-                  </Botao>
-                  {abertas === c.id && <Leituras comunicadoId={c.id} />}
-                </>
-              )}
+                <Botao
+                  variante="secundario"
+                  disabled={publicar.isPending || !podeEnviar}
+                  onClick={() => publicar.mutate({ dados: rascunho, agora: false })}
+                >
+                  Salvar rascunho
+                </Botao>
+              </div>
+
+              <Botao variante="fantasma" bloco onClick={() => setRascunho(null)}>
+                Cancelar
+              </Botao>
             </Cartao>
-          ))}
-        </div>
-      </main>
-    </div>
+          ) : null}
+
+          {comunicados.data.length === 0 && !rascunho && (
+            <Vazio
+              titulo="Nenhum comunicado ainda"
+              descricao="O que você publicar aqui aparece na caixa de avisos de cada família."
+            />
+          )}
+
+          <div className="space-y-(--gap-lista)">
+            {comunicados.data.map((c) => (
+              <Cartao key={c.id} interno className="space-y-2">
+                <div className="flex items-start justify-between gap-2">
+                  <p className="min-w-0 flex-1 font-semibold">{c.titulo}</p>
+                  {c.rascunho ? (
+                    <Etiqueta>rascunho</Etiqueta>
+                  ) : (
+                    c.exigeCiencia && <Etiqueta tom="marca">pede ciência</Etiqueta>
+                  )}
+                </div>
+
+                <p className="line-clamp-3 text-sm leading-relaxed text-[color:var(--color-tinta-suave)]">
+                  {c.corpo}
+                </p>
+
+                <p className="text-xs text-[color:var(--color-tinta-tenue)]">
+                  {c.alvoTurmas.length > 0
+                    ? `Dirigido a ${c.alvoTurmas.length} ${c.alvoTurmas.length === 1 ? 'turma' : 'turmas'}`
+                    : 'Para todas as turmas'}
+                </p>
+
+                {/* A taxa vem no cartão, não atrás de um clique: é ela que diz
+                    se o comunicado precisa ser reenviado, e é o único número
+                    que a gestão olha nesta tela. */}
+                {!c.rascunho && destinatarios > 0 && (
+                  <div>
+                    <div className="flex items-baseline justify-between gap-2">
+                      <span className="text-xs text-[color:var(--color-tinta-suave)]">
+                        Leitura confirmada
+                      </span>
+                      <span
+                        className={`numerico text-sm font-semibold ${
+                          c.totalLeituras / destinatarios < 0.5
+                            ? 'text-[color:var(--color-sol-700)]'
+                            : ''
+                        }`}
+                      >
+                        {Math.round((c.totalLeituras / destinatarios) * 100)}%
+                      </span>
+                    </div>
+                    <Barra
+                      className="mt-1"
+                      valor={c.totalLeituras / destinatarios}
+                      tom={c.totalLeituras / destinatarios < 0.5 ? 'sol' : 'marca'}
+                      rotulo={`Leitura de ${c.titulo}`}
+                    />
+                    <p className="numerico mt-1 text-2xs text-[color:var(--color-tinta-tenue)]">
+                      {c.totalLeituras} de {destinatarios} famílias ·{' '}
+                      {destinatarios - c.totalLeituras} pendentes
+                    </p>
+                  </div>
+                )}
+
+                {c.rascunho ? (
+                  <Botao
+                    bloco
+                    disabled={publicarRascunho.isPending}
+                    onClick={() => publicarRascunho.mutate(c.id)}
+                  >
+                    <Send size={15} /> Publicar
+                  </Botao>
+                ) : (
+                  <>
+                    <Botao
+                      variante="secundario"
+                      bloco
+                      onClick={() => setAbertas(abertas === c.id ? null : c.id)}
+                    >
+                      {abertas === c.id ? 'Fechar' : 'Ver quem falta'}
+                    </Botao>
+                    {abertas === c.id && <Leituras comunicadoId={c.id} />}
+                  </>
+                )}
+              </Cartao>
+            ))}
+          </div>
+      </div>
+    </LayoutGestao>
   );
 }
 
