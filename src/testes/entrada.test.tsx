@@ -130,8 +130,8 @@ describe('entrada da equipe', () => {
 
   /*
    * Sem demonstração, a tela é o formulário — e não uma mensagem de erro. Era
-   * o que acontecia antes: uma instalação de produção normal exibia "não
-   * consegui falar com a API" para todo mundo.
+   * o que acontecia antes: uma instalação de produção normal exibia um aviso
+   * de API fora do ar para todo mundo.
    */
   it('vira tela de login quando o ambiente não tem demonstração', async () => {
     responderCom({ '/v1/demo': SEM_DEMO });
@@ -139,7 +139,7 @@ describe('entrada da equipe', () => {
     render(envolver(<AppEducador />));
 
     expect(await screen.findByLabelText('E-mail')).toBeDefined();
-    expect(screen.queryByText(/Não consegui falar com a API/)).toBeNull();
+    expect(screen.queryByText(/Não foi possível conectar/)).toBeNull();
     expect(screen.queryByText(/Ambiente de demonstração/)).toBeNull();
   });
 });
@@ -261,5 +261,19 @@ describe('renovação de sessão', () => {
     await api.GET('/v1/criancas/minhas');
 
     expect(useSessao.getState().refreshToken).toBeNull();
+  });
+
+  /* O aviso de falha de rede fala com quem usa o app: sem endereço da API. */
+  it('não mostra o endereço da API quando não consegue conectar', async () => {
+    const original = globalThis.fetch;
+    globalThis.fetch = (() => Promise.reject(new TypeError('Failed to fetch'))) as typeof fetch;
+
+    try {
+      render(envolver(<AppEducador />));
+      expect(await screen.findByText(/Não foi possível conectar/)).toBeDefined();
+      expect(screen.queryByText(/http/)).toBeNull();
+    } finally {
+      globalThis.fetch = original;
+    }
   });
 });

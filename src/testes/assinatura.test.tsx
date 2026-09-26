@@ -168,7 +168,7 @@ describe('assinatura', () => {
     render(envolver('/gestao/assinatura'));
 
     await waitFor(() => {
-      expect(chamadas.some((c) => c.urlOriginal.includes('/v1/demo/assinatura'))).toBe(true);
+      expect(chamadas.some((c) => c.urlOriginal.includes('/v1/demonstracao/assinatura'))).toBe(true);
     });
   });
 

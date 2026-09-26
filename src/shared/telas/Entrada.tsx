@@ -65,7 +65,11 @@ export function Entrada({
         setPerfis(dados.perfis.filter((p) => p.app === app));
         setEstado('disponivel');
       })
-      .catch(() => {
+      .catch((falha: unknown) => {
+        // O endereço da API vai para o console, e só em desenvolvimento: na
+        // tela ele não ajuda quem usa o app e entrega a infraestrutura a quem
+        // não precisa dela.
+        if (import.meta.env.DEV) console.warn(`API inacessível em ${API_URL}`, falha);
         if (ativo) setEstado('apiFora');
       });
 
@@ -128,7 +132,9 @@ export function Entrada({
         {erro && <Aviso>{erro}</Aviso>}
 
         {estado === 'apiFora' && (
-          <Aviso>Não consegui falar com a API. Confira se ela está rodando em {API_URL}</Aviso>
+          <Aviso>
+            Não foi possível conectar agora. Confira a sua internet e tente de novo em instantes.
+          </Aviso>
         )}
 
         {estado === 'carregando' && <Carregando texto="Abrindo…" />}
