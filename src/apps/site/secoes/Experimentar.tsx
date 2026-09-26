@@ -1,5 +1,5 @@
 import { ArrowUpRight, GraduationCap, Heart } from 'lucide-react';
-import { APP_EDUCADOR, APP_RESPONSAVEL } from '../conteudo';
+import { APP_EDUCADOR, APP_RESPONSAVEL, ESCOLA_DEMONSTRACAO } from '../conteudo';
 
 /**
  * O CTA principal. Em vez de um formulário pedindo e-mail para "receber uma
@@ -26,14 +26,14 @@ export function Experimentar() {
 
         <div className="mt-10 grid gap-(--gap-lista) md:grid-cols-2">
           <CartaoApp
-            href={APP_EDUCADOR}
+            href={`${APP_EDUCADOR}/${ESCOLA_DEMONSTRACAO}`}
             icone={<GraduationCap size={22} />}
             titulo="Entrar como educadora"
             texto="Faça a chamada do Berçário II e registre o lanche da turma inteira de uma vez."
             rotulo="Ana Souza · Educadora"
           />
           <CartaoApp
-            href={APP_RESPONSAVEL}
+            href={`${APP_RESPONSAVEL}/${ESCOLA_DEMONSTRACAO}`}
             icone={<Heart size={22} />}
             titulo="Entrar como mãe"
             texto="Veja o dia da Sofia como uma família vê: linha do tempo, avisos e cardápio."

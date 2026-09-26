@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { api, mensagemDeErro } from '../api/cliente';
 import { Aviso, Botao, Campo, Cartao } from '../ui/componentes';
 
@@ -18,6 +18,7 @@ const MINIMO = 8;
  * digitá-la uma vez: é o que confirma que ela foi anotada e não só inventada.
  */
 export function RedefinirSenha() {
+  const navegar = useNavigate();
   const [parametros] = useSearchParams();
   const token = parametros.get('token') ?? '';
 
@@ -70,7 +71,8 @@ export function RedefinirSenha() {
             pedir senha também: redefinir encerra todas as sessões.
           </p>
         </Cartao>
-        <Botao bloco onClick={() => (window.location.href = '/')}>
+        {/* A entrada desta escola: `/` do roteador é `/<escola>/` no endereço. */}
+        <Botao bloco onClick={() => navegar('/', { replace: true })}>
           Entrar
         </Botao>
       </Moldura>

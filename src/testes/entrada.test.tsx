@@ -277,3 +277,42 @@ describe('renovação de sessão', () => {
     }
   });
 });
+
+describe('a escola do endereço', () => {
+  /* Endereço errado não é tela de login: entrar ali não levaria a lugar nenhum. */
+  it('diz que a escola não existe, em vez de pedir senha', async () => {
+    responderCom({
+      '/v1/demo': comStatus(404, { codigo: 'ESCOLA_NAO_ENCONTRADA', mensagem: 'Escola não encontrada.' }),
+    });
+
+    render(envolver(<AppEducador />));
+
+    expect(await screen.findByText('Escola não encontrada')).toBeDefined();
+    expect(screen.queryByLabelText('E-mail')).toBeNull();
+  });
+
+  it('diz que o acesso acabou quando a escola foi cancelada', async () => {
+    responderCom({
+      '/v1/demo': comStatus(403, { codigo: 'ESCOLA_INATIVA', mensagem: 'Encerrado.' }),
+    });
+
+    render(envolver(<AppResponsavel />));
+
+    expect(await screen.findByText('Acesso encerrado')).toBeDefined();
+  });
+
+  /* O link do convite traz o código: a família só confirma o celular. */
+  it('abre o convite do link já preenchido', async () => {
+    responderCom({ '/v1/demo': SEM_DEMO });
+    window.history.replaceState({}, '', '/?convite=sof-4k2p');
+
+    try {
+      render(envolver(<AppResponsavel />));
+      const campo = (await screen.findByLabelText('Código do convite')) as HTMLInputElement;
+      expect(campo.value).toBe('SOF-4K2P');
+    } finally {
+      window.history.replaceState({}, '', '/');
+    }
+  });
+});
+

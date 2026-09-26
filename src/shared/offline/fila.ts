@@ -1,4 +1,5 @@
 import Dexie, { type Table } from 'dexie';
+import { ESCOLA, ESCOLA_INICIAL, daEscola } from '../escola/escola';
 
 export type TipoRegistro =
   | 'ALIMENTACAO'
@@ -26,8 +27,13 @@ export interface EnvelopePendente {
 class BancoOffline extends Dexie {
   pendentes!: Table<EnvelopePendente, string>;
 
-  constructor() {
-    super('diadeles-offline');
+  /**
+   * Um banco por escola. Numa só, um registro feito offline no Cantinho Feliz
+   * seria sincronizado com o token — e para o banco — de outra escola aberta
+   * depois no mesmo aparelho.
+   */
+  constructor(nome = daEscola('diadeles-offline')) {
+    super(nome);
     this.version(1).stores({
       pendentes: 'clientId, turmaId, criadoEm, erro',
     });
@@ -35,6 +41,30 @@ class BancoOffline extends Dexie {
 }
 
 export const banco = new BancoOffline();
+
+/**
+ * A fila de antes da escola no endereço (`diadeles-offline`, um banco só) é
+ * levada para o banco da escola inicial — a única que aquele build atendia.
+ * Um registro feito offline na véspera do deploy não pode sumir por causa
+ * dele. Uma vez só: o banco antigo é apagado depois.
+ */
+export async function migrarFilaAntiga(): Promise<number> {
+  if (!(await Dexie.exists('diadeles-offline'))) return 0;
+
+  const antigo = new BancoOffline('diadeles-offline');
+  const itens = await antigo.pendentes.toArray();
+
+  if (itens.length > 0) {
+    const destino =
+      ESCOLA === ESCOLA_INICIAL ? banco : new BancoOffline(daEscola('diadeles-offline', ESCOLA_INICIAL));
+    await destino.pendentes.bulkPut(itens);
+    if (destino !== banco) destino.close();
+  }
+
+  antigo.close();
+  await Dexie.delete('diadeles-offline');
+  return itens.length;
+}
 
 /**
  * Fila de saída do app do educador.

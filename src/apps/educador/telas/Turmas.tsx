@@ -85,7 +85,13 @@ export function Turmas() {
         <div className="flex items-center justify-center gap-4 pt-4 text-sm text-[color:var(--color-tinta-tenue)]">
           {/* Ao lado de "Sair" e não numa tela de configurações: é onde quem
               recebeu uma senha provisória da secretaria vai procurar. */}
-          <Link to="/trocar-senha" className="min-h-11 underline underline-offset-2">
+          {/* `inline-flex items-center` nos dois: com 44px de altura mínima, o
+              botão centraliza o texto sozinho e o link não — o texto do link
+              ficava no topo da caixa, acima do "Sair". */}
+          <Link
+            to="/trocar-senha"
+            className="inline-flex min-h-11 items-center underline underline-offset-2"
+          >
             Trocar minha senha
           </Link>
           <span aria-hidden className="h-3 w-px bg-[color:var(--color-borda)]" />
@@ -95,7 +101,7 @@ export function Turmas() {
               void sair();
             }}
             disabled={saindo}
-            className="min-h-11 underline underline-offset-2 disabled:opacity-50"
+            className="inline-flex min-h-11 items-center underline underline-offset-2 disabled:opacity-50"
           >
             {saindo ? 'Saindo…' : 'Sair'}
           </button>

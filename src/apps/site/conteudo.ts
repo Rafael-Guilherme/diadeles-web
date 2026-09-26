@@ -11,6 +11,13 @@
 export const APP_EDUCADOR = import.meta.env.VITE_APP_EDUCADOR ?? 'http://localhost:5175';
 export const APP_RESPONSAVEL = import.meta.env.VITE_APP_RESPONSAVEL ?? 'http://localhost:5174';
 
+/**
+ * A escola de demonstração, pelo endereço — e não a página inicial do app, que
+ * abre a última escola usada no aparelho. Quem clica em "experimentar" no site
+ * quer a demonstração mesmo que já use o app de uma escola de verdade.
+ */
+export const ESCOLA_DEMONSTRACAO = import.meta.env.VITE_ESCOLA || 'demonstracao';
+
 export const PASSOS = [
   {
     numero: '01',

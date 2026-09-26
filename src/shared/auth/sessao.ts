@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
+import { daEscola } from '../escola/escola';
 
 export interface UsuarioSessao {
   id: string;
@@ -49,7 +50,9 @@ export const useSessao = create<EstadoSessao>()(
       encerrar: () => set({ accessToken: null, refreshToken: null, usuario: null }),
     }),
     {
-      name: 'diadeles.sessao',
+      // Uma sessão por escola: quem abre duas escolas no mesmo aparelho tem
+      // duas sessões, e entrar numa não derruba a outra (arquitetura.md §17.2).
+      name: daEscola('diadeles.sessao'),
       storage: createJSONStorage(() => localStorage),
     },
   ),

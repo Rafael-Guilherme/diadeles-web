@@ -10,6 +10,7 @@ export default configurarApp({
   corFundo: '#FFFFFF',
   atalhos: [
     { name: 'O dia de hoje', url: '/' },
-    { name: 'Comunicados', url: '/comunicados' },
+    // `?ir=` escolhe a tela dentro da última escola usada (shared/escola/escola.ts).
+    { name: 'Comunicados', url: '/?ir=/comunicados' },
   ],
 });

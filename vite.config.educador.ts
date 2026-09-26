@@ -9,8 +9,8 @@ export default configurarApp({
   descricao: 'Registre a rotina da turma em segundos, mesmo sem internet.',
   corTema: '#1F6F5C',
   corFundo: '#FFFFFF',
-  atalhos: [
-    { name: 'Fazer chamada', url: '/chamada' },
-    { name: 'Grade da turma', url: '/' },
-  ],
+  // Sem a escola no caminho: o atalho abre a página inicial, que leva à última
+  // escola usada (shared/escola/escola.ts). O antigo `/chamada` nunca existiu
+  // como rota — a chamada é por turma.
+  atalhos: [{ name: 'Minhas turmas', url: '/' }],
 });

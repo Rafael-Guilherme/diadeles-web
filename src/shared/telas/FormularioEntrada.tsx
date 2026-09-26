@@ -19,12 +19,19 @@ import { Aviso, Botao, Campo } from '../ui/componentes';
  *   família, e uma senha a mais para esquecer não protege nada que o código de
  *   convite já não proteja.
  */
-export function FormularioEntrada({ app }: { app: 'educador' | 'responsavel' }) {
+export function FormularioEntrada({
+  app,
+  codigoInicial = '',
+}: {
+  app: 'educador' | 'responsavel';
+  /** O código do convite que veio no link (`/instalar?convite=…`). */
+  codigoInicial?: string;
+}) {
   const definirSessao = useSessao((estado) => estado.definir);
 
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
-  const [codigo, setCodigo] = useState('');
+  const [codigo, setCodigo] = useState(codigoInicial);
   const [celular, setCelular] = useState('');
   const [nome, setNome] = useState('');
   const [erro, setErro] = useState<string | null>(null);

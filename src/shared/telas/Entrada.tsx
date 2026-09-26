@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { API_URL } from '../api/cliente';
+import { ESCOLA, esquecerEscola } from '../escola/escola';
 
 /** O site institucional, onde ficam os documentos legais. */
 const SITE_URL = import.meta.env.VITE_SITE_URL || 'http://localhost:5176';
@@ -15,8 +16,27 @@ interface PerfilDemo {
   app: 'educador' | 'responsavel';
 }
 
-/** Demonstração ligada, desligada, ou ainda não se sabe. */
-type EstadoDemo = 'carregando' | 'disponivel' | 'indisponivel' | 'apiFora';
+/**
+ * Demonstração ligada, desligada, ou ainda não se sabe — e os dois casos em
+ * que a escola do endereço não pode ser usada.
+ */
+type EstadoDemo =
+  | 'carregando'
+  | 'disponivel'
+  | 'indisponivel'
+  | 'apiFora'
+  | 'escolaNaoEncontrada'
+  | 'escolaEncerrada';
+
+/**
+ * O código do convite que chegou no link da escola
+ * (`/<escola>/instalar?convite=SOF-4K2P`). Com ele, o formulário já abre
+ * preenchido: a família só confirma o celular.
+ */
+function conviteDoEndereco(): string {
+  if (typeof window === 'undefined') return '';
+  return new URLSearchParams(window.location.search).get('convite')?.trim().toUpperCase() ?? '';
+}
 
 /**
  * A porta de entrada dos dois apps, com dois caminhos que não competem.
@@ -45,7 +65,8 @@ export function Entrada({
   const [estado, setEstado] = useState<EstadoDemo>('carregando');
   const [entrando, setEntrando] = useState<string | null>(null);
   const [erro, setErro] = useState<string | null>(null);
-  const [formularioAberto, setFormularioAberto] = useState(false);
+  const [convite] = useState(conviteDoEndereco);
+  const [formularioAberto, setFormularioAberto] = useState(Boolean(convite));
 
   useEffect(() => {
     let ativo = true;
@@ -54,9 +75,17 @@ export function Entrada({
       .then(async (resposta) => {
         if (!ativo) return;
 
-        // 404 aqui é resposta, não falha: é a API dizendo que este ambiente não
-        // tem demonstração. Só erro de rede é problema para mostrar.
+        // 404 aqui é resposta, não falha: é a API dizendo que esta escola não
+        // é a de demonstração. Só erro de rede é problema para mostrar — e a
+        // escola do endereço não existir, ou estar encerrada.
         if (!resposta.ok) {
+          const codigo = await lerCodigo(resposta);
+          if (codigo === 'ESCOLA_NAO_ENCONTRADA' || codigo === 'ESCOLA_INATIVA') {
+            // A página inicial não pode continuar mandando para cá.
+            esquecerEscola(ESCOLA);
+            setEstado(codigo === 'ESCOLA_NAO_ENCONTRADA' ? 'escolaNaoEncontrada' : 'escolaEncerrada');
+            return;
+          }
           setEstado('indisponivel');
           return;
         }
@@ -93,6 +122,10 @@ export function Entrada({
       setErro('Não foi possível entrar. Tente novamente.');
       setEntrando(null);
     }
+  }
+
+  if (estado === 'escolaNaoEncontrada' || estado === 'escolaEncerrada') {
+    return <EscolaIndisponivel naoEncontrada={estado === 'escolaNaoEncontrada'} />;
   }
 
   const temDemo = estado === 'disponivel';
@@ -184,7 +217,7 @@ export function Entrada({
         {mostrarFormulario && (
           <>
             {temDemo && <Separador />}
-            <FormularioEntrada app={app} />
+            <FormularioEntrada app={app} codigoInicial={convite} />
           </>
         )}
 
@@ -236,6 +269,40 @@ function Separador() {
         ou
       </span>
       <span className="h-px flex-1 bg-[color:var(--color-borda)]" />
+    </div>
+  );
+}
+
+async function lerCodigo(resposta: Response): Promise<string | null> {
+  try {
+    return ((await resposta.json()) as { codigo?: string }).codigo ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * O endereço aponta para uma escola que não existe, ou que encerrou o acesso.
+ * Não é tela de login: entrar ali não levaria a lugar nenhum. O botão volta à
+ * página inicial, que já esqueceu esta escola e abre a de antes.
+ */
+function EscolaIndisponivel({ naoEncontrada }: { naoEncontrada: boolean }) {
+  return (
+    <div className="mx-auto flex min-h-full w-full max-w-md flex-col justify-center gap-5 px-5 py-10">
+      <img src="/pwa-192.png" alt="" className="h-12 w-12 rounded-(--raio)" />
+      <div className="space-y-2">
+        <h1 className="text-2xl">
+          {naoEncontrada ? 'Escola não encontrada' : 'Acesso encerrado'}
+        </h1>
+        <p className="text-sm leading-relaxed text-[color:var(--color-tinta-suave)]">
+          {naoEncontrada
+            ? `Não encontramos a escola “${ESCOLA}”. Confira o endereço que a escola enviou — ele vem no convite ou no e-mail.`
+            : 'O acesso desta escola ao Diadeles foi encerrado. Em caso de dúvida, fale com a secretaria.'}
+        </p>
+      </div>
+      <Botao variante="secundario" bloco onClick={() => window.location.assign('/')}>
+        Ir para a página inicial
+      </Botao>
     </div>
   );
 }
