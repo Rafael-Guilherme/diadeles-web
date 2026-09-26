@@ -1,8 +1,7 @@
-import { useState } from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { AlertTriangle, Check, ExternalLink, RefreshCw } from 'lucide-react';
-import { api, mensagemDeErro } from '@/shared/api/cliente';
-import { Aviso, Botao, Cartao, Carregando, Etiqueta, RotuloSecao } from '@/shared/ui/componentes';
+import { useQuery } from '@tanstack/react-query';
+import { AlertTriangle, Check, ExternalLink } from 'lucide-react';
+import { api } from '@/shared/api/cliente';
+import { Aviso, Cartao, Carregando, Etiqueta, RotuloSecao } from '@/shared/ui/componentes';
 import { LayoutGestao } from '../componentes/LayoutGestao';
 
 const ROTULO_STATUS: Record<string, string> = {
@@ -29,9 +28,6 @@ const ROTULO_PLANO: Record<string, string> = {
  * quando o mínimo do plano entra.
  */
 export function Assinatura() {
-  const clienteQuery = useQueryClient();
-  const [erro, setErro] = useState<string | null>(null);
-
   const { data, isLoading } = useQuery({
     queryKey: ['assinatura'],
     queryFn: async () => {
@@ -39,18 +35,6 @@ export function Assinatura() {
       if (error) throw error;
       return data;
     },
-  });
-
-  const apurar = useMutation({
-    mutationFn: async () => {
-      const { error } = await api.POST('/v1/faturamento/apurar', { body: {} });
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      setErro(null);
-      void clienteQuery.invalidateQueries({ queryKey: ['assinatura'] });
-    },
-    onError: (e) => setErro(mensagemDeErro(e)),
   });
 
   if (isLoading || !data) {
@@ -193,23 +177,11 @@ export function Assinatura() {
             )}
           </section>
 
-          {erro && <Aviso>{erro}</Aviso>}
-
-          <section className="space-y-2">
-            <RotuloSecao>Operação</RotuloSecao>
-            <Botao
-              variante="secundario"
-              bloco
-              disabled={apurar.isPending}
-              onClick={() => apurar.mutate()}
-            >
-              <RefreshCw size={16} /> {apurar.isPending ? 'Apurando…' : 'Apurar este mês agora'}
-            </Botao>
-            <p className="text-xs leading-relaxed text-[color:var(--color-tinta-tenue)]">
-              A apuração roda sozinha no dia 1. Rodar de novo não gera segunda cobrança da mesma
-              competência.
-            </p>
-          </section>
+          {/* Apurar e dar baixa são do super admin, no painel da plataforma
+              (arquitetura.md §17.4): a escola vê a conta, não opera a cobrança. */}
+          <p className="text-xs leading-relaxed text-[color:var(--color-tinta-tenue)]">
+            A fatura do mês é apurada sozinha no dia 1. Dúvidas sobre valores, fale com a Diadeles.
+          </p>
       </div>
     </LayoutGestao>
   );

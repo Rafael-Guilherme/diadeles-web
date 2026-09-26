@@ -1,5 +1,5 @@
 import { describe, expect, it, beforeEach } from 'vitest';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router-dom';
 import { App as AppEducador } from '@/apps/educador/App';
@@ -148,16 +148,27 @@ describe('assinatura', () => {
     expect(screen.getByText(/Nenhuma fatura ainda/)).toBeDefined();
   });
 
-  it('dispara a apuração manual', async () => {
-    responderCom({ '/v1/assinatura': ASSINATURA, '/v1/faturamento/apurar': ASSINATURA.faturas[0] });
+  /* Apurar e dar baixa são do super admin, na API admin (arquitetura.md
+     §17.4). A escola vê a conta; não opera a cobrança. */
+  it('não oferece apurar a fatura', async () => {
+    responderCom({ '/v1/assinatura': ASSINATURA });
 
     useSessao.getState().definir(GESTORA);
     render(envolver('/gestao/assinatura'));
 
-    fireEvent.click(await screen.findByRole('button', { name: /Apurar este mês agora/ }));
+    expect(await screen.findByText(/apurada sozinha no dia 1/)).toBeDefined();
+    expect(screen.queryByRole('button', { name: /Apurar/ })).toBeNull();
+  });
+
+  /* Com um banco por escola, é o slug no caminho que diz qual banco a API usa. */
+  it('pede à API com a escola no caminho', async () => {
+    responderCom({ '/v1/assinatura': ASSINATURA });
+
+    useSessao.getState().definir(GESTORA);
+    render(envolver('/gestao/assinatura'));
 
     await waitFor(() => {
-      expect(chamadas.some((c) => c.url.includes('/faturamento/apurar'))).toBe(true);
+      expect(chamadas.some((c) => c.urlOriginal.includes('/v1/demo/assinatura'))).toBe(true);
     });
   });
 

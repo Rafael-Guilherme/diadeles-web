@@ -8,7 +8,19 @@ import { sessaoStore } from '../auth/sessao';
  * duplicaria o caminho — e o typecheck avisaria, que é o ponto de gerar tipos.
  */
 export const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:3100';
-export const API_URL = `${API_BASE}/v1`;
+
+/**
+ * A escola do app. Na API, toda rota de escola é `/v1/<slug>/…`
+ * (arquitetura.md §17.2): é o slug que diz em qual banco a requisição cai.
+ *
+ * **Ponte até a fase 3.** Por enquanto o slug vem do build (`VITE_ESCOLA`,
+ * `demo` por padrão) e o app atende uma escola só. Na fase 3 ele passa a vir
+ * do primeiro segmento do endereço — `app.diadeles.com.br/cantinho-feliz` —
+ * e este é o único lugar que muda.
+ */
+export const ESCOLA = import.meta.env.VITE_ESCOLA ?? 'demo';
+
+export const API_URL = `${API_BASE}/v1/${ESCOLA}`;
 
 export interface ErroApi {
   codigo: string;
@@ -70,6 +82,32 @@ async function renovarSessao(): Promise<boolean> {
   return renovacaoEmCurso;
 }
 
+/**
+ * Os paths do schema gerado são `/v1/turmas`, porque é assim que o Nest os
+ * declara; a escola entra no caminho aqui, na saída. Mantém o typecheck do
+ * contrato intacto e deixa o slug num lugar só.
+ */
+const escolaNoCaminho: Middleware = {
+  async onRequest({ request }) {
+    const url = new URL(request.url);
+    if (!url.pathname.startsWith('/v1/') || url.pathname.startsWith(`/v1/${ESCOLA}/`)) {
+      return request;
+    }
+    url.pathname = `/v1/${ESCOLA}${url.pathname.slice(3)}`;
+
+    // O corpo lido de propósito: recriar uma Request a partir de outra com
+    // corpo em stream exige `duplex` e falha em parte dos navegadores.
+    const semCorpo = request.method === 'GET' || request.method === 'HEAD';
+    return new Request(url, {
+      method: request.method,
+      headers: request.headers,
+      body: semCorpo ? undefined : await request.blob(),
+      credentials: request.credentials,
+      signal: request.signal,
+    });
+  },
+};
+
 const autenticacao: Middleware = {
   async onRequest({ request }) {
     const token = sessaoStore.getState().accessToken;
@@ -97,7 +135,7 @@ const autenticacao: Middleware = {
   },
 };
 
-api.use(autenticacao);
+api.use(escolaNoCaminho, autenticacao);
 
 export function mensagemDeErro(erro: unknown): string {
   if (typeof erro === 'object' && erro && 'mensagem' in erro) {

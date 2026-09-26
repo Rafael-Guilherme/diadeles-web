@@ -38,6 +38,8 @@ export interface ChamadaRegistrada {
   url: string;
   metodo: string;
   corpo: unknown;
+  /** Como saiu para a API, com a escola no caminho. */
+  urlOriginal: string;
 }
 
 /**
@@ -54,12 +56,24 @@ export const chamadas: ChamadaRegistrada[] = [];
  * token de teste tomaria 401 e o app encerraria a sessão, que é justamente o
  * comportamento correto dele em produção.
  */
+/*
+ * A mesma escola que `shared/api/cliente.ts` põe no caminho. Lida do ambiente,
+ * e não importada de lá: importar o cliente aqui faria o `openapi-fetch`
+ * capturar o fetch de verdade antes do stub abaixo existir.
+ */
+const ESCOLA = import.meta.env.VITE_ESCOLA ?? 'demo';
+
 globalThis.fetch = (async (entrada: RequestInfo | URL, init?: RequestInit) => {
   // O `openapi-fetch` chama `fetch(request)` com um Request montado, e não com
   // (url, init): sem ler o corpo dele, metade das requisições do app apareceria
   // aqui sem payload nenhum.
   const requisicao = typeof entrada === 'object' && 'url' in entrada ? entrada : null;
-  const url = String(requisicao ? requisicao.url : entrada);
+  const urlOriginal = String(requisicao ? requisicao.url : entrada);
+
+  // A API recebe `/v1/<escola>/turmas`; os testes descrevem a rota como o
+  // contrato a declara, `/v1/turmas`. A escola sai daqui, num lugar só — e a
+  // URL original fica registrada para quem quiser conferir que ela foi.
+  const url = urlOriginal.replace(new RegExp(`/v1/${ESCOLA}(?=/)`), '/v1');
 
   const texto = requisicao
     ? await requisicao.clone().text()
@@ -69,6 +83,7 @@ globalThis.fetch = (async (entrada: RequestInfo | URL, init?: RequestInit) => {
 
   chamadas.push({
     url,
+    urlOriginal,
     metodo: requisicao?.method ?? init?.method ?? 'GET',
     corpo: texto ? JSON.parse(texto) : null,
   });

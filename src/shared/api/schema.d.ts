@@ -195,7 +195,7 @@ export interface paths {
         };
         /**
          * Perfis disponíveis para experimentar
-         * @description Só responde com DEMO_MODE=true. Alimenta a tela de entrada dos dois PWAs, e é onde a escola de demonstração é remontada se o dia dela já passou.
+         * @description Só responde na escola marcada como demonstração no registro central. Alimenta a tela de entrada dos dois PWAs, e é onde a escola de demonstração é remontada se o dia dela já passou.
          */
         get: operations["DemoController_perfis"];
         put?: never;
@@ -1373,9 +1373,9 @@ export interface paths {
         };
         /**
          * Assinatura da escola, com as faturas
-         * @description Inclui o que sairia na próxima apuração e o ambiente do provedor — sem `ASAAS_API_KEY` as cobranças são simuladas.
+         * @description Vem do banco central (API admin). A contagem de crianças e o valor estimado são calculados aqui, com o que a escola tem agora.
          */
-        get: operations["FaturamentoController_assinatura"];
+        get: operations["AssinaturaController_assinatura"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1393,9 +1393,9 @@ export interface paths {
         };
         /**
          * O banner de inadimplência, para qualquer um da equipe
-         * @description Nulo enquanto a régua não chegou ao D+10. É o que explica ao educador por que os registros dele pararam de gravar — ele não tem acesso às faturas.
+         * @description Nulo enquanto a régua não chegou ao D+10. É o que explica ao educador por que os registros dele pararam de gravar.
          */
-        get: operations["FaturamentoController_aviso"];
+        get: operations["AssinaturaController_aviso"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1404,60 +1404,20 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/v1/faturamento/apurar": {
+    "/v1/interno/escolas/{slug}/criancas-ativas": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get?: never;
-        put?: never;
         /**
-         * Roda a apuração da competência agora
-         * @description O job automático é no dia 1 às 03:00; isto existe para operar sem esperar o mês virar. Idempotente: competência já cobrada não gera segunda cobrança. Devolve nulo quando a escola está em período de avaliação.
+         * Quantas crianças estão com matrícula ativa
+         * @description Para a apuração da API admin. Devolve um número, nunca a lista.
          */
-        post: operations["FaturamentoController_apurar"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/faturamento/regua": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
+        get: operations["InternoController_criancasAtivas"];
         put?: never;
-        /**
-         * Roda a régua de inadimplência desta escola agora
-         * @description Aplica D+3, D+10 e D+20 sobre as faturas vencidas. Idempotente: a etapa já aplicada não é repetida. Devolve o aviso resultante, ou nulo quando não há nada a avisar.
-         */
-        post: operations["FaturamentoController_rodarRegua"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/webhooks/asaas": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Notificações de cobrança do Asaas
-         * @description Exige o token em `asaas-access-token`, igual a `ASAAS_WEBHOOK_TOKEN`. Idempotente pelo id do evento: um reenvio do provedor não gera segunda baixa. O status vem de uma reconsulta ao provedor, nunca do corpo recebido.
-         */
-        post: operations["WebhooksController_asaas"];
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -2569,35 +2529,9 @@ export interface components {
             /** @example 238.00 */
             valor?: string | null;
         };
-        ApurarDto: {
-            /**
-             * @description Padrão: a competência corrente
-             * @example 2026-08
-             */
-            competencia?: string;
-        };
-        PagamentoAsaasDto: {
-            /** @example pay_8021991822 */
-            id: string;
-            /** @example RECEIVED */
-            status?: string;
-            /** @description O id da nossa Fatura, mandado na emissão */
-            externalReference?: string;
-            /** @example 2026-08-09 */
-            paymentDate?: string;
-        };
-        EventoAsaasDto: {
-            /**
-             * @description Único por evento
-             * @example evt_05b708f961d739ea7eba7e4db318f621
-             */
-            id: string;
-            /**
-             * @description PAYMENT_RECEIVED, PAYMENT_CONFIRMED e PAYMENT_OVERDUE são tratados
-             * @example PAYMENT_RECEIVED
-             */
-            event: string;
-            payment: components["schemas"]["PagamentoAsaasDto"];
+        CriancasAtivasDto: {
+            /** @example 42 */
+            criancasAtivas: number;
         };
         CriarOcorrenciaDto: {
             /** @description UUID gerado no cliente — reenvio não cria uma segunda ocorrência */
@@ -4517,7 +4451,7 @@ export interface operations {
             };
         };
     };
-    FaturamentoController_assinatura: {
+    AssinaturaController_assinatura: {
         parameters: {
             query?: never;
             header?: never;
@@ -4536,7 +4470,7 @@ export interface operations {
             };
         };
     };
-    FaturamentoController_aviso: {
+    AssinaturaController_aviso: {
         parameters: {
             query?: never;
             header?: never;
@@ -4555,34 +4489,13 @@ export interface operations {
             };
         };
     };
-    FaturamentoController_apurar: {
+    InternoController_criancasAtivas: {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ApurarDto"];
+            path: {
+                slug: string;
             };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FaturaDto"];
-                };
-            };
-        };
-    };
-    FaturamentoController_rodarRegua: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
             cookie?: never;
         };
         requestBody?: never;
@@ -4592,30 +4505,8 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["AvisoAssinaturaDto"];
+                    "application/json": components["schemas"]["CriancasAtivasDto"];
                 };
-            };
-        };
-    };
-    WebhooksController_asaas: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["EventoAsaasDto"];
-            };
-        };
-        responses: {
-            /** @description Recebido — o processamento acontece na fila. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
             };
         };
     };
