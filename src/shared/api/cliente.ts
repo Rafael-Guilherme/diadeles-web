@@ -18,7 +18,7 @@ export const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:3100';
  * do primeiro segmento do endereço — `app.diadeles.com.br/cantinho-feliz` —
  * e este é o único lugar que muda.
  */
-export const ESCOLA = import.meta.env.VITE_ESCOLA ?? 'demo';
+export const ESCOLA = import.meta.env.VITE_ESCOLA || 'demo';
 
 export const API_URL = `${API_BASE}/v1/${ESCOLA}`;
 

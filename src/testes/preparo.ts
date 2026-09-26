@@ -61,7 +61,7 @@ export const chamadas: ChamadaRegistrada[] = [];
  * e não importada de lá: importar o cliente aqui faria o `openapi-fetch`
  * capturar o fetch de verdade antes do stub abaixo existir.
  */
-const ESCOLA = import.meta.env.VITE_ESCOLA ?? 'demo';
+const ESCOLA = import.meta.env.VITE_ESCOLA || 'demo';
 
 globalThis.fetch = (async (entrada: RequestInfo | URL, init?: RequestInit) => {
   // O `openapi-fetch` chama `fetch(request)` com um Request montado, e não com

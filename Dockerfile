@@ -34,9 +34,16 @@ ARG APP
 ARG VITE_API_URL
 ARG VITE_APP_EDUCADOR
 ARG VITE_APP_RESPONSAVEL
+# Sem estas duas no build, o Vite nunca as via: o link dos termos nos apps de
+# produção apontava para localhost, e a escola não podia ser escolhida.
+# Vazias, o código cai no padrão (`||`, e não `??` — vazio não é ausente).
+ARG VITE_SITE_URL
+ARG VITE_ESCOLA
 ENV VITE_API_URL=$VITE_API_URL
 ENV VITE_APP_EDUCADOR=$VITE_APP_EDUCADOR
 ENV VITE_APP_RESPONSAVEL=$VITE_APP_RESPONSAVEL
+ENV VITE_SITE_URL=$VITE_SITE_URL
+ENV VITE_ESCOLA=$VITE_ESCOLA
 
 # `build:$APP` e não `build`: compilar os três e jogar dois fora triplicaria o
 # tempo de cada deploy.

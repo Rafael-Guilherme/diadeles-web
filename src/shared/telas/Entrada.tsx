@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { API_URL } from '../api/cliente';
 
 /** O site institucional, onde ficam os documentos legais. */
-const SITE_URL = import.meta.env.VITE_SITE_URL ?? 'http://localhost:5176';
+const SITE_URL = import.meta.env.VITE_SITE_URL || 'http://localhost:5176';
 import { useSessao, type Sessao } from '../auth/sessao';
 import { Avatar, Aviso, Botao, Cartao, Carregando } from '../ui/componentes';
 import { FormularioEntrada } from './FormularioEntrada';
