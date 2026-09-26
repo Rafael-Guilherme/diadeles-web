@@ -88,12 +88,14 @@ function Coluna({
         {links.map(([href, texto]) => (
           <li key={texto}>
             {interno ? (
-              <Link to={href} className={estilo}>
+              <Link to={href} className={estilo} data-evento="rodape-link" data-evento-destino={texto}>
                 {texto}
               </Link>
             ) : (
               <a
                 href={href}
+                data-evento="rodape-link"
+                data-evento-destino={texto}
                 {...(externo ? { target: '_blank', rel: 'noreferrer' } : {})}
                 className={estilo}
               >

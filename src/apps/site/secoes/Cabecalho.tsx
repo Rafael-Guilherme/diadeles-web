@@ -37,6 +37,8 @@ export function Cabecalho() {
             <a
               key={href}
               href={href}
+              data-evento="menu"
+              data-evento-destino={href}
               className="text-sm font-medium text-[color:var(--color-tinta-suave)] transition hover:text-[color:var(--color-tinta)]"
             >
               {texto}
@@ -44,6 +46,7 @@ export function Cabecalho() {
           ))}
           <a
             href="#experimentar"
+            data-evento="menu-ver-funcionando"
             className="rounded-(--raio) bg-(color:--cor-acao) px-4 py-2.5 text-sm font-semibold text-white transition hover:brightness-110"
           >
             Ver funcionando
@@ -66,6 +69,8 @@ export function Cabecalho() {
             <a
               key={href}
               href={href}
+              data-evento="menu"
+              data-evento-destino={href}
               onClick={() => setAberto(false)}
               className="block py-2.5 font-medium"
             >
@@ -74,6 +79,7 @@ export function Cabecalho() {
           ))}
           <a
             href="#experimentar"
+            data-evento="menu-ver-funcionando"
             onClick={() => setAberto(false)}
             className="mt-2 block rounded-(--raio) bg-(color:--cor-acao) px-4 py-3 text-center font-semibold text-white"
           >

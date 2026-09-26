@@ -27,6 +27,7 @@ export function Experimentar() {
         <div className="mt-10 grid gap-(--gap-lista) md:grid-cols-2">
           <CartaoApp
             href={`${APP_EDUCADOR}/${ESCOLA_DEMONSTRACAO}`}
+            app="educador"
             icone={<GraduationCap size={22} />}
             titulo="Entrar como educadora"
             texto="Faça a chamada do Berçário II e registre o lanche da turma inteira de uma vez."
@@ -34,6 +35,7 @@ export function Experimentar() {
           />
           <CartaoApp
             href={`${APP_RESPONSAVEL}/${ESCOLA_DEMONSTRACAO}`}
+            app="familia"
             icone={<Heart size={22} />}
             titulo="Entrar como mãe"
             texto="Veja o dia da Sofia como uma família vê: linha do tempo, avisos e cardápio."
@@ -52,12 +54,15 @@ export function Experimentar() {
 
 function CartaoApp({
   href,
+  app,
   icone,
   titulo,
   texto,
   rotulo,
 }: {
   href: string;
+  /** Qual demonstração — o dado que diz se a escola se interessa mais pela equipe ou pela família. */
+  app: 'educador' | 'familia';
   icone: React.ReactNode;
   titulo: string;
   texto: string;
@@ -66,6 +71,8 @@ function CartaoApp({
   return (
     <a
       href={href}
+      data-evento="demo-abrir"
+      data-evento-app={app}
       target="_blank"
       rel="noreferrer"
       className="group flex flex-col rounded-(--raio-xl) bg-white/10 p-(--padding-cartao) ring-1 ring-white/15 transition hover:bg-white/15"

@@ -33,6 +33,8 @@ export function Planos() {
             <button
               key={rotulo}
               onClick={() => setAnual(valor)}
+              data-evento="planos-periodo"
+              data-evento-periodo={valor ? 'anual' : 'mensal'}
               aria-pressed={anual === valor}
               className={`rounded-(--raio-sm) px-3.5 py-2 text-sm font-semibold transition ${
                 anual === valor
@@ -88,6 +90,9 @@ export function Planos() {
 
               <a
                 href="#experimentar"
+                data-evento="plano-escolher"
+                data-evento-plano={plano.nome}
+                data-evento-periodo={anual ? 'anual' : 'mensal'}
                 className={`mt-6 rounded-(--raio) px-4 py-3 text-center font-semibold transition ${
                   plano.destaque
                     ? 'bg-(color:--cor-acao) text-white hover:brightness-110'

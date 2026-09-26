@@ -6,6 +6,7 @@ import './tema.css';
 import { Site } from './Site';
 import { PaginaLegal } from './paginas/PaginaLegal';
 import { DOCUMENTOS } from './paginas/conteudo-legal';
+import { iniciarRastreio } from './rastreio';
 
 /*
   O site ganhou rotas por causa das três páginas legais.
@@ -15,6 +16,9 @@ import { DOCUMENTOS } from './paginas/conteudo-legal';
   da landing tornaria impossível linkar só ele. O `nginx.conf` já devolve
   `index.html` para qualquer caminho, então nada muda no deploy.
 */
+// Só com VITE_ANALYTICS_URL e VITE_ANALYTICS_SITE no build (rastreio.ts).
+iniciarRastreio();
+
 createRoot(document.getElementById('raiz')!).render(
   <StrictMode>
     <BrowserRouter>

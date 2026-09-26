@@ -26,6 +26,10 @@ add_header Permissions-Policy "camera=(), microphone=(), geolocation=()" always;
 # analytics: as fontes são self-hosted (shared/ui/fontes) justamente para que
 # esta linha possa ser estrita numa página que mostra o dia de uma criança.
 #
+# A exceção é o site institucional, e só ele: `__ANALYTICS_ORIGEM__` vira a
+# origem do Umami quando o build é do site e há `VITE_ANALYTICS_URL`, e vira
+# nada em todos os outros casos — os apps nunca carregam analytics.
+#
 # `style-src` precisa de 'unsafe-inline' porque o React escreve `style="..."`
 # em atributo — é o preço dos tokens de tema aplicados por elemento, e não
 # abre caminho para execução de código.
@@ -33,4 +37,4 @@ add_header Permissions-Policy "camera=(), microphone=(), geolocation=()" always;
 # `connect-src` libera a origem da API porque ela vive noutro subdomínio.
 # `frame-ancestors 'none'` impede que a tela da família seja embutida em
 # qualquer página de terceiro.
-add_header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self' __API_ORIGEM__; worker-src 'self'; manifest-src 'self'; base-uri 'none'; object-src 'none'; form-action 'self'; frame-ancestors 'none'" always;
+add_header Content-Security-Policy "default-src 'self'; script-src 'self' __ANALYTICS_ORIGEM__; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self' __API_ORIGEM__ __ANALYTICS_ORIGEM__; worker-src 'self'; manifest-src 'self'; base-uri 'none'; object-src 'none'; form-action 'self'; frame-ancestors 'none'" always;

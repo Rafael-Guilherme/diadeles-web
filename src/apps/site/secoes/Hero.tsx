@@ -50,12 +50,14 @@ export function Hero() {
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <a
               href="#experimentar"
+              data-evento="hero-ver-funcionando"
               className="inline-flex items-center justify-center gap-2 rounded-(--raio) bg-(color:--cor-acao) px-6 py-3.5 font-semibold text-white transition hover:brightness-110"
             >
               Ver funcionando agora <ArrowRight size={18} />
             </a>
             <a
               href="#planos"
+              data-evento="hero-ver-planos"
               className="inline-flex items-center justify-center rounded-(--raio) border border-[color:var(--color-borda-forte)] bg-white px-6 py-3.5 font-semibold transition hover:bg-[color:var(--color-papel)]"
             >
               Ver planos

@@ -39,11 +39,16 @@ ARG VITE_APP_RESPONSAVEL
 # Vazias, o código cai no padrão (`||`, e não `??` — vazio não é ausente).
 ARG VITE_SITE_URL
 ARG VITE_ESCOLA
+# Só o site usa (src/apps/site/rastreio.ts). Vazias, nada é carregado.
+ARG VITE_ANALYTICS_URL
+ARG VITE_ANALYTICS_SITE
 ENV VITE_API_URL=$VITE_API_URL
 ENV VITE_APP_EDUCADOR=$VITE_APP_EDUCADOR
 ENV VITE_APP_RESPONSAVEL=$VITE_APP_RESPONSAVEL
 ENV VITE_SITE_URL=$VITE_SITE_URL
 ENV VITE_ESCOLA=$VITE_ESCOLA
+ENV VITE_ANALYTICS_URL=$VITE_ANALYTICS_URL
+ENV VITE_ANALYTICS_SITE=$VITE_ANALYTICS_SITE
 
 # `build:$APP` e não `build`: compilar os três e jogar dois fora triplicaria o
 # tempo de cada deploy.
@@ -53,13 +58,21 @@ RUN pnpm run "build:${APP}"
 FROM nginx:1.27-alpine AS release
 ARG APP
 ARG VITE_API_URL
+ARG VITE_ANALYTICS_URL
 
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY nginx-seguranca.inc /etc/nginx/seguranca.inc
 
 # A origem da API entra na CSP aqui, no build, porque é aqui que ela é
 # conhecida. `VITE_API_URL` já vem sem barra final e sem caminho — é a origem.
-RUN sed -i "s|__API_ORIGEM__|${VITE_API_URL}|g" /etc/nginx/seguranca.inc \
+#
+# A do analytics entra só no build do site: nos apps o marcador vira nada, e a
+# CSP deles continua sem nenhum script de fora.
+RUN ORIGEM_ANALYTICS=""; \
+  if [ "$APP" = "site" ] && [ -n "$VITE_ANALYTICS_URL" ]; then \
+    ORIGEM_ANALYTICS=$(echo "$VITE_ANALYTICS_URL" | sed -E 's#^(https?://[^/]+).*#\1#'); \
+  fi; \
+  sed -i "s|__API_ORIGEM__|${VITE_API_URL}|g; s|__ANALYTICS_ORIGEM__|${ORIGEM_ANALYTICS}|g" /etc/nginx/seguranca.inc \
   && nginx -t
 
 COPY --from=build /app/dist/${APP} /usr/share/nginx/html

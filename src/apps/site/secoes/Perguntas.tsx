@@ -22,6 +22,7 @@ export function Perguntas() {
         </p>
         <a
           href="#experimentar"
+          data-evento="perguntas-falar-com-pessoa"
           className="mt-6 inline-flex items-center justify-center rounded-(--raio) border border-[color:var(--color-borda-forte)] bg-white px-5 py-3 font-semibold transition hover:bg-[color:var(--color-papel)]"
         >
           Falar com uma pessoa
