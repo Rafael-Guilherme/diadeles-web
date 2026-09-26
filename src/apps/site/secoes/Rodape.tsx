@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { APP_EDUCADOR, APP_RESPONSAVEL } from '../conteudo';
 
 /**
@@ -25,11 +26,13 @@ export function Rodape() {
           <div className="grid grid-cols-2 gap-8 text-sm sm:grid-cols-3">
             <Coluna
               titulo="Produto"
+              // Com a barra: a partir de `/termos`, um `#planos` cru não
+              // acharia seção nenhuma — a landing não está na tela.
               links={[
-                ['#como-funciona', 'Como funciona'],
-                ['#publicos', 'Para quem'],
-                ['#planos', 'Planos'],
-                ['#perguntas', 'Perguntas'],
+                ['/#como-funciona', 'Como funciona'],
+                ['/#publicos', 'Para quem'],
+                ['/#planos', 'Planos'],
+                ['/#perguntas', 'Perguntas'],
               ]}
             />
             <Coluna
@@ -43,10 +46,11 @@ export function Rodape() {
             <Coluna
               titulo="Legal"
               links={[
-                ['#', 'Termos de uso'],
-                ['#', 'Política de privacidade'],
-                ['#', 'Tratamento de dados de crianças'],
+                ['/termos', 'Termos de uso'],
+                ['/privacidade', 'Política de privacidade'],
+                ['/dados-de-criancas', 'Tratamento de dados de crianças'],
               ]}
+              interno
             />
           </div>
         </div>
@@ -67,24 +71,35 @@ function Coluna({
   titulo,
   links,
   externo = false,
+  interno = false,
 }: {
   titulo: string;
   links: [string, string][];
   externo?: boolean;
+  /** Rota do próprio site — precisa de `Link`, senão recarrega a página inteira. */
+  interno?: boolean;
 }) {
+  const estilo = 'text-white/70 transition hover:text-white';
+
   return (
     <div>
       <p className="text-2xs font-semibold uppercase tracking-[0.14em] text-white/40">{titulo}</p>
       <ul className="mt-3 space-y-2">
         {links.map(([href, texto]) => (
           <li key={texto}>
-            <a
-              href={href}
-              {...(externo ? { target: '_blank', rel: 'noreferrer' } : {})}
-              className="text-white/70 transition hover:text-white"
-            >
-              {texto}
-            </a>
+            {interno ? (
+              <Link to={href} className={estilo}>
+                {texto}
+              </Link>
+            ) : (
+              <a
+                href={href}
+                {...(externo ? { target: '_blank', rel: 'noreferrer' } : {})}
+                className={estilo}
+              >
+                {texto}
+              </a>
+            )}
           </li>
         ))}
       </ul>

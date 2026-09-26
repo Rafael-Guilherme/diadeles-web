@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react';
+import { Link } from 'react-router-dom';
 import { api, mensagemDeErro } from '../api/cliente';
 import { rotuloDoDevice } from '../auth/device';
 import { useSessao, type Sessao } from '../auth/sessao';
@@ -126,6 +127,16 @@ export function FormularioEntrada({ app }: { app: 'educador' | 'responsavel' }) 
       <Botao type="submit" bloco disabled={!podeEnviar || enviando}>
         {enviando ? 'Entrando…' : daEquipe ? 'Entrar' : 'Entrar com o convite'}
       </Botao>
+
+      {/* Só do lado da equipe: a família não tem senha para esquecer. */}
+      {daEquipe && (
+        <Link
+          to="/esqueci-senha"
+          className="block min-h-11 pt-1 text-center text-sm font-semibold text-(color:--cor-acao)"
+        >
+          Esqueci minha senha
+        </Link>
+      )}
 
       {!daEquipe && (
         <p className="text-xs leading-relaxed text-[color:var(--color-tinta-tenue)]">

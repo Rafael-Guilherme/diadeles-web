@@ -109,6 +109,66 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/auth/senha/esqueci": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Pede um link de redefinição de senha (equipe)
+         * @description Responde 204 sempre, exista a conta ou não: dizer "este e-mail não existe" entregaria a lista de quem trabalha na escola a quem estiver sondando. O link vale uma hora e uma vez só. A família não tem senha — entra por convite.
+         */
+        post: operations["AuthController_esqueciSenha"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/auth/senha/redefinir": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Troca a senha usando o token do e-mail
+         * @description Derruba todas as sessões abertas do usuário, inclusive em outros aparelhos: quem redefine a senha ou a esqueceu ou desconfia que alguém a tem.
+         */
+        post: operations["AuthController_redefinirSenha"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/auth/senha": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Troca a própria senha, já estando dentro do app
+         * @description Exige a senha atual. É o destino de toda senha provisória entregue pela secretaria. Devolve uma sessão nova, porque as anteriores são revogadas no mesmo ato.
+         */
+        patch: operations["AuthController_trocarSenha"];
+        trace?: never;
+    };
     "/v1/auth/eu": {
         parameters: {
             query?: never;
@@ -318,6 +378,26 @@ export interface paths {
          * @description Recusa com 409 quando a mudança deixaria a escola sem nenhum gestor ativo. Desativar encerra o acesso e preserva o histórico.
          */
         patch: operations["UsuariosController_atualizarMembro"];
+        trace?: never;
+    };
+    "/v1/equipe/{id}/senha": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Gera uma senha provisória nova para um membro da equipe
+         * @description Para quem esqueceu a senha e precisa entrar agora. A senha vem na resposta uma única vez e não fica recuperável. Fecha todas as sessões abertas da pessoa — se o motivo foi um celular perdido, é essa metade que importa.
+         */
+        post: operations["UsuariosController_redefinirSenha"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/v1/criancas/{criancaId}/responsaveis": {
@@ -1534,6 +1614,23 @@ export interface components {
         RefreshDto: {
             refreshToken: string;
         };
+        PedirRedefinicaoDto: {
+            /** @example ana.souza@escolamodelo.com.br */
+            email: string;
+        };
+        RedefinirSenhaDto: {
+            /** @description O token que veio no link do e-mail */
+            token: string;
+            /** @example uma-senha-nova */
+            novaSenha: string;
+        };
+        TrocarSenhaDto: {
+            senhaAtual: string;
+            /** @example uma-senha-nova */
+            novaSenha: string;
+            /** @example Motorola Edge 30 */
+            deviceLabel?: string;
+        };
         DemoLoginDto: {
             /**
              * @example educadora
@@ -2747,6 +2844,71 @@ export interface operations {
             };
         };
     };
+    AuthController_esqueciSenha: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PedirRedefinicaoDto"];
+            };
+        };
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AuthController_redefinirSenha: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RedefinirSenhaDto"];
+            };
+        };
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AuthController_trocarSenha: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TrocarSenhaDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessaoDto"];
+                };
+            };
+        };
+    };
     AuthController_eu: {
         parameters: {
             query?: never;
@@ -3039,6 +3201,27 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MembroEquipeDto"];
+                };
+            };
+        };
+    };
+    UsuariosController_redefinirSenha: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MembroCriadoDto"];
                 };
             };
         };

@@ -4,6 +4,9 @@ import { ehDaGestao, useSessao } from '@/shared/auth/sessao';
 import { iniciarSincronizacao } from '@/shared/offline/sincronizador';
 import { Entrada } from '@/shared/telas/Entrada';
 import { Instalar } from '@/shared/telas/Instalar';
+import { EsqueciSenha } from '@/shared/telas/EsqueciSenha';
+import { RedefinirSenha } from '@/shared/telas/RedefinirSenha';
+import { TrocarSenha } from '@/shared/telas/TrocarSenha';
 import { Turmas } from './telas/Turmas';
 import { Grade } from './telas/Grade';
 import { Chamada } from './telas/Chamada';
@@ -34,12 +37,27 @@ export function App() {
   useEffect(() => iniciarSincronizacao(), []);
 
   if (!usuario) {
+    /*
+      Deslogado também tem rotas, e são duas: quem clica no link do e-mail de
+      redefinição chega aqui sem sessão nenhuma — é o estado normal de quem
+      esqueceu a senha, não um erro. Sem isto, o link do e-mail cairia na tela
+      de entrada e o token se perderia no caminho.
+    */
     return (
-      <Entrada
-        app="educador"
-        titulo="Diadeles"
-        subtitulo="Escolha um perfil para experimentar o app do educador."
-      />
+      <Routes>
+        <Route path="/esqueci-senha" element={<EsqueciSenha />} />
+        <Route path="/redefinir-senha" element={<RedefinirSenha />} />
+        <Route
+          path="*"
+          element={
+            <Entrada
+              app="educador"
+              titulo="Diadeles"
+              subtitulo="Escolha um perfil para experimentar o app do educador."
+            />
+          }
+        />
+      </Routes>
     );
   }
 
@@ -51,6 +69,7 @@ export function App() {
 
       <Routes>
         <Route path="/" element={<Turmas />} />
+        <Route path="/trocar-senha" element={<TrocarSenha />} />
         <Route path="/turma/:turmaId" element={<Grade />} />
         <Route path="/turma/:turmaId/chamada" element={<Chamada />} />
         <Route path="/turma/:turmaId/pendencias" element={<Pendencias />} />

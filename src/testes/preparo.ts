@@ -87,9 +87,17 @@ export function responderCom(mapa: Record<string, unknown>): void {
         ? (valor as RespostaCrua).__resposta
         : null;
 
-    return new Response(JSON.stringify(crua ? crua.corpo : valor), {
-      status: crua ? crua.status : 200,
-      headers: { 'Content-Type': 'application/json' },
+    const status = crua ? crua.status : 200;
+
+    // 204 e 304 não podem ter corpo — o `Response` do Node recusa a construção,
+    // e o erro sai como rejeição não tratada em vez de falha de teste. A API
+    // tem rotas 204 de verdade (`/auth/sair`, a régua de senha), então o
+    // preparo precisa saber representá-las.
+    const semCorpo = status === 204 || status === 205 || status === 304;
+
+    return new Response(semCorpo ? null : JSON.stringify(crua ? crua.corpo : valor), {
+      status,
+      headers: semCorpo ? undefined : { 'Content-Type': 'application/json' },
     });
   };
 }

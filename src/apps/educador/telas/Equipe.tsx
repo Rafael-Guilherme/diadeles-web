@@ -65,6 +65,28 @@ export function Equipe() {
     },
   });
 
+  /*
+    A senha nova sai na tela, na mão de quem está do outro lado do balcão.
+
+    Existe porque o link por e-mail não cobre a terça-feira de manhã: a
+    educadora está na porta da sala, o e-mail cadastrado é o da secretaria, e
+    esperar uma mensagem chegar é esperar a chamada não acontecer.
+  */
+  const redefinirSenha = useMutation({
+    mutationFn: async (id: string) => {
+      const { data, error } = await api.POST('/v1/equipe/{id}/senha', {
+        params: { path: { id } },
+      });
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (resposta) => {
+      if (resposta?.senhaProvisoria) {
+        setSenhaGerada({ nome: resposta.membro.nome, senha: resposta.senhaProvisoria });
+      }
+    },
+  });
+
   const alternarAtivo = useMutation({
     mutationFn: async ({ id, ativo }: { id: string; ativo: boolean }) => {
       const { error } = await api.PATCH('/v1/equipe/{id}', {
@@ -97,12 +119,15 @@ export function Equipe() {
       }
     >
       <div className="space-y-(--gap-lista)">
-          {(criar.error || alternarAtivo.error) && (
-            <Aviso>{mensagemDeErro(criar.error ?? alternarAtivo.error)}</Aviso>
+          {(criar.error || alternarAtivo.error || redefinirSenha.error) && (
+            <Aviso>
+              {mensagemDeErro(criar.error ?? alternarAtivo.error ?? redefinirSenha.error)}
+            </Aviso>
           )}
 
-          {/* A senha provisória aparece uma única vez. Some ao sair da tela, e a
-              secretaria precisa passá-la à pessoa antes disso. */}
+          {/* A senha provisória aparece uma única vez — no cadastro e na
+              redefinição. Some ao sair da tela, e a secretaria precisa
+              passá-la à pessoa antes disso. */}
           {senhaGerada && (
             <Cartao interno className="space-y-2">
               <RotuloSecao>Senha de {senhaGerada.nome}</RotuloSecao>
@@ -217,14 +242,32 @@ export function Equipe() {
                       {membro.ultimoAcesso ? formatarAcesso(membro.ultimoAcesso) : 'nunca entrou'}
                     </Td>
                     <Td className="text-right">
-                      <Botao
-                        variante="secundario"
-                        tamanho="compacto"
-                        disabled={alternarAtivo.isPending}
-                        onClick={() => alternarAtivo.mutate({ id: membro.id, ativo: !membro.ativo })}
-                      >
-                        {membro.ativo ? 'Desativar' : 'Reativar'}
-                      </Botao>
+                      <div className="flex justify-end gap-2">
+                        {/* Só para quem entra por senha. Quem está desativado
+                            não entra de jeito nenhum, e uma senha nova ali
+                            prometeria um acesso que o `ativo: false` recusa. */}
+                        {membro.ativo && membro.email && (
+                          <Botao
+                            variante="secundario"
+                            tamanho="compacto"
+                            disabled={redefinirSenha.isPending}
+                            aria-label={`Gerar senha nova para ${membro.nome}`}
+                            onClick={() => redefinirSenha.mutate(membro.id)}
+                          >
+                            <KeyRound size={14} /> Senha
+                          </Botao>
+                        )}
+                        <Botao
+                          variante="secundario"
+                          tamanho="compacto"
+                          disabled={alternarAtivo.isPending}
+                          onClick={() =>
+                            alternarAtivo.mutate({ id: membro.id, ativo: !membro.ativo })
+                          }
+                        >
+                          {membro.ativo ? 'Desativar' : 'Reativar'}
+                        </Botao>
+                      </div>
                     </Td>
                   </Tr>
                 ))}

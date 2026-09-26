@@ -82,16 +82,24 @@ export function Turmas() {
           </div>
         )}
 
-        <button
-          onClick={() => {
-            setSaindo(true);
-            void sair();
-          }}
-          disabled={saindo}
-          className="min-h-11 w-full pt-4 text-center text-sm text-[color:var(--color-tinta-tenue)] underline underline-offset-2 disabled:opacity-50"
-        >
-          {saindo ? 'Saindo…' : 'Sair'}
-        </button>
+        <div className="flex items-center justify-center gap-4 pt-4 text-sm text-[color:var(--color-tinta-tenue)]">
+          {/* Ao lado de "Sair" e não numa tela de configurações: é onde quem
+              recebeu uma senha provisória da secretaria vai procurar. */}
+          <Link to="/trocar-senha" className="min-h-11 underline underline-offset-2">
+            Trocar minha senha
+          </Link>
+          <span aria-hidden className="h-3 w-px bg-[color:var(--color-borda)]" />
+          <button
+            onClick={() => {
+              setSaindo(true);
+              void sair();
+            }}
+            disabled={saindo}
+            className="min-h-11 underline underline-offset-2 disabled:opacity-50"
+          >
+            {saindo ? 'Saindo…' : 'Sair'}
+          </button>
+        </div>
       </main>
     </div>
   );

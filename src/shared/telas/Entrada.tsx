@@ -1,5 +1,8 @@
 import { useEffect, useState } from 'react';
 import { API_URL } from '../api/cliente';
+
+/** O site institucional, onde ficam os documentos legais. */
+const SITE_URL = import.meta.env.VITE_SITE_URL ?? 'http://localhost:5176';
 import { useSessao, type Sessao } from '../auth/sessao';
 import { Avatar, Aviso, Botao, Cartao, Carregando } from '../ui/componentes';
 import { FormularioEntrada } from './FormularioEntrada';
@@ -191,8 +194,28 @@ export function Entrada({
           </Cartao>
         )}
 
+        {/* Concordar com um documento que não dá para abrir é concordar com
+            nada. Os dois links saem para o site, que é onde eles moram. */}
         <p className="text-xs leading-relaxed text-[color:var(--color-tinta-tenue)]">
-          Ao entrar você concorda com os termos de uso e a política de privacidade.
+          Ao entrar você concorda com os{' '}
+          <a
+            href={`${SITE_URL}/termos`}
+            target="_blank"
+            rel="noreferrer"
+            className="underline underline-offset-2"
+          >
+            termos de uso
+          </a>{' '}
+          e a{' '}
+          <a
+            href={`${SITE_URL}/privacidade`}
+            target="_blank"
+            rel="noreferrer"
+            className="underline underline-offset-2"
+          >
+            política de privacidade
+          </a>
+          .
         </p>
       </div>
     </div>
